@@ -1,0 +1,123 @@
+# ==========================================================================
+# Lyra 2.0 — .gitignore
+# Project: AI Order Co-Pilot for FMCG distributors (hackathon build)
+# ==========================================================================
+
+# --- Current folder contents (kept out of VCS on purpose) -----------------
+# Design docs stay local-only for now; the build starts from a clean tree.
+Project details/
+
+# Tooling / indexer cache
+.recon/
+
+# Windows reserved device names (cannot be read or deleted normally)
+# Accidentally created files named like these are undeletable via Explorer
+# and must be handled with \\?\ paths — keep them out of VCS entirely.
+NUL
+CON
+PRN
+AUX
+COM1
+COM2
+COM3
+COM4
+COM5
+COM6
+COM7
+COM8
+COM9
+LPT1
+LPT2
+LPT3
+LPT4
+LPT5
+LPT6
+LPT7
+LPT8
+LPT9
+
+# --- OS junk --------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- Editors / IDEs -------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.iml
+.vs/
+
+# --- Node / Next.js -------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+.next/
+out/
+build/
+dist/
+coverage/
+.turbo/
+.cache/
+.eslintcache
+.parcel-cache/
+.vite/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Environment / secrets ------------------------------------------------
+.supabase-token
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+!*.example.pem
+
+# --- Logs / temp ----------------------------------------------------------
+logs/
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# --- Database / migrations (generated) ------------------------------------
+*.sqlite
+*.sqlite3
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+
+# --- Misc -----------------------------------------------------------------
+.vercel/
+.netlify/
+.history/
+.husky/_
+*.orig
+*.rej
