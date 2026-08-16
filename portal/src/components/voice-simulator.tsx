@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Card, CardHeader } from "@/components/ui";
 import { languageLabel } from "@/lib/format";
-import { STATE_LABELS, startCall, step } from "@/lib/voice/engine";
+import { STATE_LABELS, startCall, step, summarize } from "@/lib/voice/engine";
 import { LYRA_SYSTEM_PROMPT } from "@/lib/voice/prompt";
 import { VOICE_TOOLS } from "@/lib/voice/tools";
 import { speakLyra, stopLyraSpeech, type LyraVoice } from "@/lib/voice/tts";
+import { voiceApi, type CreatedOrderPayload } from "@/lib/voice/client";
+import type { AppLanguage } from "@/lib/types";
 import type {
   RepeatItem,
   VoiceContext,
@@ -18,6 +20,15 @@ type ShopOption = {
   shop_id: string;
   shop_name: string;
   preferred_language: string;
+  phone_number: string;
+};
+
+type TraceEvent = {
+  id: number;
+  tool: string;
+  detail: string;
+  status: "ok" | "error";
+  at: string;
 };
 
 interface SpeechRecognitionLike {
@@ -48,13 +59,7 @@ const FLOW_STEPS: VoiceState[] = [
   "end",
 ];
 
-export function VoiceSimulator({
-  shops,
-  repeatByShop,
-}: {
-  shops: ShopOption[];
-  repeatByShop: Record<string, RepeatItem[]>;
-}) {
+export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
   const [phase, setPhase] = useState<"idle" | "active" | "done">("idle");
   const [selectedShopId, setSelectedShopId] = useState(shops[0]?.shop_id ?? "");
   const [state, setState] = useState<VoiceState>("greeting");
@@ -65,6 +70,10 @@ export function VoiceSimulator({
   const [voice, setVoice] = useState<LyraVoice>("male");
   const [listening, setListening] = useState(false);
   const [copied, setCopied] = useState<"prompt" | "tools" | null>(null);
+  const [trace, setTrace] = useState<TraceEvent[]>([]);
+  const [orderResult, setOrderResult] = useState<CreatedOrderPayload | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [callLanguage, setCallLanguage] = useState<AppLanguage>("tanglish");
 
   const phaseRef = useRef(phase);
   const stateRef = useRef(state);
@@ -108,13 +117,92 @@ export function VoiceSimulator({
     void speakLyra(text, voiceRef.current);
   }, []);
 
+  const pushTrace = useCallback(
+    (tool: string, detail: string, status: "ok" | "error" = "ok") => {
+      setTrace((t) => [
+        ...t,
+        {
+          id: t.length + 1,
+          tool,
+          detail,
+          status,
+          at: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }),
+        },
+      ]);
+    },
+    []
+  );
+
+  const recordOptOut = useCallback(
+    async (ctxFinal: VoiceContext) => {
+      try {
+        pushTrace("mark_opt_out", `shop_id=${ctxFinal.shopId}`);
+        const res = await voiceApi.markOptOut(ctxFinal.shopId);
+        pushTrace("mark_opt_out", `${res.shop_name}: opt_out=true, voice_consent=false`);
+      } catch (err) {
+        pushTrace(
+          "mark_opt_out",
+          err instanceof Error ? err.message : String(err),
+          "error"
+        );
+      }
+    },
+    [pushTrace]
+  );
+
+  const placeOrder = useCallback(
+    async (ctxFinal: VoiceContext) => {
+      const items = ctxFinal.repeatItems.map((i) => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+      }));
+      const summary = ctxFinal.currentSummary ?? summarize(ctxFinal.repeatItems) ?? "";
+      try {
+        pushTrace("create_order", `shop_id=${ctxFinal.shopId} · ${items.length} item(s)`);
+        const order = await voiceApi.createOrder({
+          shop_id: ctxFinal.shopId,
+          items,
+          transcript_summary: summary,
+          language_detected: callLanguage,
+        });
+        setOrderResult(order);
+        pushTrace(
+          "create_order",
+          `${order.order_id} created · ₹${order.total_amount.toLocaleString("en-IN")} · ${order.order_status}`
+        );
+        pushTrace("save_memory", "order behaviour → product_preference");
+        await voiceApi.saveMemory({
+          shop_id: ctxFinal.shopId,
+          memory_text: `Repeat order confirmed: ${summary}`,
+          memory_type: "product_preference",
+          confirmed_by_user: true,
+          confidence_score: 0.9,
+        });
+        pushTrace("save_memory", "memory saved");
+      } catch (err) {
+        pushTrace(
+          "create_order",
+          err instanceof Error ? err.message : String(err),
+          "error"
+        );
+        setApiError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [pushTrace, callLanguage]
+  );
+
   const runStep = useCallback(
     (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || phaseRef.current !== "active" || !ctxRef.current) return;
+      const prevState = stateRef.current;
       setInput("");
       setMessages((m) => [...m, { role: "user", text: trimmed }]);
-      const result = step(stateRef.current, trimmed, ctxRef.current);
+      const result = step(prevState, trimmed, ctxRef.current);
       stateRef.current = result.state;
       ctxRef.current = result.ctx;
       setState(result.state);
@@ -126,32 +214,69 @@ export function VoiceSimulator({
       if (result.done) {
         phaseRef.current = "done";
         setPhase("done");
+        if (result.ctx.optedOut) {
+          void recordOptOut(result.ctx);
+        } else if (prevState === "confirm") {
+          void placeOrder(result.ctx);
+        }
       }
     },
-    [speak]
+    [speak, recordOptOut, placeOrder]
   );
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!selectedShopId) return;
     const shop = shops.find((s) => s.shop_id === selectedShopId);
     if (!shop) return;
-    const ctx0: VoiceContext = {
-      shopId: shop.shop_id,
-      shopName: shop.shop_name,
-      repeatItems: repeatByShop[shop.shop_id] ?? [],
-      currentSummary: null,
-      corrections: 0,
-      optedOut: false,
-    };
-    const first = startCall(ctx0);
-    ctxRef.current = first.ctx;
-    stateRef.current = first.state;
-    setCtx(first.ctx);
-    setState(first.state);
-    setMessages([{ role: "agent", text: first.agentText }]);
-    phaseRef.current = "active";
+    stopLyraSpeech();
+    stopRecognition();
+    setMessages([]);
+    setTrace([]);
+    setOrderResult(null);
+    setApiError(null);
     setPhase("active");
-    speak(first.agentText);
+    try {
+      pushTrace("identify_shop_by_phone", `phone=${shop.phone_number}`);
+      const context = await voiceApi.identifyShopByPhone(shop.phone_number);
+      setCallLanguage(context.language);
+      pushTrace(
+        "identify_shop_by_phone",
+        `${context.shop_name} found · ${context.language} · credit ₹${context.available_credit.toLocaleString("en-IN")}`
+      );
+
+      pushTrace("get_suggested_order", `shop_id=${shop.shop_id}`);
+      const suggested = await voiceApi.getSuggestedOrder(shop.shop_id);
+      const repeat: RepeatItem[] = suggested.repeat_order;
+      pushTrace(
+        "get_suggested_order",
+        repeat.length
+          ? `${repeat.length} item(s) from last order`
+          : "no prior order — start from scratch"
+      );
+
+      const ctx0: VoiceContext = {
+        shopId: context.shop_id,
+        shopName: context.shop_name,
+        repeatItems: repeat,
+        currentSummary: null,
+        corrections: 0,
+        optedOut: false,
+      };
+      const first = startCall(ctx0);
+      ctxRef.current = first.ctx;
+      stateRef.current = first.state;
+      setCtx(first.ctx);
+      setState(first.state);
+      setMessages([{ role: "agent", text: first.agentText }]);
+      phaseRef.current = "active";
+      setPhase("active");
+      speak(first.agentText);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      pushTrace("identify_shop_by_phone", message, "error");
+      setApiError(message);
+      setPhase("idle");
+    }
   };
 
   const handleEnd = () => {
@@ -211,7 +336,7 @@ export function VoiceSimulator({
       <Card className="lg:col-span-3">
         <CardHeader
           title="Live call"
-          subtitle="The Lyra voice flow, running entirely in the browser (no phone line)"
+          subtitle="Incoming call → real Supabase lookup → order saved back to the database"
           right={
             <div className="flex items-center gap-2">
               {phase === "active" && (
@@ -230,9 +355,29 @@ export function VoiceSimulator({
         />
 
         <div className="space-y-4 p-4">
+          {apiError && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
+              <span className="font-semibold">Database lookup failed:</span> {apiError}
+            </div>
+          )}
+
+          {orderResult && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">
+              <span className="font-semibold">Order saved to database</span> —{" "}
+              <span className="font-mono font-semibold">{orderResult.order_id}</span> · ₹
+              {orderResult.total_amount.toLocaleString("en-IN")} · {orderResult.order_status}
+              <a
+                href="/orders"
+                className="ml-2 font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-900"
+              >
+                View in portal →
+              </a>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center gap-2">
             <label className="text-sm text-zinc-500" htmlFor="voice-shop">
-              Calling
+              Incoming call
             </label>
             <select
               id="voice-shop"
@@ -247,6 +392,11 @@ export function VoiceSimulator({
                 </option>
               ))}
             </select>
+            {selectedShop && (
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-mono text-xs font-medium text-zinc-600">
+                {selectedShop.phone_number}
+              </span>
+            )}
             {selectedShop && (
               <span className="rounded-full bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-inset ring-violet-600/20">
                 {languageLabel[selectedShop.preferred_language] ?? selectedShop.preferred_language}
@@ -264,7 +414,7 @@ export function VoiceSimulator({
             {phase === "idle" ? (
               <button
                 type="button"
-                onClick={handleStart}
+                onClick={() => void handleStart()}
                 className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
               >
                 Start call
@@ -309,8 +459,9 @@ export function VoiceSimulator({
           >
             {messages.length === 0 ? (
               <p className="text-sm text-zinc-400">
-                Press <span className="font-medium">Start call</span> to begin.
-                Lyra will greet the shop and walk through the order flow.
+                Press <span className="font-medium">Start call</span> to begin. Lyra
+                identifies the shop by Caller ID, greets in their language, suggests the
+                repeat order and saves the confirmed order back to the database.
               </p>
             ) : (
               messages.map((m, i) => (
@@ -383,13 +534,48 @@ export function VoiceSimulator({
 
           {ctx?.optedOut && (
             <p className="text-xs text-amber-700">
-              Shop owner opted out — the real agent would call <span className="font-semibold">mark_opt_out</span> and stop future calls.
+              Shop owner opted out — <span className="font-semibold">mark_opt_out</span>{" "}
+              recorded in the database (voice_consent=false).
             </p>
           )}
         </div>
       </Card>
 
       <div className="space-y-6 lg:col-span-2">
+        <Card>
+          <CardHeader
+            title="Database trace"
+            subtitle="Live API calls made by this call"
+          />
+          {trace.length === 0 ? (
+            <p className="p-4 text-sm text-zinc-400">
+              Start a call to see the agent hit the real Supabase API.
+            </p>
+          ) : (
+            <ol className="space-y-2 p-4">
+              {trace.map((t) => (
+                <li
+                  key={t.id}
+                  className="rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                        t.status === "ok" ? "bg-emerald-500" : "bg-rose-500"
+                      }`}
+                    />
+                    <span className="font-mono text-xs font-semibold text-zinc-800">
+                      {t.tool}
+                    </span>
+                    <span className="ml-auto text-[10px] text-zinc-400">{t.at}</span>
+                  </div>
+                  <p className="mt-0.5 pl-3 text-xs text-zinc-600">{t.detail}</p>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Card>
+
         <Card>
           <CardHeader
             title="Call flow"
@@ -445,8 +631,8 @@ export function VoiceSimulator({
 
         <Card>
           <CardHeader
-            title="Tools (Phase 4)"
-            subtitle="Function schemas the agent will call against Supabase"
+            title="Tools"
+            subtitle="Function schemas the agent calls — implemented against live Supabase"
             right={
               <button
                 type="button"

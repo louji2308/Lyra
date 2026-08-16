@@ -339,6 +339,7 @@ export interface CreateOrderInputItem {
 async function nextNumericId(prefix: string, from: "orders" | "call_logs"): Promise<string> {
   const { data, error } = await supabase.from(from).select(from === "orders" ? "order_id" : "call_id");
   if (error) throw new VoiceApiError(500, "db_error", error.message);
+  const pad = from === "orders" ? 4 : 3;
   const max = Math.max(
     0,
     ...(data ?? []).map((r) => {
@@ -347,7 +348,7 @@ async function nextNumericId(prefix: string, from: "orders" | "call_logs"): Prom
       return match ? parseInt(match[1], 10) : 0;
     })
   );
-  return `${prefix}${String(max + 1).padStart(4, "0")}`;
+  return `${prefix}${String(max + 1).padStart(pad, "0")}`;
 }
 
 export async function createOrder(
@@ -405,9 +406,23 @@ export async function createOrder(
     Math.round(lineItems.reduce((sum, i) => sum + i.line_total, 0) * 100) / 100;
   const orderId = await nextNumericId("ORD", "orders");
   const callId = await nextNumericId("CALL", "call_logs");
+  const today = new Date().toISOString().slice(0, 10);
   const deliveryDate = new Date(Date.now() + 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
+
+  const { error: callError } = await supabase.from("call_logs").insert({
+    call_id: callId,
+    shop_id: shopId,
+    end_time: new Date().toISOString(),
+    language_detected: opts.language_detected ?? shop.preferred_language ?? null,
+    sentiment: "positive",
+    order_placed: true,
+    whatsapp_sent: false,
+    escalated_to_human: false,
+    transcript_summary: opts.transcript_summary ?? null,
+  });
+  if (callError) throw new VoiceApiError(500, "db_error", callError.message);
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
@@ -415,7 +430,7 @@ export async function createOrder(
       order_id: orderId,
       shop_id: shopId,
       call_id: callId,
-      order_date: new Date().toISOString().slice(0, 10),
+      order_date: today,
       delivery_date: deliveryDate,
       delivery_slot: "2 PM - 5 PM",
       total_amount: totalAmount,
@@ -440,22 +455,9 @@ export async function createOrder(
   );
   if (itemsError) throw new VoiceApiError(500, "db_error", itemsError.message);
 
-  const { error: callError } = await supabase.from("call_logs").insert({
-    call_id: callId,
-    shop_id: shopId,
-    end_time: new Date().toISOString(),
-    language_detected: opts.language_detected ?? shop.preferred_language ?? null,
-    sentiment: "positive",
-    order_placed: true,
-    whatsapp_sent: false,
-    escalated_to_human: false,
-    transcript_summary: opts.transcript_summary ?? null,
-  });
-  if (callError) throw new VoiceApiError(500, "db_error", callError.message);
-
   const { error: shopUpdateError } = await supabase
     .from("shops")
-    .update({ last_order_date: new Date().toISOString().slice(0, 10) })
+    .update({ last_order_date: today })
     .eq("shop_id", shopId);
   if (shopUpdateError) throw new VoiceApiError(500, "db_error", shopUpdateError.message);
 

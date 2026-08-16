@@ -1,0 +1,161 @@
+import type { AppLanguage, MemoryType, OrderStatus, PaymentStatus } from "@/lib/types";
+import type { RepeatItem } from "./types";
+
+export interface BlacklistItem {
+  product_id: string;
+  product_name: string;
+  reason: string | null;
+}
+
+export interface LastOrderItem {
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit: string;
+  price: number;
+}
+
+export interface ShopContextPayload {
+  shop_id: string;
+  shop_name: string;
+  owner_name: string | null;
+  language: AppLanguage;
+  preferred_call_time: string | null;
+  credit_limit: number;
+  outstanding_balance: number;
+  available_credit: number;
+  opt_out: boolean;
+  blacklist: BlacklistItem[];
+  last_order: LastOrderItem[];
+}
+
+export interface SuggestedOrderPayload {
+  shop_id: string;
+  shop_name: string;
+  repeat_order: RepeatItem[];
+  missing_categories: string[];
+  new_product: { product_id: string; product_name: string; price: number } | null;
+}
+
+export interface CheckStockPayload {
+  product_id: string;
+  product_name: string;
+  unit_type: string;
+  available_qty: number;
+  requested_qty: number | null;
+  available: boolean;
+  low_stock: boolean;
+}
+
+export interface CheckCreditPayload {
+  shop_id: string;
+  shop_name: string;
+  credit_limit: number;
+  outstanding_balance: number;
+  available_credit: number;
+  order_total: number;
+  approved: boolean;
+  extra_payment_needed: number;
+}
+
+export interface CreatedOrderPayload {
+  order_id: string;
+  shop_id: string;
+  shop_name: string;
+  total_amount: number;
+  credit_used: number;
+  payment_status: PaymentStatus;
+  order_status: OrderStatus;
+  items: {
+    product_id: string;
+    product_name: string;
+    quantity: number;
+    unit: string;
+    price: number;
+    line_total: number;
+  }[];
+}
+
+export interface SavedMemoryPayload {
+  memory_id: number;
+  shop_id: string;
+  memory_text: string;
+  memory_type: MemoryType;
+  confidence_score: number;
+  confirmed_by_user: boolean;
+  created_at: string;
+}
+
+export interface SavedComplaintPayload {
+  complaint_id: number;
+  shop_id: string;
+  complaint_type: string;
+  description: string | null;
+  severity: string;
+  status: string;
+  callback_requested: boolean;
+  created_at: string;
+}
+
+export interface OptOutPayload {
+  shop_id: string;
+  shop_name: string;
+  opt_out: boolean;
+  voice_consent: boolean;
+}
+
+async function req<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `request_failed (${res.status})`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export const voiceApi = {
+  identifyShopByPhone: (phone: string) =>
+    req<ShopContextPayload>(`/api/shop-context?phone=${encodeURIComponent(phone)}`),
+
+  getShopContext: (shopId: string) =>
+    req<ShopContextPayload>(`/api/shop-context?shop_id=${encodeURIComponent(shopId)}`),
+
+  getSuggestedOrder: (shopId: string) =>
+    req<SuggestedOrderPayload>(`/api/suggested-order?shop_id=${encodeURIComponent(shopId)}`),
+
+  checkStock: (body: { product_id: string; quantity?: number }) =>
+    req<CheckStockPayload>("/api/check-stock", { method: "POST", body: JSON.stringify(body) }),
+
+  checkCredit: (body: { shop_id: string; order_total: number }) =>
+    req<CheckCreditPayload>("/api/check-credit", { method: "POST", body: JSON.stringify(body) }),
+
+  createOrder: (body: {
+    shop_id: string;
+    items: { product_id: string; quantity: number }[];
+    payment_status?: PaymentStatus;
+    order_status?: OrderStatus;
+    transcript_summary?: string;
+    language_detected?: AppLanguage | null;
+  }) => req<CreatedOrderPayload>("/api/create-order", { method: "POST", body: JSON.stringify(body) }),
+
+  saveMemory: (body: {
+    shop_id: string;
+    memory_text: string;
+    memory_type: MemoryType;
+    confirmed_by_user?: boolean;
+    confidence_score?: number;
+  }) => req<SavedMemoryPayload>("/api/save-memory", { method: "POST", body: JSON.stringify(body) }),
+
+  saveComplaint: (body: {
+    shop_id: string;
+    complaint_type: string;
+    description?: string;
+    callback_requested?: boolean;
+  }) => req<SavedComplaintPayload>("/api/save-complaint", { method: "POST", body: JSON.stringify(body) }),
+
+  markOptOut: (shopId: string) =>
+    req<OptOutPayload>("/api/mark-opt-out", { method: "POST", body: JSON.stringify({ shop_id: shopId }) }),
+};

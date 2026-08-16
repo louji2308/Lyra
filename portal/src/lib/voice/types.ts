@@ -8,9 +8,11 @@ export type VoiceState =
   | "end";
 
 export interface RepeatItem {
+  product_id: string;
   product_name: string;
   quantity: number;
   unit: string;
+  price?: number;
 }
 
 export interface VoiceContext {
