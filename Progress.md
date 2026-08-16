@@ -1,9 +1,9 @@
 # Lyra 2.0 — Build Progress
 
 **Product:** AI Order Co-Pilot for FMCG distributors (Shree Agencies demo)
-**Phase:** 3 — Voice AI Foundation (foundation built; live phone number pending)
+**Phase:** 4 — Connect Voice to Database (voice now reads + writes live Supabase)
 **Started:** 2026-08-16
-**Status:** 🔨 Phase 3 in progress
+**Status:** 🔨 Phase 5 next
 
 ---
 
@@ -14,8 +14,8 @@
 | 0 | Freeze the Scope | ✅ Done (docs only; no separate scope.md per user choice) |
 | 1 | Build the Data Brain | ✅ Done — live on Supabase `mxjsnhbziewlpnsybbvq` |
 | 2 | Build the Agency Portal | ✅ Done — live on http://localhost:3000 |
-| 3 | Build the Voice AI Foundation | 🔨 In Progress — agent prompt + flow engine + browser simulator done; SnapServe/Vobiz live number pending |
-| 4 | Connect Voice to Database | ⏳ Pending |
+| 3 | Build the Voice AI Foundation | ✅ Done — agent prompt + flow engine + browser simulator; live SnapServe number still pending |
+| 4 | Connect Voice to Database | ✅ Done — API layer + simulator wired to live Supabase |
 | 5 | Add Business Rules | ⏳ Pending |
 | 6 | Add WhatsApp Layer | ⏳ Pending |
 | 7 | Add Memory + Blacklist | ⏳ Pending |
@@ -136,6 +136,38 @@
 
 ---
 
+## Phase 4 — Connect Voice to Database ✅ (2026-08-16)
+
+### Goal (from Plan.md)
+The AI must stop being a generic bot: identify the shop by phone, fetch last order, check credit/stock, and save the confirmed order + memory back to the database.
+
+### API layer (portal/src/app/api/*, logic in `portal/src/lib/voice/backend.ts`)
+- `GET /api/shop-context?phone=…` → identify shop by Caller ID (digits-normalized, matches 12-digit / 10-digit / +91), returns shop name, language, preferred call time, credit, blacklist, last order. `?shop_id=…` variant for direct lookup. Unknown phone → `404 shop_not_found`.
+- `GET /api/suggested-order?shop_id=…` → repeat order from the most recent **real** order (confirmed/delivered/payment_pending/out_for_delivery, never drafts), plus missing categories + upsell candidate.
+- `POST /api/check-stock` → availability vs requested qty incl. low-stock flag.
+- `POST /api/check-credit` → `approved` / `extra_payment_needed` from the `shop_credit` view.
+- `POST /api/create-order` → order header + line items + `call_logs` row + `shops.last_order_date` update (call log inserted **first** to satisfy `orders_call_id_fkey`); auto-generates `ORD`/`CALL` IDs matching the seed format.
+- `POST /api/save-memory`, `POST /api/save-complaint`, `POST /api/mark-opt-out`.
+
+### Simulator now runs on live data
+- Start call = simulate Caller ID → `identify_shop_by_phone` → greets with the real shop name in the shop's language.
+- Repeat-order suggestion comes from `/api/suggested-order` (real last order).
+- Confirming the order calls `create_order` (order appears on the portal Orders page instantly) + `save_memory` (order-behaviour memory).
+- Opt-out calls `mark_opt_out` (sets `opt_out=true`, `voice_consent=false`).
+- New **Database trace** panel shows every API call with status + response summary.
+
+### Verified in Chrome against live Supabase
+- Kannan Stores (S101): identify by phone (credit ₹2,500, 2 blacklist items, last order 3 items) → repeat suggested from real ORD1019 → confirmed → **ORD1024 created (₹4,560, awaiting_confirmation)** → appears on Orders page (6 orders, ₹17,940) → memory auto-saved (AI Memory page shows it, 8 memories).
+- Murugan Store (S102): opt-out at greeting → `mark_opt_out` → `opt_out=true / voice_consent=false` (restored after test).
+- API curl checks: unknown phone → 404; check-stock (Surf Excel, 3 units, low stock); check-credit (₹4,200 > ₹2,500 available → extra ₹1,700); save-memory 201; save-complaint 201; mark-opt-out 200.
+- `npm run lint` + `tsc` clean; 0 console errors.
+
+### Notes
+- Changes the shop speaks are captured in the transcript summary but are parsed into structured line items by the live LLM agent (Phase 9); the simulator creates the repeat-order base as-is.
+- `nextNumericId` pads orders to 4 digits and call logs to 3 digits to match the seed (`ORD1019`, `CALL101`).
+
+---
+
 ## Log
 
 | Date | Update |
@@ -145,3 +177,4 @@
 | 2026-08-16 | Product renamed **Vaniga-Mithran → Lyra** everywhere (docs, SQL comments, portal brand/metadata, system prompts). |
 | 2026-08-16 | Phase 3 foundation: voice engine + Tanglish script + agent prompt + 9 tool schemas + browser call simulator at `/voice` (verified happy path + opt-out, 0 console errors). Live SnapServe number still pending. |
 | 2026-08-16 | Voice quality fix: replaced `speechSynthesis` (no ta-IN on Windows → US-English "American Tamil") with **Edge TTS neural `ta-IN`** via new `POST /api/tts` route (Valluvar/Pallavi, free, no key); verified in browser. |
+| 2026-08-16 | **Phase 4 shipped**: 8 voice API routes (shop-context, suggested-order, check-stock, check-credit, create-order, save-memory, save-complaint, mark-opt-out) + simulator wired to live Supabase — identify by Caller ID, repeat order from DB, order + memory persisted. Verified end-to-end in Chrome (ORD1024 visible on portal). |
