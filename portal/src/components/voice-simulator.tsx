@@ -284,6 +284,32 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
     }
   };
 
+  const handleLiveCall = async () => {
+    if (!selectedShopId) return;
+    const shop = shops.find((s) => s.shop_id === selectedShopId);
+    if (!shop) return;
+    stopLyraSpeech();
+    stopRecognition();
+    resetCallState();
+    setPhase("active");
+    pushTrace("live_call", `Initiating live call to ${shop.shop_name} (${shop.phone_number})`);
+    try {
+      const res = await fetch("/api/call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shop_id: shop.shop_id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Call failed");
+      pushTrace("live_call", `Call initiated: ${data.call_sid} to ${data.to}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      pushTrace("live_call", message, "error");
+      setApiError(message);
+      setPhase("idle");
+    }
+  };
+
   const handleEnd = () => {
     stopLyraSpeech();
     stopRecognition();
@@ -415,13 +441,22 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
 
           <div className="flex flex-wrap items-center gap-2">
             {phase === "idle" ? (
-              <button
-                type="button"
-                onClick={() => void handleStart()}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-              >
-                Start call
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => void handleStart()}
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+                >
+                  Start call (simulator)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleLiveCall()}
+                  className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
+                >
+                  Live call (phone)
+                </button>
+              </>
             ) : (
               <button
                 type="button"

@@ -48,6 +48,7 @@ export interface LastOrderItem {
 export interface ShopContextResult {
   shop_id: string;
   shop_name: string;
+  phone_number: string;
   owner_name: string | null;
   language: AppLanguage;
   preferred_call_time: string | null;
@@ -214,6 +215,7 @@ export async function getShopContext(shopId: string): Promise<ShopContextResult>
   return {
     shop_id: shop.shop_id,
     shop_name: shop.shop_name,
+    phone_number: shop.phone_number,
     owner_name: shop.owner_name,
     language: shop.preferred_language as AppLanguage,
     preferred_call_time: preferredCallTime,
