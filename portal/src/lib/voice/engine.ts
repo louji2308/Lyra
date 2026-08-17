@@ -39,27 +39,27 @@ export function step(
 ): VoiceStep {
   const intent = detectIntent(userText);
 
+  // Global pre-checks: intents that apply in any conversational state
+  if (intent === "stop") {
+    return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
+  }
+  const inSubFlow =
+    state === "complaint" ||
+    state === "complaint_desc" ||
+    state === "return_product" ||
+    state === "return_qty" ||
+    state === "return_reason";
+  if (!inSubFlow) {
+    if (intent === "complaint") {
+      return { state: "complaint", agentText: SCRIPT.complaintAsk, done: false, ctx };
+    }
+    if (intent === "return") {
+      return { state: "return_product", agentText: SCRIPT.returnAsk, done: false, ctx };
+    }
+  }
+
   switch (state) {
     case "greeting": {
-      if (intent === "stop") {
-        return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
-      }
-      if (intent === "complaint") {
-        return {
-          state: "complaint",
-          agentText: SCRIPT.complaintAsk,
-          done: false,
-          ctx,
-        };
-      }
-      if (intent === "return") {
-        return {
-          state: "return_product",
-          agentText: SCRIPT.returnAsk,
-          done: false,
-          ctx,
-        };
-      }
       if (intent === "yes") {
         return {
           state: "good_time",
@@ -72,25 +72,6 @@ export function step(
     }
 
     case "good_time": {
-      if (intent === "stop") {
-        return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
-      }
-      if (intent === "complaint") {
-        return {
-          state: "complaint",
-          agentText: SCRIPT.complaintAsk,
-          done: false,
-          ctx,
-        };
-      }
-      if (intent === "return") {
-        return {
-          state: "return_product",
-          agentText: SCRIPT.returnAsk,
-          done: false,
-          ctx,
-        };
-      }
       if (intent === "yes") {
         const summary = summarize(ctx.repeatItems);
         return {
@@ -104,25 +85,6 @@ export function step(
     }
 
     case "repeat_order": {
-      if (intent === "stop") {
-        return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
-      }
-      if (intent === "complaint") {
-        return {
-          state: "complaint",
-          agentText: SCRIPT.complaintAsk,
-          done: false,
-          ctx,
-        };
-      }
-      if (intent === "return") {
-        return {
-          state: "return_product",
-          agentText: SCRIPT.returnAsk,
-          done: false,
-          ctx,
-        };
-      }
       if (intent === "yes") {
         return {
           state: "read_back",
@@ -140,9 +102,6 @@ export function step(
     }
 
     case "changes": {
-      if (intent === "stop") {
-        return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
-      }
       const corrected = userText.trim() || ctx.currentSummary || "no changes";
       return {
         state: "read_back",
@@ -153,9 +112,6 @@ export function step(
     }
 
     case "read_back": {
-      if (intent === "stop") {
-        return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
-      }
       if (intent === "yes") {
         return {
           state: "confirm",
@@ -171,9 +127,6 @@ export function step(
     }
 
     case "confirm": {
-      if (intent === "stop") {
-        return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
-      }
       return endWith(state, SCRIPT.endGood, ctx);
     }
 

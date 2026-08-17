@@ -87,19 +87,11 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
 
   useEffect(() => {
     phaseRef.current = phase;
-  }, [phase]);
-  useEffect(() => {
     stateRef.current = state;
-  }, [state]);
-  useEffect(() => {
     ctxRef.current = ctx;
-  }, [ctx]);
-  useEffect(() => {
     ttsRef.current = ttsOn;
-  }, [ttsOn]);
-  useEffect(() => {
     voiceRef.current = voice;
-  }, [voice]);
+  });
 
   const speechSupported = useSyncExternalStore(
     () => () => {},
@@ -197,6 +189,13 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
     [pushTrace, callLanguage]
   );
 
+  const hydrateState = useCallback((nextState: VoiceState, nextCtx: VoiceContext) => {
+    stateRef.current = nextState;
+    ctxRef.current = nextCtx;
+    setState(nextState);
+    setCtx(nextCtx);
+  }, []);
+
   const runStep = useCallback(
     (text: string) => {
       const trimmed = text.trim();
@@ -205,10 +204,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
       setInput("");
       setMessages((m) => [...m, { role: "user", text: trimmed }]);
       const result = step(prevState, trimmed, ctxRef.current);
-      stateRef.current = result.state;
-      ctxRef.current = result.ctx;
-      setState(result.state);
-      setCtx(result.ctx);
+      hydrateState(result.state, result.ctx);
       if (result.agentText) {
         setMessages((m) => [...m, { role: "agent", text: result.agentText }]);
         speak(result.agentText);
@@ -223,8 +219,17 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
         }
       }
     },
-    [speak, recordOptOut, placeOrder]
+    [hydrateState, speak, recordOptOut, placeOrder]
   );
+
+  const resetCallState = useCallback(() => {
+    setMessages([]);
+    setTrace([]);
+    setOrderResult(null);
+    setApiError(null);
+    setCtx(null);
+    setState("greeting");
+  }, []);
 
   const handleStart = async () => {
     if (!selectedShopId) return;
@@ -232,10 +237,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
     if (!shop) return;
     stopLyraSpeech();
     stopRecognition();
-    setMessages([]);
-    setTrace([]);
-    setOrderResult(null);
-    setApiError(null);
+    resetCallState();
     setPhase("active");
     try {
       pushTrace("identify_shop_by_phone", `phone=${shop.phone_number}`);
@@ -269,10 +271,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
         pendingReturnOrderId: null,
       };
       const first = startCall(ctx0);
-      ctxRef.current = first.ctx;
-      stateRef.current = first.state;
-      setCtx(first.ctx);
-      setState(first.state);
+      hydrateState(first.state, first.ctx);
       setMessages([{ role: "agent", text: first.agentText }]);
       phaseRef.current = "active";
       setPhase("active");
@@ -289,9 +288,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
     stopLyraSpeech();
     stopRecognition();
     recRef.current = null;
-    setMessages([]);
-    setCtx(null);
-    setState("greeting");
+    resetCallState();
     setPhase("idle");
   };
 

@@ -149,6 +149,10 @@ async function req<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> 
   return res.json() as Promise<T>;
 }
 
+function post<T>(url: string, body: unknown): Promise<T> {
+  return req<T>(url, { method: "POST", body: JSON.stringify(body) });
+}
+
 export const voiceApi = {
   identifyShopByPhone: (phone: string) =>
     req<ShopContextPayload>(`/api/shop-context?phone=${encodeURIComponent(phone)}`),
@@ -160,10 +164,10 @@ export const voiceApi = {
     req<SuggestedOrderPayload>(`/api/suggested-order?shop_id=${encodeURIComponent(shopId)}`),
 
   checkStock: (body: { product_id: string; quantity?: number }) =>
-    req<CheckStockPayload>("/api/check-stock", { method: "POST", body: JSON.stringify(body) }),
+    post<CheckStockPayload>("/api/check-stock", body),
 
   checkCredit: (body: { shop_id: string; order_total: number }) =>
-    req<CheckCreditPayload>("/api/check-credit", { method: "POST", body: JSON.stringify(body) }),
+    post<CheckCreditPayload>("/api/check-credit", body),
 
   createOrder: (body: {
     shop_id: string;
@@ -172,7 +176,7 @@ export const voiceApi = {
     order_status?: OrderStatus;
     transcript_summary?: string;
     language_detected?: AppLanguage | null;
-  }) => req<CreatedOrderPayload>("/api/create-order", { method: "POST", body: JSON.stringify(body) }),
+  }) => post<CreatedOrderPayload>("/api/create-order", body),
 
   saveMemory: (body: {
     shop_id: string;
@@ -180,23 +184,23 @@ export const voiceApi = {
     memory_type: MemoryType;
     confirmed_by_user?: boolean;
     confidence_score?: number;
-  }) => req<SavedMemoryPayload>("/api/save-memory", { method: "POST", body: JSON.stringify(body) }),
+  }) => post<SavedMemoryPayload>("/api/save-memory", body),
 
   saveComplaint: (body: {
     shop_id: string;
     complaint_type: string;
     description?: string;
     callback_requested?: boolean;
-  }) => req<SavedComplaintPayload>("/api/save-complaint", { method: "POST", body: JSON.stringify(body) }),
+  }) => post<SavedComplaintPayload>("/api/save-complaint", body),
 
   markOptOut: (shopId: string) =>
-    req<OptOutPayload>("/api/mark-opt-out", { method: "POST", body: JSON.stringify({ shop_id: shopId }) }),
+    post<OptOutPayload>("/api/mark-opt-out", { shop_id: shopId }),
 
   checkBlacklist: (body: { shop_id: string; product_id: string }) =>
-    req<CheckBlacklistPayload>("/api/check-blacklist", { method: "POST", body: JSON.stringify(body) }),
+    post<CheckBlacklistPayload>("/api/check-blacklist", body),
 
   sendWhatsApp: (body: { shop_id: string; order_id: string }) =>
-    req<SendWhatsAppPayload>("/api/send-whatsapp", { method: "POST", body: JSON.stringify(body) }),
+    post<SendWhatsAppPayload>("/api/send-whatsapp", body),
 
   createReturn: (body: {
     shop_id: string;
@@ -204,7 +208,7 @@ export const voiceApi = {
     quantity: number;
     reason?: string;
     order_id?: string;
-  }) => req<CreateReturnPayload>("/api/create-return", { method: "POST", body: JSON.stringify(body) }),
+  }) => post<CreateReturnPayload>("/api/create-return", body),
 
   getSchemes: () => req<SchemePayload[]>("/api/schemes"),
 };

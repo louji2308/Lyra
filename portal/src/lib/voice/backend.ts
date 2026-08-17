@@ -118,6 +118,18 @@ const REAL_ORDER_STATUSES: OrderStatus[] = [
   "out_for_delivery",
 ];
 
+async function resolveProductNames(
+  ids: string[]
+): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from("products")
+    .select("product_id, product_name")
+    .in("product_id", ids);
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  return new Map((data ?? []).map((p) => [p.product_id, p.product_name]));
+}
+
 function normalizePhone(phone: string): string {
   return (phone ?? "").replace(/\D/g, "");
 }
@@ -249,13 +261,7 @@ async function fetchLatestOrderItems(shopId: string): Promise<LastOrderItem[]> {
     | undefined) ?? [];
   if (rows.length === 0) return [];
 
-  const ids = rows.map((r) => r.product_id);
-  const { data: products, error: productsError } = await supabase
-    .from("products")
-    .select("product_id, product_name")
-    .in("product_id", ids);
-  if (productsError) throw new VoiceApiError(500, "db_error", productsError.message);
-  const names = new Map((products ?? []).map((p) => [p.product_id, p.product_name]));
+  const names = await resolveProductNames(rows.map((r) => r.product_id));
 
   return rows.map((r) => ({
     product_id: r.product_id,
@@ -649,12 +655,7 @@ export async function sendWhatsAppSummary(
     .from("order_items")
     .select("product_id, quantity, unit, price, line_total")
     .eq("order_id", orderId);
-  const productIds = [...new Set((items ?? []).map((i) => i.product_id))];
-  const { data: products } = await supabase
-    .from("products")
-    .select("product_id, product_name")
-    .in("product_id", productIds);
-  const nameMap = new Map((products ?? []).map((p) => [p.product_id, p.product_name]));
+  const nameMap = await resolveProductNames([...new Set((items ?? []).map((i) => i.product_id))]);
 
   const lines = (items ?? []).map((i) => {
     const name = nameMap.get(i.product_id) ?? i.product_id;
