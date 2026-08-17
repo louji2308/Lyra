@@ -5,6 +5,11 @@ export type VoiceState =
   | "changes"
   | "read_back"
   | "confirm"
+  | "complaint"
+  | "complaint_desc"
+  | "return_product"
+  | "return_qty"
+  | "return_reason"
   | "end";
 
 export interface RepeatItem {
@@ -22,6 +27,10 @@ export interface VoiceContext {
   currentSummary: string | null;
   corrections: number;
   optedOut: boolean;
+  pendingComplaintType: string | null;
+  pendingReturnProductId: string | null;
+  pendingReturnProductName: string | null;
+  pendingReturnOrderId: string | null;
 }
 
 export interface VoiceMessage {

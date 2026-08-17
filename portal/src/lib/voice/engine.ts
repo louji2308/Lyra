@@ -44,6 +44,22 @@ export function step(
       if (intent === "stop") {
         return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
       }
+      if (intent === "complaint") {
+        return {
+          state: "complaint",
+          agentText: SCRIPT.complaintAsk,
+          done: false,
+          ctx,
+        };
+      }
+      if (intent === "return") {
+        return {
+          state: "return_product",
+          agentText: SCRIPT.returnAsk,
+          done: false,
+          ctx,
+        };
+      }
       if (intent === "yes") {
         return {
           state: "good_time",
@@ -58,6 +74,22 @@ export function step(
     case "good_time": {
       if (intent === "stop") {
         return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
+      }
+      if (intent === "complaint") {
+        return {
+          state: "complaint",
+          agentText: SCRIPT.complaintAsk,
+          done: false,
+          ctx,
+        };
+      }
+      if (intent === "return") {
+        return {
+          state: "return_product",
+          agentText: SCRIPT.returnAsk,
+          done: false,
+          ctx,
+        };
       }
       if (intent === "yes") {
         const summary = summarize(ctx.repeatItems);
@@ -74,6 +106,22 @@ export function step(
     case "repeat_order": {
       if (intent === "stop") {
         return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
+      }
+      if (intent === "complaint") {
+        return {
+          state: "complaint",
+          agentText: SCRIPT.complaintAsk,
+          done: false,
+          ctx,
+        };
+      }
+      if (intent === "return") {
+        return {
+          state: "return_product",
+          agentText: SCRIPT.returnAsk,
+          done: false,
+          ctx,
+        };
       }
       if (intent === "yes") {
         return {
@@ -129,6 +177,65 @@ export function step(
       return endWith(state, SCRIPT.endGood, ctx);
     }
 
+    case "complaint": {
+      const complaintType = userText.trim() || "other";
+      return {
+        state: "complaint_desc",
+        agentText: SCRIPT.complaintConfirm(complaintType),
+        done: false,
+        ctx: { ...ctx, pendingComplaintType: complaintType },
+      };
+    }
+
+    case "complaint_desc": {
+      if (intent === "yes") {
+        return endWith(state, SCRIPT.complaintEscalate, ctx);
+      }
+      return endWith(state, SCRIPT.endGood, ctx);
+    }
+
+    case "return_product": {
+      const productName = userText.trim();
+      return {
+        state: "return_qty",
+        agentText: SCRIPT.returnQty(productName || "that product"),
+        done: false,
+        ctx: { ...ctx, pendingReturnProductName: productName || null },
+      };
+    }
+
+    case "return_qty": {
+      const qty = parseInt(userText.trim(), 10);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        return {
+          state: "return_qty",
+          agentText: "Ethu quantity? Number sollunga.",
+          done: false,
+          ctx,
+        };
+      }
+      return {
+        state: "return_reason",
+        agentText: SCRIPT.returnAskReason(
+          ctx.pendingReturnProductName ?? "product",
+          qty
+        ),
+        done: false,
+        ctx: { ...ctx, pendingReturnProductName: ctx.pendingReturnProductName ?? "product" },
+      };
+    }
+
+    case "return_reason": {
+      return endWith(
+        state,
+        SCRIPT.returnConfirm(
+          ctx.pendingReturnProductName ?? "product",
+          parseInt(userText.trim(), 10) || 1
+        ),
+        ctx
+      );
+    }
+
     case "end":
     default:
       return { state: "end", agentText: "", done: true, ctx };
@@ -142,5 +249,10 @@ export const STATE_LABELS: Record<VoiceState, string> = {
   changes: "Taking changes",
   read_back: "Read back",
   confirm: "Confirming",
+  complaint: "Complaint type",
+  complaint_desc: "Complaint details",
+  return_product: "Return product",
+  return_qty: "Return quantity",
+  return_reason: "Return reason",
   end: "Ended",
 };

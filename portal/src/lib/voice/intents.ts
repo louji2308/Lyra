@@ -1,4 +1,4 @@
-export type Intent = "yes" | "no" | "stop" | "change" | "other";
+export type Intent = "yes" | "no" | "stop" | "change" | "complaint" | "return" | "other";
 
 const STOP_TOKENS = [
   "stop",
@@ -83,6 +83,44 @@ const NO_TOKENS = [
   "நோ",
 ];
 
+const COMPLAINT_TOKENS = [
+  "complaint",
+  "problem",
+  "issue",
+  "damaged",
+  "wrong",
+  "late",
+  "missing",
+  "broken",
+  "bad",
+  "poor",
+  "price",
+  "complain",
+  "prashna",
+  "badhu",
+  "kushtam",
+  "thevai illa",
+  "பிரச்சனை",
+  "சேதம்",
+  "தவறு",
+  "குறை",
+  "புகார்",
+];
+
+const RETURN_TOKENS = [
+  "return",
+  "refund",
+  "exchange",
+  "replace",
+  "back",
+  "edukka",
+  "thirupi",
+  "mattum",
+  "கொடு",
+  "திரும்ப",
+  "மாற்று",
+];
+
 function hasToken(text: string, token: string): boolean {
   const boundary = "[\\s.,!?;:'\"()\\-—–]";
   return new RegExp(`(^|${boundary})${token}($|${boundary})`, "i").test(text);
@@ -101,6 +139,8 @@ export function detectIntent(raw: string): Intent {
   if (!text) return "other";
 
   if (anyToken(text, STOP_TOKENS)) return "stop";
+  if (anyToken(text, COMPLAINT_TOKENS)) return "complaint";
+  if (anyToken(text, RETURN_TOKENS)) return "return";
   if (anyToken(text, CHANGE_TOKENS)) return "change";
   if (anyToken(text, YES_TOKENS)) return "yes";
   if (anyToken(text, NO_TOKENS)) return "no";

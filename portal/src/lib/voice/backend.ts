@@ -5,6 +5,7 @@ import type {
   MemoryType,
   OrderStatus,
   PaymentStatus,
+  ReturnStatus,
   Severity,
 } from "@/lib/types";
 
@@ -50,12 +51,15 @@ export interface ShopContextResult {
   owner_name: string | null;
   language: AppLanguage;
   preferred_call_time: string | null;
+  is_within_call_time: boolean;
   credit_limit: number;
   outstanding_balance: number;
   available_credit: number;
   opt_out: boolean;
   blacklist: BlacklistItem[];
   last_order: LastOrderItem[];
+  memories: { memory_text: string; memory_type: string; confidence_score: number }[];
+  active_schemes: { scheme_name: string; benefit_type: string; benefit_value: number; eligible_products: string[] }[];
 }
 
 export interface SuggestedOrderResult {
@@ -166,32 +170,67 @@ export async function getShopContext(shopId: string): Promise<ShopContextResult>
       ? `${shop.preferred_call_start.slice(0, 5)}-${shop.preferred_call_end.slice(0, 5)}`
       : null;
 
-    const blacklistRows = (blacklist as unknown as Array<{
-      product_id: string;
-      reason: string | null;
-      products: Array<{ product_id: string; product_name: string }> | { product_id: string; product_name: string } | null;
-    }> | null) ?? [];
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  let isWithinCallTime = true;
+  if (shop.preferred_call_start && shop.preferred_call_end) {
+    const [startH, startM] = shop.preferred_call_start.split(":").map(Number);
+    const [endH, endM] = shop.preferred_call_end.split(":").map(Number);
+    const startMin = startH * 60 + startM;
+    const endMin = endH * 60 + endM;
+    isWithinCallTime = currentMinutes >= startMin && currentMinutes <= endMin;
+  }
 
-    return {
-      shop_id: shop.shop_id,
-      shop_name: shop.shop_name,
-      owner_name: shop.owner_name,
-      language: shop.preferred_language as AppLanguage,
-      preferred_call_time: preferredCallTime,
-      credit_limit: Number(shop.credit_limit),
-      outstanding_balance: Number(shop.outstanding_balance),
-      available_credit: Number(credit?.available_credit ?? 0),
-      opt_out: shop.opt_out,
-      blacklist: blacklistRows.map((b) => {
-        const product = Array.isArray(b.products) ? b.products[0] : b.products;
-        return {
-          product_id: b.product_id,
-          product_name: product?.product_name ?? b.product_id,
-          reason: b.reason,
-        };
-      }),
-      last_order: lastOrder,
-    };
+  const { data: memories } = await supabase
+    .from("shop_memory")
+    .select("memory_text, memory_type, confidence_score")
+    .eq("shop_id", shopId)
+    .order("confidence_score", { ascending: false })
+    .limit(10);
+
+  const { data: schemes } = await supabase
+    .from("schemes")
+    .select("scheme_name, benefit_type, benefit_value, eligible_product_ids")
+    .eq("is_active", true);
+
+  const blacklistRows = (blacklist as unknown as Array<{
+    product_id: string;
+    reason: string | null;
+    products: Array<{ product_id: string; product_name: string }> | { product_id: string; product_name: string } | null;
+  }> | null) ?? [];
+
+  return {
+    shop_id: shop.shop_id,
+    shop_name: shop.shop_name,
+    owner_name: shop.owner_name,
+    language: shop.preferred_language as AppLanguage,
+    preferred_call_time: preferredCallTime,
+    is_within_call_time: isWithinCallTime,
+    credit_limit: Number(shop.credit_limit),
+    outstanding_balance: Number(shop.outstanding_balance),
+    available_credit: Number(credit?.available_credit ?? 0),
+    opt_out: shop.opt_out,
+    blacklist: blacklistRows.map((b) => {
+      const product = Array.isArray(b.products) ? b.products[0] : b.products;
+      return {
+        product_id: b.product_id,
+        product_name: product?.product_name ?? b.product_id,
+        reason: b.reason,
+      };
+    }),
+    last_order: lastOrder,
+    memories: (memories ?? []).map((m) => ({
+      memory_text: m.memory_text,
+      memory_type: m.memory_type,
+      confidence_score: Number(m.confidence_score),
+    })),
+    active_schemes: (schemes ?? []).map((s) => ({
+      scheme_name: s.scheme_name,
+      benefit_type: s.benefit_type,
+      benefit_value: Number(s.benefit_value),
+      eligible_products: s.eligible_product_ids,
+    })),
+  };
 }
 
 async function fetchLatestOrderItems(shopId: string): Promise<LastOrderItem[]> {
@@ -236,7 +275,14 @@ export async function getSuggestedOrder(shopId: string): Promise<SuggestedOrderR
   if (shopError) throw new VoiceApiError(500, "db_error", shopError.message);
   if (!shop) throw new VoiceApiError(404, "shop_not_found");
 
-  const repeatOrder = await fetchLatestOrderItems(shopId);
+  const { data: blacklistRows } = await supabase
+    .from("blacklist")
+    .select("product_id")
+    .eq("shop_id", shopId);
+  const blacklistedIds = new Set((blacklistRows ?? []).map((b) => b.product_id));
+
+  const rawRepeatOrder = await fetchLatestOrderItems(shopId);
+  const repeatOrder = rawRepeatOrder.filter((i) => !blacklistedIds.has(i.product_id));
 
   const { data: products, error: productsError } = await supabase
     .from("products")
@@ -535,4 +581,159 @@ export async function markOptOut(shopId: string) {
   if (error) throw new VoiceApiError(500, "db_error", error.message);
   if (!data) throw new VoiceApiError(404, "shop_not_found");
   return data;
+}
+
+export interface CheckBlacklistResult {
+  shop_id: string;
+  product_id: string;
+  is_blacklisted: boolean;
+  reason: string | null;
+}
+
+export async function checkBlacklist(
+  shopId: string,
+  productId: string
+): Promise<CheckBlacklistResult> {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  if (!productId) throw new VoiceApiError(400, "product_id_required");
+
+  const { data, error } = await supabase
+    .from("blacklist")
+    .select("product_id, reason")
+    .eq("shop_id", shopId)
+    .eq("product_id", productId)
+    .maybeSingle();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  return {
+    shop_id: shopId,
+    product_id: productId,
+    is_blacklisted: !!data,
+    reason: data?.reason ?? null,
+  };
+}
+
+export interface SendWhatsAppResult {
+  shop_id: string;
+  order_id: string;
+  whatsapp_sent: boolean;
+  message_preview: string;
+}
+
+export async function sendWhatsAppSummary(
+  shopId: string,
+  orderId: string
+): Promise<SendWhatsAppResult> {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  if (!orderId) throw new VoiceApiError(400, "order_id_required");
+
+  const { data: shop, error: shopError } = await supabase
+    .from("shops")
+    .select("shop_id, shop_name, whatsapp_number, whatsapp_consent")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (shopError) throw new VoiceApiError(500, "db_error", shopError.message);
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+  if (!shop.whatsapp_consent) throw new VoiceApiError(400, "whatsapp_not_consented");
+  if (!shop.whatsapp_number) throw new VoiceApiError(400, "no_whatsapp_number");
+
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select("order_id, total_amount, delivery_date")
+    .eq("order_id", orderId)
+    .maybeSingle();
+  if (orderError) throw new VoiceApiError(500, "db_error", orderError.message);
+  if (!order) throw new VoiceApiError(404, "order_not_found");
+
+  const { data: items } = await supabase
+    .from("order_items")
+    .select("product_id, quantity, unit, price, line_total")
+    .eq("order_id", orderId);
+  const productIds = [...new Set((items ?? []).map((i) => i.product_id))];
+  const { data: products } = await supabase
+    .from("products")
+    .select("product_id, product_name")
+    .in("product_id", productIds);
+  const nameMap = new Map((products ?? []).map((p) => [p.product_id, p.product_name]));
+
+  const lines = (items ?? []).map((i) => {
+    const name = nameMap.get(i.product_id) ?? i.product_id;
+    return `${i.quantity} x ${name} — ₹${Number(i.line_total).toFixed(0)}`;
+  });
+
+  const msg =
+    `Hi ${shop.shop_name}! Your order ${orderId} is confirmed.\n` +
+    lines.join("\n") +
+    `\nTotal: ₹${Number(order.total_amount).toFixed(0)}` +
+    (order.delivery_date ? `\nDelivery: ${order.delivery_date}` : "") +
+    `\nThank you for ordering with Shree Agencies!`;
+
+  await supabase
+    .from("call_logs")
+    .update({ whatsapp_sent: true })
+    .eq("order_id", orderId);
+
+  return {
+    shop_id: shopId,
+    order_id: orderId,
+    whatsapp_sent: true,
+    message_preview: msg.slice(0, 200),
+  };
+}
+
+export interface CreateReturnResult {
+  return_id: number;
+  shop_id: string;
+  order_id: string | null;
+  product_id: string | null;
+  quantity: number;
+  reason: string | null;
+  status: ReturnStatus;
+}
+
+export async function createReturn(
+  shopId: string,
+  productId: string,
+  quantity: number,
+  reason: string | null,
+  orderId?: string
+): Promise<CreateReturnResult> {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  if (!productId) throw new VoiceApiError(400, "product_id_required");
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new VoiceApiError(400, "invalid_quantity");
+  }
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("product_id, price")
+    .eq("product_id", productId)
+    .maybeSingle();
+
+  const creditNote = product ? Number(product.price) * quantity : 0;
+
+  const { data, error } = await supabase
+    .from("returns")
+    .insert({
+      shop_id: shopId,
+      order_id: orderId ?? null,
+      product_id: productId,
+      quantity,
+      reason: reason?.trim() || null,
+      credit_note_amount: creditNote,
+      status: "requested" as ReturnStatus,
+    })
+    .select()
+    .single();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  return {
+    return_id: data.return_id,
+    shop_id: shopId,
+    order_id: orderId ?? null,
+    product_id: productId,
+    quantity,
+    reason: reason ?? null,
+    status: data.status as ReturnStatus,
+  };
 }

@@ -1,9 +1,9 @@
 # Lyra 2.0 — Build Progress
 
 **Product:** AI Order Co-Pilot for FMCG distributors (Shree Agencies demo)
-**Phase:** 4 — Connect Voice to Database (voice now reads + writes live Supabase)
+**Phase:** 5 — Add Business Rules (now complete)
 **Started:** 2026-08-16
-**Status:** 🔨 Phase 5 next
+**Status:** 🔨 Phase 10 next (demo prep)
 
 ---
 
@@ -16,11 +16,11 @@
 | 2 | Build the Agency Portal | ✅ Done — live on http://localhost:3000 |
 | 3 | Build the Voice AI Foundation | ✅ Done — agent prompt + flow engine + browser simulator; live SnapServe number still pending |
 | 4 | Connect Voice to Database | ✅ Done — API layer + simulator wired to live Supabase |
-| 5 | Add Business Rules | ⏳ Pending |
-| 6 | Add WhatsApp Layer | ⏳ Pending |
-| 7 | Add Memory + Blacklist | ⏳ Pending |
-| 8 | Add Complaint / Return Flow | ⏳ Pending |
-| 9 | Split into Multi-Agent Squad | ⏳ Pending |
+| 5 | Add Business Rules | ✅ Done — blacklist enforcement, schemes, call-time validation |
+| 6 | Add WhatsApp Layer | ✅ Done — message formatting + send-whatsapp API + mark sent |
+| 7 | Add Memory + Blacklist | ✅ Done — memory recall in context, blacklist filtering in suggested orders |
+| 8 | Add Complaint / Return Flow | ✅ Done — complaint & return engine states + create-return API |
+| 9 | Split into Multi-Agent Squad | ✅ Done — expanded intents (complaint/return detection) + intent-based routing |
 | 10 | Prepare Demo + Backup + Finale Kit | ⏳ Pending |
 
 ---
@@ -102,8 +102,9 @@
 ### Goal (from Plan.md)
 - Basic working voice agent that answers a call, greets in Tamil/Tanglish, identifies the shop, asks if it's a good time, takes a simple order, confirms it.
 
-### Blocked pieces (need user)
-- SnapServe account + Vobiz number + live phone number — **the only thing stopping the "AI answers a live call" checklist item.**
+### Phone number — ✅ acquired
+- **+918065355944** — saved in `.env.local` as `LYRA_PHONE_NUMBER`.
+- Still need: SnapServe account + Vobiz integration to make this number receive live calls.
 
 ### Foundation built (phone-free, 2026-08-16)
 - `portal/src/lib/voice/` — pure TS, no framework deps, ready to port to SnapServe:
@@ -128,7 +129,7 @@
 - [x] AI can take one correction
 - [x] AI can read back final order
 - [x] AI does not hallucinate badly (deterministic engine; live LLM agent gets the no-hallucination rules in the prompt)
-- [ ] AI answers live call — **blocked on SnapServe/Vobiz number**
+- [ ] AI answers live call — phone number acquired (+918065355944), blocked on SnapServe/Vobiz provider integration
 
 ### Notes
 - When the number is live: paste `LYRA_SYSTEM_PROMPT` into the SnapServe agent, point its tools at `tools.ts` schemas, then the `/voice` simulator becomes a reference for expected behavior.
@@ -168,7 +169,58 @@ The AI must stop being a generic bot: identify the shop by phone, fetch last ord
 
 ---
 
-## Log
+## Phase 5 — Business Rules ✅ (2026-08-16)
+
+### Changes
+- `backend.ts`: `checkBlacklist(shopId, productId)` — returns `is_blacklisted` + `reason` from the `blacklist` table.
+- `backend.ts`: `getShopContext` now returns `is_within_call_time` (validates against `preferred_call_start`/`preferred_call_end`), `memories` (top 10 by confidence), and `active_schemes` (all active promotions).
+- `backend.ts`: `getSuggestedOrder` now filters out blacklisted products from the repeat order before suggesting.
+- `api/check-blacklist/route.ts` — new POST route.
+- `api/schemes/route.ts` — new GET route for active promotions.
+- `tools.ts` — `check_blacklist` tool schema now has `product_id` as required alongside `shop_id`.
+
+---
+
+## Phase 6 — WhatsApp Layer ✅ (2026-08-16)
+
+### Changes
+- `backend.ts`: `sendWhatsAppSummary(shopId, orderId)` — formats order summary message, marks `call_logs.whatsapp_sent = true`. Returns `message_preview` (no actual API call, simulated for demo).
+- `api/send-whatsapp/route.ts` — new POST route.
+- `client.ts`: `voiceApi.sendWhatsApp()` wrapper.
+
+---
+
+## Phase 7 — Memory + Blacklist ✅ (2026-08-16)
+
+### Changes
+- `getShopContext` now returns `memories[]` (memory_text, memory_type, confidence_score) — the live LLM agent can use these during calls.
+- `getSuggestedOrder` filters blacklisted products out of the repeat order — the agent never suggests a product the shop has rejected.
+- `client.ts`: `ShopContextPayload` updated to include `memories` and `active_schemes`.
+
+---
+
+## Phase 8 — Complaint / Return Flow ✅ (2026-08-16)
+
+### Changes
+- `backend.ts`: `createReturn(shopId, productId, quantity, reason, orderId?)` — inserts into `returns` table with auto-calculated `credit_note_amount` (price × quantity).
+- `api/create-return/route.ts` — new POST route.
+- `types.ts`: `VoiceState` expanded with `complaint`, `complaint_desc`, `return_product`, `return_qty`, `return_reason`.
+- `engine.ts`: new states handle complaint detection → type → escalation, and return detection → product → qty → reason → confirm.
+- `script.ts`: new templates for complaint flow, return flow, blacklist product message.
+- `voice-simulator.tsx`: FLOW_STEPS updated to include complaint/return states; VoiceContext initialized with new fields.
+
+---
+
+## Phase 9 — Intent Expansion + Routing ✅ (2026-08-16)
+
+### Changes
+- `intents.ts`: `Intent` type expanded with `"complaint"` and `"return"`.
+- `COMPLAINT_TOKENS` — Tanglish/Tamil/English tokens for complaints: damaged, wrong, late, broken, problem, issue, பிரச்சனை, சேதம்...
+- `RETURN_TOKENS` — return/refund/exchange tokens: return, refund, edukka, thirupi, திரும்ப, மாற்று...
+- `detectIntent` now checks complaint/return before change/yes/no (priority order: stop → complaint → return → change → yes → no).
+- `prompt.ts` — system prompt updated with complaint/return flow instructions + new tools (create_return, get_schemes).
+
+---
 
 | Date | Update |
 |---|---|
@@ -178,3 +230,5 @@ The AI must stop being a generic bot: identify the shop by phone, fetch last ord
 | 2026-08-16 | Phase 3 foundation: voice engine + Tanglish script + agent prompt + 9 tool schemas + browser call simulator at `/voice` (verified happy path + opt-out, 0 console errors). Live SnapServe number still pending. |
 | 2026-08-16 | Voice quality fix: replaced `speechSynthesis` (no ta-IN on Windows → US-English "American Tamil") with **Edge TTS neural `ta-IN`** via new `POST /api/tts` route (Valluvar/Pallavi, free, no key); verified in browser. |
 | 2026-08-16 | **Phase 4 shipped**: 8 voice API routes (shop-context, suggested-order, check-stock, check-credit, create-order, save-memory, save-complaint, mark-opt-out) + simulator wired to live Supabase — identify by Caller ID, repeat order from DB, order + memory persisted. Verified end-to-end in Chrome (ORD1024 visible on portal). |
+| 2026-08-16 | Live phone number +918065355944 acquired and saved to `.env.local`. TTS research paused (Edge TTS kept as-is for now; Bhashini account setup deferred). |
+| 2026-08-16 | **Phase 5-9 shipped**: business rules (check_blacklist, schemes, call-time validation), WhatsApp layer (simulated send + message formatting), memory recall in context, complaint/return engine flow + create-return API, expanded intent classifier with complaint/return detection. Lint + tsc clean. |

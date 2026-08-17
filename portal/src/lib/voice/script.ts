@@ -15,6 +15,25 @@ export const SCRIPT = {
 
   confirm: "Order confirm. WhatsApp la summary anuppuren.",
 
+  complaintAsk: "Enna problem irukku sollunga. Damaged goods? Wrong item? Late delivery?",
+
+  complaintConfirm: (complaintType: string) =>
+    `${complaintType} complaint register pannuren. Callback venuma?`,
+
+  complaintEscalate:
+    "Sari, idhu mukkiyama irukku. Naan onnoda manager kitta solren. 24 hrs la callback pannuvaanga. Vanakkam!",
+
+  returnAsk: "Enna product return venum? Name sollunga.",
+
+  returnQty: (productName: string) =>
+    `${productName} — ethu quantity return?`,
+
+  returnConfirm: (productName: string, qty: number) =>
+    `${productName} x ${qty} return register pannuren. Credit note kidaikum. Vanakkam!`,
+
+  returnAskReason: (productName: string, qty: number) =>
+    `Yena reason ${productName} x ${qty} return pannuringa? Damaged aa? Wrong item aa?`,
+
   endGood: "Nandri, vanakkam!",
 
   endWrongNumber:
@@ -28,4 +47,10 @@ export const SCRIPT = {
 
   endNoConfirm:
     "Sari, puriyala. WhatsApp la details anuppuren. Vanakkam!",
+
+  notGoodTimeWithComplaint:
+    "Sari, vera nerathula call pannuren. Complaint details kuraiyila solunga.",
+
+  blacklistedProduct: (productName: string, reason: string | null) =>
+    `Sorry, ${productName} indha shop ku order panna mudiyathu${reason ? ` — ${reason}` : ""}. Vera enna venum?`,
 };

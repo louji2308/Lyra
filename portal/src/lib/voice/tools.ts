@@ -126,4 +126,29 @@ export const VOICE_TOOLS: VoiceTool[] = [
       required: ["shop_id"],
     },
   },
+  {
+    name: "create_return",
+    description:
+      "Log a product return request. Requires shop_id, product_id, and quantity. Returns the return record.",
+    parameters: {
+      type: "object",
+      properties: {
+        shop_id: { type: "string" },
+        product_id: { type: "string" },
+        quantity: { type: "number" },
+        reason: { type: "string" },
+        order_id: { type: "string" },
+      },
+      required: ["shop_id", "product_id", "quantity"],
+    },
+  },
+  {
+    name: "get_schemes",
+    description:
+      "Fetch currently active promotion schemes (discounts, free units, cashback) that may apply to the order.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+  },
 ];

@@ -1,4 +1,4 @@
-import type { AppLanguage, MemoryType, OrderStatus, PaymentStatus } from "@/lib/types";
+import type { AppLanguage, MemoryType, OrderStatus, PaymentStatus, ReturnStatus } from "@/lib/types";
 import type { RepeatItem } from "./types";
 
 export interface BlacklistItem {
@@ -104,6 +104,39 @@ export interface OptOutPayload {
   voice_consent: boolean;
 }
 
+export interface CheckBlacklistPayload {
+  shop_id: string;
+  product_id: string;
+  is_blacklisted: boolean;
+  reason: string | null;
+}
+
+export interface SendWhatsAppPayload {
+  shop_id: string;
+  order_id: string;
+  whatsapp_sent: boolean;
+  message_preview: string;
+}
+
+export interface CreateReturnPayload {
+  return_id: number;
+  shop_id: string;
+  order_id: string | null;
+  product_id: string | null;
+  quantity: number;
+  reason: string | null;
+  status: ReturnStatus;
+}
+
+export interface SchemePayload {
+  scheme_id: string;
+  scheme_name: string;
+  benefit_type: string;
+  benefit_value: number;
+  eligible_product_ids: string[];
+  is_active: boolean;
+}
+
 async function req<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const res = await fetch(input, {
     ...init,
@@ -158,4 +191,20 @@ export const voiceApi = {
 
   markOptOut: (shopId: string) =>
     req<OptOutPayload>("/api/mark-opt-out", { method: "POST", body: JSON.stringify({ shop_id: shopId }) }),
+
+  checkBlacklist: (body: { shop_id: string; product_id: string }) =>
+    req<CheckBlacklistPayload>("/api/check-blacklist", { method: "POST", body: JSON.stringify(body) }),
+
+  sendWhatsApp: (body: { shop_id: string; order_id: string }) =>
+    req<SendWhatsAppPayload>("/api/send-whatsapp", { method: "POST", body: JSON.stringify(body) }),
+
+  createReturn: (body: {
+    shop_id: string;
+    product_id: string;
+    quantity: number;
+    reason?: string;
+    order_id?: string;
+  }) => req<CreateReturnPayload>("/api/create-return", { method: "POST", body: JSON.stringify(body) }),
+
+  getSchemes: () => req<SchemePayload[]>("/api/schemes"),
 };

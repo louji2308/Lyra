@@ -56,6 +56,8 @@ const FLOW_STEPS: VoiceState[] = [
   "changes",
   "read_back",
   "confirm",
+  "complaint",
+  "return_product",
   "end",
 ];
 
@@ -261,6 +263,10 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
         currentSummary: null,
         corrections: 0,
         optedOut: false,
+        pendingComplaintType: null,
+        pendingReturnProductId: null,
+        pendingReturnProductName: null,
+        pendingReturnOrderId: null,
       };
       const first = startCall(ctx0);
       ctxRef.current = first.ctx;
@@ -445,8 +451,8 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
                   onChange={(e) => setVoice(e.target.value as LyraVoice)}
                   className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-xs font-medium text-zinc-900"
                 >
-                  <option value="male">Valluvar · Male (ta-IN)</option>
-                  <option value="female">Pallavi · Female (ta-IN)</option>
+                  <option value="male">Male · ta-IN</option>
+                  <option value="female">Female · ta-IN</option>
                 </select>
                 <span className="text-[11px] text-zinc-400">Edge neural · free</span>
               </label>
