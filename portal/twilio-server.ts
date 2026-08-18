@@ -1,6 +1,6 @@
 import { DeepgramClient } from "@deepgram/sdk";
 import { WebSocketServer, WebSocket } from "ws";
-import { createServer } from "http";
+import { createServer, IncomingMessage, ServerResponse } from "http";
 import { step, startCall } from "./src/lib/voice/engine";
 import { SCRIPT } from "./src/lib/voice/script";
 import type { VoiceContext, VoiceState } from "./src/lib/voice/types";
@@ -23,8 +23,25 @@ interface CallSession {
   isProcessing: boolean;
 }
 
-const server = createServer();
-const wss = new WebSocketServer({ server });
+const WS_PORT = parseInt(process.env.TWILIO_WS_PORT ?? "3001", 10);
+
+const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+  if (req.method === "POST" && req.url === "/api/twilio/voice") {
+    const wsHost = process.env.TUNNEL_URL ?? `ws://localhost:${WS_PORT}`;
+    const streamUrl = wsHost.replace(/^https?:\/\//, "ws://").replace(/\/$/, "");
+    res.writeHead(200, { "Content-Type": "text/xml" });
+    res.end(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Connect>
+    <Stream url="${streamUrl}" />
+  </Connect>
+</Response>`);
+    return;
+  }
+  res.writeHead(404);
+  res.end("Not found");
+});
+const wss = new WebSocketServer({ server, path: "/" });
 
 console.log("Twilio Media Stream WebSocket server starting on port 3001...");
 
@@ -210,6 +227,20 @@ async function sendAudioToTwilio(session: CallSession, text: string) {
   }
 }
 
-server.listen(3001, () => {
-  console.log("WebSocket server listening on port 3001");
+server.listen(WS_PORT, () => {
+  console.log(`Server listening on port ${WS_PORT}`);
+  console.log(`  Webhook: http://localhost:${WS_PORT}/api/twilio/voice`);
+  console.log(`  WebSocket: ws://localhost:${WS_PORT}`);
+});
+
+server.on("error", (err: Error) => {
+  console.error("Server error:", err);
+});
+
+process.on("uncaughtException", (err: Error) => {
+  console.error("Uncaught exception:", err);
+});
+
+process.on("unhandledRejection", (reason: unknown, promise: Promise<unknown>) => {
+  console.error("Unhandled rejection at:", promise, "reason:", reason);
 });

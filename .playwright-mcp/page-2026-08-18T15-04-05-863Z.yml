@@ -1,0 +1,163 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - list [ref=e5]:
+        - listitem [ref=e6]:
+          - button "CALL" [ref=e8] [cursor=pointer]
+        - listitem [ref=e9]:
+          - button "SMS" [ref=e10] [cursor=pointer]
+        - listitem [ref=e11]:
+          - link "API Credentials" [ref=e12] [cursor=pointer]:
+            - /url: https://my.exotel.com/lyra61/apisettings/site#api-credentials
+      - list [ref=e14]:
+        - listitem [ref=e15]
+        - listitem [ref=e17]:
+          - generic [ref=e18]: "Credits: 150"
+        - listitem [ref=e24]:
+          - generic "Help" [ref=e26] [cursor=pointer]
+        - listitem [ref=e27]:
+          - generic "Loujan B" [ref=e29] [cursor=pointer]
+        - listitem [ref=e30]:
+          - generic [ref=e32] [cursor=pointer]
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - heading [level=1] [ref=e35]:
+          - link [ref=e36] [cursor=pointer]:
+            - /url: https://my.exotel.com/
+            - img "OpenVBX" [ref=e37]
+        - list [ref=e41]:
+          - generic [ref=e42]:
+            - heading "My Account" [level=3] [ref=e43] [cursor=pointer]
+            - list [ref=e45]:
+              - listitem [ref=e46]:
+                - link "Personal Info" [ref=e47] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/account
+              - listitem [ref=e48]:
+                - link "Impersonation" [ref=e49] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/impersonation/#/impersonation
+              - listitem [ref=e50]:
+                - link "Company Info" [ref=e51] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/company_details/#/company-info
+              - listitem [ref=e52]:
+                - link "Personalization" [ref=e53] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/personalization
+              - listitem [ref=e54]:
+                - link "Notifications" [ref=e55] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/notifications
+              - listitem [ref=e56]:
+                - link "Heartbeat" [ref=e57] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/heartbeat
+              - listitem [ref=e58]:
+                - link "Access Control" [ref=e59] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/access_control
+          - generic [ref=e60]:
+            - heading "Call Settings" [level=3] [ref=e61] [cursor=pointer]
+            - list [ref=e63]:
+              - listitem [ref=e64]:
+                - link "Audio Library" [ref=e65] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/audio_library
+              - listitem [ref=e66]:
+                - link "Whitelist Numbers" [ref=e67] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/whitelist
+          - generic [ref=e68]:
+            - heading "SMS Settings" [level=3] [ref=e69] [cursor=pointer]
+            - list [ref=e71]:
+              - listitem [ref=e72]:
+                - link "SMS Templates" [ref=e73] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/sms_templates
+              - listitem [ref=e74]:
+                - link "Sender ID" [ref=e75] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/sms_senderid
+          - generic [ref=e76]:
+            - heading "Developer Settings" [level=3] [ref=e77] [cursor=pointer]
+            - list [ref=e79]:
+              - listitem [ref=e80]:
+                - link "API Settings" [ref=e81] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/apisettings/site
+          - generic [ref=e82]:
+            - heading "Payment and Bills" [level=3] [ref=e83] [cursor=pointer]
+            - list [ref=e85]:
+              - listitem [ref=e86]:
+                - link "Make a Payment" [ref=e87] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/npay
+              - listitem [ref=e88]:
+                - link "Payment History" [ref=e89] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/payments
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - list:
+            - listitem:
+              - link "API Credentials" [ref=e95] [cursor=pointer]:
+                - /url: "#api-credentials"
+        - generic [ref=e96]:
+          - generic [ref=e97]:
+            - generic [ref=e98]: "Account SID:"
+            - generic [ref=e99]: lyra61
+            - generic [ref=e100] [cursor=pointer]
+          - generic [ref=e101]:
+            - generic [ref=e102]: "Account region:"
+            - generic [ref=e103]: Singapore
+            - generic [ref=e104] [cursor=pointer]
+          - generic [ref=e105]:
+            - generic [ref=e106]: "Subdomain:"
+            - generic [ref=e107]: api.exotel.com
+            - generic [ref=e108] [cursor=pointer]
+          - generic [ref=e109]:
+            - text: Learn and explore Exotel APIs -
+            - link "API documentation " [ref=e110] [cursor=pointer]:
+              - /url: https://developer.exotel.com/api
+              - text: API documentation
+              - generic [ref=e111]: 
+            - link "Postman Collection " [ref=e112] [cursor=pointer]:
+              - /url: https://www.postman.com/universal-star-324650/workspace/exotel-apis/overview
+              - text: Postman Collection
+              - generic [ref=e113]: 
+          - button "Create API Key" [ref=e114] [cursor=pointer]
+          - generic [ref=e115]:
+            - table [ref=e116]:
+              - rowgroup [ref=e117]:
+                - row [ref=e118]:
+                  - columnheader "API Key Name" [ref=e119]
+                  - columnheader "Created On" [ref=e120]
+                  - columnheader "Created By" [ref=e121]
+                  - columnheader "API Key (username)" [ref=e122]
+                  - columnheader "API Token (password)" [ref=e123]
+                  - columnheader "Action" [ref=e124]
+              - rowgroup [ref=e125]:
+                - row [ref=e156]:
+                  - cell "Default API key" [ref=e127]
+                  - cell "18-08-2026" [ref=e128]
+                  - cell [ref=e129]
+                  - cell "58d2432cd8babc56592e201501554be7f6a817e3f64baa64" [ref=e130]:
+                    - text: 58d2432cd8babc56592e201501554be7f6a817e3f64baa64
+                    - generic [ref=e131] [cursor=pointer]
+                  - cell "fad38477f2336d813680a6c3bf4a06497b907f5bdb585370" [ref=e157]:
+                    - text: fad38477f2336d813680a6c3bf4a06497b907f5bdb585370
+                    - generic [ref=e158] [cursor=pointer]
+                  - cell [ref=e159] [cursor=pointer]:
+                    - img "hide" [ref=e160]
+                    - img "edit" [ref=e136]
+                    - img "delete" [ref=e137]
+            - paragraph [ref=e140]:
+              - text: "Note: Please remember to update the API Token while using any of the APIs mentioned under"
+              - link "Exotel API" [ref=e141] [cursor=pointer]:
+                - /url: https://support.exotel.com/support/solutions/folders/92360/page/1
+  - paragraph [ref=e143]:
+    - text: Obelix by Exotel • Built in Bengaluru • Inspired also by OpenVBX • © 2026 -
+    - link "Exotel Techcom Pvt. Ltd." [ref=e144] [cursor=pointer]:
+      - /url: http://exotel.com/
+    - text: •
+    - link "Terms" [ref=e145] [cursor=pointer]:
+      - /url: https://exotel.com/terms-of-service-exotel/
+    - text: •
+    - link "Privacy" [ref=e146] [cursor=pointer]:
+      - /url: https://exotel.com/privacy-policy/
+    - text: •
+    - link "Support" [ref=e147] [cursor=pointer]:
+      - /url: https://docs.exotel.com/business-phone-system
+  - generic [ref=e149]:
+    - generic [ref=e150]: Enable Incoming Call Desktop Notification
+    - generic [ref=e153]:
+      - button "YES" [ref=e154] [cursor=pointer]
+      - button "NO THANKS" [ref=e155] [cursor=pointer]
+  - text: ★ ★ ★ ★ ★ ★ ★ ★ ★ ★

@@ -16,9 +16,6 @@ export async function makeOutboundCall(options: OutboundCallOptions) {
     from: twilioPhoneNumber,
     to: options.to,
     url: options.webhookUrl,
-    method: "POST",
-    timeout: 60,
-    record: false,
   });
   return call;
 }

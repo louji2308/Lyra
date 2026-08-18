@@ -1,0 +1,112 @@
+- generic [active] [ref=f19e1]:
+  - paragraph [ref=f19e3]:
+    - text: You are on a
+    - link "Free trial account" [ref=f19e4] [cursor=pointer]:
+      - /url: https://support.exotel.com/solution/articles/102083-what-is-the-difference-between-a-trial-account-and-a-full-account-
+    - text: .
+    - link "See pricing" [ref=f19e5] [cursor=pointer]:
+      - /url: https://exotel.com/pricing/
+    - text: ","
+    - link "ask a question" [ref=f19e6] [cursor=pointer]:
+      - /url: https://my.exotel.com/lyra61/accountmanager
+    - text: ","
+    - link "make a payment" [ref=f19e7] [cursor=pointer]:
+      - /url: https://my.exotel.com/lyra61/pay
+    - text: ","
+    - link "Get an ExoPhone" [ref=f19e8] [cursor=pointer]:
+      - /url: https://my.exotel.com/lyra61/numbers
+    - text: and done!.
+  - generic [ref=f19e10]:
+    - generic [ref=f19e11]:
+      - heading [level=1] [ref=f19e12]:
+        - link [ref=f19e13] [cursor=pointer]:
+          - /url: https://my.exotel.com/lyra61/
+          - img "OpenVBX" [ref=f19e14]
+      - list [ref=f19e16]:
+        - listitem [ref=f19e17]:
+          - generic [ref=f19e18]: louji2308@gmail.com
+        - listitem [ref=f19e20]:
+          - link "" [ref=f19e22] [cursor=pointer]:
+            - /url: https://my.exotel.com/lyra61/callindex
+        - listitem [ref=f19e23]:
+          - link "" [ref=f19e25] [cursor=pointer]:
+            - /url: http://support.exotel.com/
+        - listitem [ref=f19e26]:
+          - link "" [ref=f19e28] [cursor=pointer]:
+            - /url: https://my.exotel.com/lyra61/npay
+        - listitem [ref=f19e29]:
+          - link "" [ref=f19e31] [cursor=pointer]:
+            - /url: https://my.exotel.com/lyra61/account
+        - listitem [ref=f19e32]:
+          - generic [ref=f19e33]: 
+        - listitem [ref=f19e34]:
+          - link "" [ref=f19e36] [cursor=pointer]:
+            - /url: https://my.exotel.com/auth/logout
+    - generic [ref=f19e37]:
+      - heading "lyra61 Landing Flow" [level=2] [ref=f19e39]
+      - list [ref=f19e40]:
+        - listitem:
+          - link "Save" [ref=f19e41] [cursor=pointer]:
+            - /url: ""
+        - listitem:
+          - link "Close" [ref=f19e43] [cursor=pointer]:
+            - /url: https://my.exotel.com/lyra61/flows
+    - generic [ref=f19e48]:
+      - generic: 
+      - generic [ref=f19e51]:
+        - table [ref=f19e55]:
+          - rowgroup [ref=f19e56]:
+            - row [ref=f19e57]:
+              - cell
+              - cell "Call Start When a call begins, what should we do? Drag an applet from the right to get started. Greeting" [ref=f19e58]:
+                - generic [ref=f19e60]:
+                  - heading "Call Start" [level=2] [ref=f19e61]
+                  - generic [ref=f19e63]:
+                    - heading "When a call begins, what should we do?" [level=2] [ref=f19e64]
+                    - heading "Drag an applet from the right to get started." [level=3] [ref=f19e65]
+                    - generic "Greeting" [ref=f19e66]:
+                      - generic [ref=f19e67]:
+                        - link "Greeting" [ref=f19e68] [cursor=pointer]:
+                          - /url: "#flowline/start/33d3e3"
+                        - generic [ref=f19e70] [cursor=pointer]
+              - cell
+              - cell
+              - cell
+              - cell
+              - cell
+              - cell
+              - cell
+        - generic [ref=f19e72]:
+          - heading "Voice Applets" [level=3] [ref=f19e73]
+          - generic "Send a greeting to the caller." [ref=f19e74]: Greeting
+          - generic "Call (someone else) from a flow." [ref=f19e76]: New Call
+          - generic "Dial a user or group or send them to voicemail if they can't be reached." [ref=f19e78]: Connect
+          - generic "Send an email to someone with details" [ref=f19e80]: Email
+          - generic "Real time transmission of audio" [ref=f19e82]: Stream
+          - generic "Connecting call to an automated agent or campaign" [ref=f19e84]: Voicebot
+          - generic "Do things like 'Press 1 for Sales, Press 2 for Support'" [ref=f19e86]: IVR Menu
+          - generic "Hangup a caller." [ref=f19e88]: Hangup
+          - generic "Redirect to arbitrary applets depending on the time of the call." [ref=f19e90]: Timing
+          - generic "Gather DTMF codes" [ref=f19e92]: Gather
+          - generic [ref=f19e116]: Passthru
+          - generic "Continue the flow by starting another flow or redirecting to a TwiML URL." [ref=f19e96]: Transfer
+          - generic "Redirect if the sender is subscribed to a list." [ref=f19e98]: Who's Calling?
+          - generic "Password protects the next applet in the flow." [ref=f19e100]: Password
+          - generic "Adds or removes the number from Lists." [ref=f19e102]: List Manager
+          - generic "Transfer control based on user input from gather/passthru" [ref=f19e104]: Switch Case
+          - generic "Send text message to the caller or sender." [ref=f19e106]: Sms
+          - generic "SMS (someone else) from a flow." [ref=f19e108]: New SMS
+    - paragraph [ref=f19e111]:
+      - text: Obelix by Exotel • Built in Bengaluru • Inspired also by OpenVBX • © 2026 -
+      - link "Exotel Techcom Pvt. Ltd." [ref=f19e112] [cursor=pointer]:
+        - /url: http://exotel.com/
+      - text: •
+      - link "Terms" [ref=f19e113] [cursor=pointer]:
+        - /url: https://exotel.com/terms-of-service-exotel/
+      - text: •
+      - link "Privacy" [ref=f19e114] [cursor=pointer]:
+        - /url: https://exotel.com/privacy-policy/
+      - text: •
+      - link "Support" [ref=f19e115] [cursor=pointer]:
+        - /url: https://docs.exotel.com/business-phone-system
+  - text: ★ ★ ★ ★ ★ ★ ★ ★ ★ ★

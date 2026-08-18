@@ -1,0 +1,251 @@
+- generic [ref=f17e1]:
+  - paragraph [ref=f17e3]:
+    - text: You are on a
+    - link "Unverified Account" [ref=f17e4] [cursor=pointer]:
+      - /url: https://support.exotel.com/solution/articles/102083-what-is-the-difference-between-a-trial-account-and-a-full-account-
+    - text: .
+    - link "Verify Number" [ref=f17e5] [cursor=pointer]:
+      - /url: javascript:void(0)
+    - text: ","
+    - link "Complete KYC" [ref=f17e6] [cursor=pointer]:
+      - /url: https://my.exotel.com/lyra61/settings/kyc
+    - text: ","
+    - link "make a payment" [ref=f17e7] [cursor=pointer]:
+      - /url: https://my.exotel.com/lyra61/pay
+    - text: ","
+    - link "Get an ExoPhone" [ref=f17e8] [cursor=pointer]:
+      - /url: https://my.exotel.com/lyra61/numbers
+    - text: and done!.
+  - generic [ref=f17e9]:
+    - generic [ref=f17e10]:
+      - list [ref=f17e12]:
+        - listitem [ref=f17e13]:
+          - button "CALL" [ref=f17e15] [cursor=pointer]
+        - listitem [ref=f17e16]:
+          - button "SMS" [ref=f17e17] [cursor=pointer]
+        - listitem [ref=f17e18]:
+          - link "API Credentials" [ref=f17e19] [cursor=pointer]:
+            - /url: https://my.exotel.com/lyra61/apisettings/site#api-credentials
+      - list [ref=f17e21]:
+        - listitem [ref=f17e22]:
+          - generic "09042113132" [ref=f17e24] [cursor=pointer]:
+            - checkbox [ref=f17e25]
+            - generic [ref=f17e26]: "OFF"
+        - listitem [ref=f17e28]:
+          - generic [ref=f17e29]: "Credits: 150"
+        - listitem [ref=f17e35]:
+          - generic "Help" [ref=f17e37] [cursor=pointer]
+        - listitem [ref=f17e38]:
+          - generic "Loujan B" [ref=f17e40] [cursor=pointer]
+        - listitem [ref=f17e41]:
+          - generic [ref=f17e43] [cursor=pointer]
+    - generic [ref=f17e44]:
+      - generic [ref=f17e45]:
+        - heading [level=1] [ref=f17e46]:
+          - link [ref=f17e47] [cursor=pointer]:
+            - /url: https://my.exotel.com/
+            - img "OpenVBX" [ref=f17e48]
+        - list [ref=f17e52]:
+          - generic [ref=f17e53]:
+            - heading "Calls" [level=3] [ref=f17e54] [cursor=pointer]
+            - list [ref=f17e56]:
+              - listitem [ref=f17e57]:
+                - link "Inbox" [ref=f17e58] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/callindex
+              - listitem [ref=f17e59]:
+                - link "Sales" [ref=f17e60] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/callindex/960836
+              - listitem [ref=f17e61]:
+                - link "Support" [ref=f17e62] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/callindex/960837
+              - listitem [ref=f17e63]:
+                - link "Call Settings " [ref=f17e64] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/audio_library
+                  - text: Call Settings
+                  - generic [ref=f17e65]: 
+          - generic [ref=f17e66]:
+            - heading "House of AI New" [level=3] [ref=f17e67] [cursor=pointer]
+            - list [ref=f17e69]:
+              - listitem [ref=f17e70]:
+                - link "AI Voice Agents " [ref=f17e71] [cursor=pointer]:
+                  - /url: https://voicebot.in.exotel.com
+                  - text: AI Voice Agents
+                  - generic [ref=f17e72]: 
+          - generic [ref=f17e73]:
+            - heading "SMS" [level=3] [ref=f17e74] [cursor=pointer]
+            - list [ref=f17e76]:
+              - listitem [ref=f17e77]:
+                - link "Outbox" [ref=f17e78] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/smses/outbox
+              - listitem [ref=f17e79]:
+                - link "SMS Stats Beta" [ref=f17e80] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/messaging/#/sms-stats
+              - listitem [ref=f17e81]:
+                - link "Upload Templates Beta" [ref=f17e82] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/messaging/#/bulk
+              - listitem [ref=f17e83]:
+                - link "SMS Settings " [ref=f17e84] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/sms_templates
+                  - text: SMS Settings
+                  - generic [ref=f17e85]: 
+          - generic [ref=f17e86]:
+            - heading "Tools" [level=3] [ref=f17e87] [cursor=pointer]
+            - list [ref=f17e89]:
+              - listitem [ref=f17e90]:
+                - link "RCS " [ref=f17e91] [cursor=pointer]:
+                  - /url: https://platform.exotel.com/rcs/bot-management
+                  - text: RCS
+                  - generic [ref=f17e92]: 
+              - listitem [ref=f17e93]:
+                - link "ExoVerify " [ref=f17e94] [cursor=pointer]:
+                  - /url: https://verify.exotel.com
+                  - text: ExoVerify
+                  - generic [ref=f17e95]: 
+              - listitem [ref=f17e96]:
+                - link "Campaigns" [ref=f17e97] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/campaigns_v2/#/campaigns
+          - generic [ref=f17e98]:
+            - heading "Manage" [level=3] [ref=f17e99] [cursor=pointer]
+            - list [ref=f17e101]:
+              - listitem [ref=f17e102]:
+                - link "Address book" [ref=f17e103] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/addressbook
+              - listitem [ref=f17e104]:
+                - link "Co-workers and Groups" [ref=f17e105] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/accounts
+              - listitem [ref=f17e106]:
+                - link "Talk to our Telephony Expert" [ref=f17e107] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/accountmanager
+              - listitem [ref=f17e108]:
+                - link "App Bazaar" [ref=f17e109] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/apps
+              - listitem [ref=f17e110]:
+                - link "ExoPhones" [ref=f17e111] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/numbers
+          - generic [ref=f17e112]:
+            - heading "My Account" [level=3] [ref=f17e113] [cursor=pointer]
+            - list [ref=f17e115]:
+              - listitem [ref=f17e116]:
+                - link "Personal Info " [ref=f17e117] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/account
+                  - text: Personal Info
+                  - generic [ref=f17e118]: 
+              - listitem [ref=f17e119]:
+                - link "Impersonation " [ref=f17e120] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/impersonation/#/impersonation
+                  - text: Impersonation
+                  - generic [ref=f17e121]: 
+              - listitem [ref=f17e122]:
+                - link "Company Info " [ref=f17e123] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/company_details/#/company-info
+                  - text: Company Info
+                  - generic [ref=f17e124]: 
+              - listitem [ref=f17e125]:
+                - link "Notifications " [ref=f17e126] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/notifications
+                  - text: Notifications
+                  - generic [ref=f17e127]: 
+              - listitem [ref=f17e128]:
+                - link "Make a Payment " [ref=f17e129] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/npay
+                  - text: Make a Payment
+                  - generic [ref=f17e130]: 
+          - generic [ref=f17e131]:
+            - heading "Monitor" [level=3] [ref=f17e132] [cursor=pointer]
+            - list [ref=f17e134]:
+              - listitem [ref=f17e135]:
+                - link "Co-worker Activity Log" [ref=f17e136] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/audit_log
+              - listitem [ref=f17e137]:
+                - link "Analytics" [ref=f17e138] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/charts
+              - listitem [ref=f17e139]:
+                - link "Reports" [ref=f17e140] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/accounts/lyra61/reports
+          - listitem [ref=f17e141]:
+            - link "Developer " [ref=f17e142] [cursor=pointer]:
+              - /url: https://my.exotel.com/lyra61/apisettings/site
+              - text: Developer
+              - generic [ref=f17e143]: 
+      - generic [ref=f17e146]:
+        - generic [ref=f17e147]:
+          - link [ref=f17e148] [cursor=pointer]:
+            - /url: javascript:void(0);
+          - generic [ref=f17e149]:
+            - heading "Get started!" [level=3] [ref=f17e150]
+            - paragraph [ref=f17e151]: Call 09513886363 to experience the basics of Exotel using a number that is not your registered number.
+        - generic [ref=f17e152]:
+          - generic [ref=f17e154]:
+            - listitem [ref=f17e155]:
+              - generic "Trust and Connectivity - Higher with verification" [ref=f17e156] [cursor=pointer]: Opt for Truecaller / Google Verification
+            - list [ref=f17e157]:
+              - listitem [ref=f17e158]:
+                - textbox "Search ExoPhone, e.g. 08088919888" [ref=f17e159]
+              - listitem [ref=f17e160]:
+                - button "Assign ExoPhones to Flow" [active] [ref=f17e161] [cursor=pointer]
+                - generic [ref=f17e199]:
+                  - generic [ref=f17e200]:
+                    - generic [ref=f17e201]: ExoPhone list (0) selected
+                    - generic [ref=f17e202]:
+                      - generic "Select All" [ref=f17e203] [cursor=pointer]: 
+                      - textbox "Search" [ref=f17e205]:
+                        - /placeholder: "Search "
+                      - generic [ref=f17e206] [cursor=pointer]
+                  - generic [ref=f17e207]:
+                    - generic [ref=f17e208]: Flow/App list
+                    - generic [ref=f17e209]:
+                      - textbox "Search flow/app" [ref=f17e211]
+                      - generic [ref=f17e212] [cursor=pointer]
+                  - list [ref=f17e213]:
+                    - listitem [ref=f17e214] [cursor=pointer]:
+                      - generic [ref=f17e215]: 
+                      - text: "09513886363"
+                  - list [ref=f17e216]:
+                    - listitem [ref=f17e217] [cursor=pointer]:
+                      - generic [ref=f17e218]: 
+                      - text: lyra61 Landing Flow
+                  - generic [ref=f17e219]:
+                    - button "Cancel" [ref=f17e220] [cursor=pointer]
+                    - button "Attach flow" [ref=f17e221] [cursor=pointer]
+              - listitem [ref=f17e162]:
+                - button "New ExoPhone" [ref=f17e163] [cursor=pointer]
+          - generic [ref=f17e164]:
+            - table [ref=f17e166]:
+              - rowgroup [ref=f17e167]:
+                - row [ref=f17e168]:
+                  - columnheader "ExoPhone" [ref=f17e169]
+                  - columnheader "Type" [ref=f17e170]
+                  - columnheader "Installed App" [ref=f17e171]
+                  - columnheader [ref=f17e172]
+              - rowgroup [ref=f17e173]:
+                - row [ref=f17e174]:
+                  - cell [ref=f17e175]:
+                    - link "095-138-86363" [ref=f17e177] [cursor=pointer]:
+                      - /url: https://support.exotel.com/support/solutions/articles/134536-working-with-your-trial-number?_gl=1*1ytmsu0*_gcl_au*NzI3NzQ3MDQyLjE3ODcwNjUyNjcuMTEwNDQ5MTAyOS4xNzg3MDY1MzM2LjE3ODcwNjUzMzYuOTYwNjMwMzM0LjE3ODcwNjUzMzYuMTc4NzA2NTMzNg..*_ga*MzgzODAwNzU0LjE3ODcwNjUyNjc.*_ga_VGJ56BFYBZ*czE3ODcwNjUyNjckbzEkZzEkdDE3ODcwNjU1MjgkajYwJGwwJGgxNzc3Mzg0NDg3
+                      - text: 095-138-86363
+                      - generic "Trial number" [ref=f17e178]
+                    - paragraph [ref=f17e179]: "Pin: 9042-1131-32"
+                  - cell "Not set" [ref=f17e180]
+                  - cell "lyra61 Landing Flow" [ref=f17e181]:
+                    - paragraph [ref=f17e182]: lyra61 Landing Flow
+                  - cell [ref=f17e184]:
+                    - link [ref=f17e185] [cursor=pointer]:
+                      - /url: "https://my.exotel.com/numbers/delete/Sandbox "
+            - generic [ref=f17e187]:
+              - generic "No Previous Page" [ref=f17e188] [cursor=pointer]
+              - generic [ref=f17e190]: 1 - 1
+              - generic "No Next Page" [ref=f17e191] [cursor=pointer]
+    - paragraph [ref=f17e194]:
+      - text: Obelix by Exotel • Built in Bengaluru • Inspired also by OpenVBX • © 2026 -
+      - link "Exotel Techcom Pvt. Ltd." [ref=f17e195] [cursor=pointer]:
+        - /url: http://exotel.com/
+      - text: •
+      - link "Terms" [ref=f17e196] [cursor=pointer]:
+        - /url: https://exotel.com/terms-of-service-exotel/
+      - text: •
+      - link "Privacy" [ref=f17e197] [cursor=pointer]:
+        - /url: https://exotel.com/privacy-policy/
+      - text: •
+      - link "Support" [ref=f17e198] [cursor=pointer]:
+        - /url: https://docs.exotel.com/business-phone-system
+  - text: ★ ★ ★ ★ ★ ★ ★ ★ ★ ★

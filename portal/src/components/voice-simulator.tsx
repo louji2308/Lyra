@@ -284,7 +284,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
     }
   };
 
-  const handleLiveCall = async () => {
+  const handleLiveCall = async (provider: "twilio" | "exotel" = "twilio") => {
     if (!selectedShopId) return;
     const shop = shops.find((s) => s.shop_id === selectedShopId);
     if (!shop) return;
@@ -292,16 +292,16 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
     stopRecognition();
     resetCallState();
     setPhase("active");
-    pushTrace("live_call", `Initiating live call to ${shop.shop_name} (${shop.phone_number})`);
+    pushTrace("live_call", `Initiating live call to ${shop.shop_name} (${shop.phone_number}) via ${provider}`);
     try {
       const res = await fetch("/api/call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shop_id: shop.shop_id }),
+        body: JSON.stringify({ shop_id: shop.shop_id, provider }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Call failed");
-      pushTrace("live_call", `Call initiated: ${data.call_sid} to ${data.to}`);
+      pushTrace("live_call", `Call initiated: ${data.call_sid ?? "ok"} to ${data.to}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       pushTrace("live_call", message, "error");
@@ -440,24 +440,31 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {phase === "idle" ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => void handleStart()}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-                >
-                  Start call (simulator)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleLiveCall()}
-                  className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
-                >
-                  Live call (phone)
-                </button>
-              </>
-            ) : (
+{phase === "idle" ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void handleStart()}
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+                  >
+                    Start call (simulator)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleLiveCall("twilio")}
+                    className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
+                  >
+                    Live call (Twilio)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleLiveCall("exotel")}
+                    className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-700"
+                  >
+                    Live call (Exotel)
+                  </button>
+                </>
+              ) : (
               <button
                 type="button"
                 onClick={handleEnd}
