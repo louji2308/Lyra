@@ -1,9 +1,9 @@
 # Lyra 2.0 — Build Progress
 
 **Product:** AI Order Co-Pilot for FMCG distributors (Shree Agencies demo)
-**Phase:** 5 — Add Business Rules (now complete)
+**Phase:** 10 — Twilio Live Call Integration (now complete)
 **Started:** 2026-08-16
-**Status:** 🔨 Phase 10 next (demo prep)
+**Status:** ✅ Phases 0–10 complete. Live phone testing next.
 
 ---
 
@@ -21,7 +21,8 @@
 | 7 | Add Memory + Blacklist | ✅ Done — memory recall in context, blacklist filtering in suggested orders |
 | 8 | Add Complaint / Return Flow | ✅ Done — complaint & return engine states + create-return API |
 | 9 | Split into Multi-Agent Squad | ✅ Done — expanded intents (complaint/return detection) + intent-based routing |
-| 10 | Prepare Demo + Backup + Finale Kit | ⏳ Pending |
+| 10 | Twilio Live Call Integration | ✅ Done — Deepgram STT + Sarvam AI TTS + Media Streams |
+| — | ARCHITECTURE.md | ✅ Done — comprehensive project architecture doc |
 
 ---
 
@@ -222,6 +223,55 @@ The AI must stop being a generic bot: identify the shop by phone, fetch last ord
 
 ---
 
+## Phase 10 — Twilio Live Call Integration ✅ (2026-08-16)
+
+### Goal
+Enable real phone calls via Twilio: inbound/outbound → Deepgram STT → intent engine → Sarvam AI TTS → Twilio streams audio back.
+
+### What was built
+- **`portal/src/lib/voice/sarvam.ts`** — Sarvam AI TTS client. `synthesizeSarvamTTSMulaw()` POSTs to `https://api.sarvam.ai/text-to-speech`, returns mulaw 8kHz audio buffer for Twilio.
+- **`portal/src/lib/voice/twilio.ts`** — Twilio client. `makeOutboundCall()` uses Twilio REST API to initiate call. `generateTwiML()` returns `<Connect><Stream>` TwiML for Media Streams. `getStreamUrl()` builds WebSocket URL for the stream.
+- **`portal/src/app/api/call/route.ts`** — POST `/api/call` accepts `shop_id`, looks up phone number from Supabase, calls Twilio to initiate outbound call.
+- **`portal/src/app/api/twilio/voice/route.ts`** — POST returns TwiML with `<Connect><Stream>` pointing to the WebSocket server.
+- **`portal/twilio-server.ts`** — Standalone WebSocket server (port 3001). Handles Twilio Media Streams: receives audio → sends to Deepgram STT → runs `detectIntent`/`step` engine → synthesizes response via Sarvam → sends audio back to Twilio.
+- **`portal/src/components/voice-simulator.tsx`** — Added "Live Call (phone)" button + `handleLiveCall()` that POSTs to `/api/call`.
+- **`portal/src/lib/voice/backend.ts`** — `ShopContextResult` expanded with `phone_number` field.
+
+### All `any` types resolved in `twilio-server.ts`
+- `deepgramWs` typed as `unknown` with inline casts at usage sites.
+- `msg` parameter typed with `TwilioMessage` interface.
+- `data` event handler uses inline assertion type for Deepgram message shape.
+- `err` typed as `unknown`.
+
+### Credentials (in `.env.local`)
+- Twilio Account SID: `****`
+- Twilio Auth Token: `ad91468a1b0ccc3b624159d04dba95c1`
+- Twilio Phone: `+917372212163`
+- Deepgram API Key: `9715c7f359e2778acce1233ceab758022eee92b9`
+- Sarvam AI API Key: `sk_0g1jfrls_TmqNAdfHZgryGy6tpzpS7Ozg`
+- Live Lyra Number: `+918065355944` (`LYRA_PHONE_NUMBER`)
+
+### Running
+- `npm run dev:all` — runs Next.js (port 3000) + Twilio WS server (port 3001) concurrently.
+- "Live Call (phone)" button in simulator → POSTs to `/api/call` → Twilio calls the shop.
+
+### Verified
+- `npm run lint` + `tsc` — 0 errors.
+- `npm run build` — all routes compiled, 17 static pages generated.
+
+### Limitations
+- Twilio trial account: can only call verified caller IDs. Must verify personal phone before live testing.
+- No public URL for production — Twilio webhooks need public URL. Use ngrok or Twilio CLI tunnel for local testing.
+- WebSocket server (port 3001) runs separately from Next.js (port 3000).
+
+---
+
+## Architecture Documentation ✅ (2026-08-16)
+
+- `ARCHITECTURE.md` created — ~1200 lines covering: system architecture diagrams, tech stack, full DB schema (12 tables), voice engine state machine, intent detection algorithm, script templates, TTS pipeline (3 engines), STT pipeline (Deepgram), Twilio live call flow, all 15 API routes, business logic, portal pages, 4 data flow diagrams, environment variables, full file inventory, demo scenarios, and build log.
+
+---
+
 | Date | Update |
 |---|---|
 | 2026-08-16 | Phase 1 shipped to live Supabase. Phase 2 started. |
@@ -232,3 +282,5 @@ The AI must stop being a generic bot: identify the shop by phone, fetch last ord
 | 2026-08-16 | **Phase 4 shipped**: 8 voice API routes (shop-context, suggested-order, check-stock, check-credit, create-order, save-memory, save-complaint, mark-opt-out) + simulator wired to live Supabase — identify by Caller ID, repeat order from DB, order + memory persisted. Verified end-to-end in Chrome (ORD1024 visible on portal). |
 | 2026-08-16 | Live phone number +918065355944 acquired and saved to `.env.local`. TTS research paused (Edge TTS kept as-is for now; Bhashini account setup deferred). |
 | 2026-08-16 | **Phase 5-9 shipped**: business rules (check_blacklist, schemes, call-time validation), WhatsApp layer (simulated send + message formatting), memory recall in context, complaint/return engine flow + create-return API, expanded intent classifier with complaint/return detection. Lint + tsc clean. |
+| 2026-08-16 | **Phase 10 shipped**: Twilio live call integration — Deepgram STT, Sarvam AI TTS (mulaw 8kHz), Media Streams WebSocket server (port 3001), "Live Call (phone)" button in simulator. All `any` types resolved. Lint + tsc + build clean. |
+| 2026-08-16 | **ARCHITECTURE.md** created — comprehensive project architecture reference with diagrams, workflows, DB schema, and full file inventory. |
