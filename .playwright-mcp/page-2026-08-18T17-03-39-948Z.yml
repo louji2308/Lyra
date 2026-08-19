@@ -1,0 +1,120 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic:
+            - link:
+              - /url: /app
+              - generic: SnapServe
+            - button
+          - generic:
+            - button:
+              - generic: Search…
+              - generic: ⌘K
+          - generic:
+            - button:
+              - generic: New agent
+          - generic:
+            - generic:
+              - generic:
+                - link:
+                  - /url: /app/home
+                  - generic: Home
+                - link:
+                  - /url: /app/campaigns
+                  - generic: Campaigns
+                - link:
+                  - /url: /app/agents
+                  - generic: Agents
+                - link:
+                  - /url: /app/phone-numbers
+                  - generic: Phone numbers
+                - link:
+                  - /url: /app/connections
+                  - generic: Connections
+                - link:
+                  - /url: /app/history
+                  - generic: History
+                - link:
+                  - /url: /app/analytics
+                  - generic: Analytics
+            - generic:
+              - paragraph: MORE
+              - generic:
+                - link:
+                  - /url: /app/knowledge-bases
+                  - generic: Knowledge
+                - link:
+                  - /url: /app/memory
+                  - generic: Memory
+                - link:
+                  - /url: /app/squads
+                  - generic: Squads
+                - link:
+                  - /url: /app/scheduling
+                  - generic: Bookings
+            - button:
+              - generic: Settings
+          - generic:
+            - generic:
+              - link:
+                - /url: /docs
+                - generic: Documentation
+            - generic:
+              - link:
+                - /url: /app/wallet
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: ₹5500.00
+                      - generic: ~1100m
+            - generic:
+              - generic:
+                - button:
+                  - generic: L
+                  - generic: Loujan
+      - main:
+        - generic:
+          - generic:
+            - generic: 🎙️ Live Event
+            - generic:
+              - text: India's biggest Voice-a-thon powered by
+              - strong: VoBiz
+              - text: "& organized by"
+              - strong: SnapServe
+              - text: — Please register now!
+          - generic:
+            - link:
+              - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+              - text: Register for Event
+            - button
+        - generic:
+          - button
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=2]: Select an agent
+                  - paragraph: Pick one from the list, or create a new agent for phone — or phone plus meetings.
+                - generic:
+                  - button: New agent
+                  - button: Build with AI
+    - list
+  - generic: "0"
+  - dialog [active] [ref=f33e400]:
+    - generic [ref=f33e369]:
+      - heading "Where will they talk?" [level=2] [ref=f33e401]
+      - paragraph [ref=f33e371]: Phone only (calendar bookings + Meet links for humans; AI never joins), or phone + meetings (AI can join Meet).
+    - generic [ref=f33e402]:
+      - generic [ref=f33e403]:
+        - button [ref=f33e404] [cursor=pointer]:
+          - paragraph [ref=f33e407]: Phone
+          - paragraph [ref=f33e408]: Voice calls. Can book calendar — does not join Meet.
+        - button [ref=f33e409] [cursor=pointer]:
+          - paragraph [ref=f33e416]: Phone + meetings
+          - paragraph [ref=f33e417]: Voice calls, plus join Meet/Zoom/Teams from Meeting bots. Booking a slot is separate.
+      - generic [ref=f33e418]:
+        - button "Back" [ref=f33e419] [cursor=pointer]
+        - button "Continue" [ref=f33e420] [cursor=pointer]
+    - button "Close" [ref=f33e395] [cursor=pointer]

@@ -1,0 +1,148 @@
+- generic [ref=f2e2]:
+  - generic [ref=f2e3]:
+    - complementary [ref=f2e4]:
+      - generic [ref=f2e5]:
+        - generic [ref=f2e6]:
+          - link "SnapServe SnapServe" [ref=f2e7] [cursor=pointer]:
+            - /url: /app
+            - img "SnapServe" [ref=f2e8]
+            - generic "SnapServe" [ref=f2e13]
+          - button "Collapse" [ref=f2e14] [cursor=pointer]
+        - button "Search… ⌘K" [ref=f2e18] [cursor=pointer]:
+          - generic [ref=f2e22]: Search…
+          - generic [ref=f2e23]: ⌘K
+        - button "New agent" [ref=f2e25] [cursor=pointer]
+        - generic [ref=f2e28]:
+          - generic [ref=f2e30]:
+            - link "Home" [ref=f2e31] [cursor=pointer]:
+              - /url: /app/home
+            - link "Campaigns" [ref=f2e38] [cursor=pointer]:
+              - /url: /app/campaigns
+            - link "Agents" [ref=f2e47] [cursor=pointer]:
+              - /url: /app/agents
+            - link "Phone numbers" [ref=f2e55] [cursor=pointer]:
+              - /url: /app/phone-numbers
+            - link "Connections" [ref=f2e62] [cursor=pointer]:
+              - /url: /app/connections
+            - link "History" [ref=f2e71] [cursor=pointer]:
+              - /url: /app/history
+            - link "Analytics" [ref=f2e79] [cursor=pointer]:
+              - /url: /app/analytics
+          - generic [ref=f2e86]:
+            - paragraph [ref=f2e88]: MORE
+            - generic [ref=f2e89]:
+              - link "Knowledge" [ref=f2e90] [cursor=pointer]:
+                - /url: /app/knowledge-bases
+              - link "Memory" [ref=f2e98] [cursor=pointer]:
+                - /url: /app/memory
+              - link "Squads" [ref=f2e107] [cursor=pointer]:
+                - /url: /app/squads
+              - link "Bookings" [ref=f2e117] [cursor=pointer]:
+                - /url: /app/scheduling
+          - button "Settings" [ref=f2e129] [cursor=pointer]
+        - generic [ref=f2e143]:
+          - link "Documentation" [ref=f2e145] [cursor=pointer]:
+            - /url: /docs
+          - link "₹5500.00 ~1100m" [ref=f2e153] [cursor=pointer]:
+            - /url: /app/wallet
+            - generic [ref=f2e161]:
+              - generic [ref=f2e162]: ₹5500.00
+              - generic [ref=f2e163]: ~1100m
+          - button "L Loujan" [ref=f2e168] [cursor=pointer]:
+            - generic [ref=f2e169]: L
+            - generic [ref=f2e171]: Loujan
+    - main [ref=f2e174]:
+      - generic [ref=f2e175]:
+        - generic [ref=f2e176]:
+          - generic [ref=f2e177]: 🎙️ Live Event
+          - generic [ref=f2e178]:
+            - text: India's biggest Voice-a-thon powered by
+            - strong [ref=f2e179]: VoBiz
+            - text: "& organized by"
+            - strong [ref=f2e180]: SnapServe
+            - text: — Please register now!
+        - generic [ref=f2e181]:
+          - link "Register for Event" [ref=f2e182] [cursor=pointer]:
+            - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+          - button "Dismiss notification" [ref=f2e183] [cursor=pointer]
+      - generic [ref=f2e189]:
+        - generic [ref=f2e190]:
+          - generic [ref=f2e191]:
+            - button "Back" [ref=f2e192] [cursor=pointer]
+            - button "Agents" [ref=f2e194] [cursor=pointer]
+            - button "Editing Lyra" [ref=f2e197] [cursor=pointer]:
+              - generic [ref=f2e198]:
+                - generic [ref=f2e199]: Editing
+                - generic [ref=f2e200]: Lyra
+            - generic [ref=f2e204]: Draft
+          - generic [ref=f2e206]:
+            - generic [ref=f2e207]:
+              - generic [ref=f2e208]: Est.
+              - generic [ref=f2e209]: ₹5.00
+              - generic [ref=f2e210]: /min
+            - button "Call" [ref=f2e211] [cursor=pointer]
+            - button "Live test" [ref=f2e212] [cursor=pointer]
+            - button "Save" [ref=f2e213] [cursor=pointer]
+            - button [ref=f2e214] [cursor=pointer]
+        - generic [ref=f2e215]:
+          - navigation "Editor sections" [ref=f2e216]:
+            - button "Overview" [ref=f2e217] [cursor=pointer]
+            - button "Prompt" [ref=f2e218] [cursor=pointer]
+            - button "Voice" [ref=f2e219] [cursor=pointer]
+            - button "Tools" [ref=f2e220] [cursor=pointer]
+            - button "Outcomes" [ref=f2e221] [cursor=pointer]
+            - button "Analytics" [ref=f2e222] [cursor=pointer]
+            - button "Voicemail" [ref=f2e223] [cursor=pointer]
+            - button "Settings" [ref=f2e224] [cursor=pointer]
+            - button "Versions" [ref=f2e225] [cursor=pointer]
+          - generic [ref=f2e231]:
+            - generic [ref=f2e232]:
+              - generic [ref=f2e233]:
+                - generic [ref=f2e234]:
+                  - heading "Overview" [level=2] [ref=f2e235]
+                  - generic [ref=f2e236]: Ready
+                - paragraph [ref=f2e239]:
+                  - text: Billed at
+                  - generic [ref=f2e240]: ₹5.00
+                  - text: /min
+              - generic [ref=f2e241]:
+                - button "Analytics" [ref=f2e242] [cursor=pointer]
+                - button "Edit prompt" [ref=f2e243] [cursor=pointer]
+            - generic [ref=f2e244]:
+              - paragraph [ref=f2e245]: Pipeline
+              - generic [ref=f2e246]:
+                - button "Transcriber English (India) Sarvam AI (Real-time Streaming) · saaras:v3" [ref=f2e247] [cursor=pointer]:
+                  - generic [ref=f2e251]: Transcriber
+                  - generic [ref=f2e256]: English (India)
+                  - generic [ref=f2e257]: Sarvam AI (Real-time Streaming) · saaras:v3
+                - button "Model Sarvam 105B Conversations (recommended — voice) Sarvam AI (India-hosted)" [ref=f2e258] [cursor=pointer]:
+                  - generic [ref=f2e262]: Model
+                  - generic [ref=f2e272]: Sarvam 105B Conversations (recommended — voice)
+                  - generic [ref=f2e273]: Sarvam AI (India-hosted)
+                - button "Voice Priya (female) Sarvam (Bulbul) — recommended" [ref=f2e274] [cursor=pointer]:
+                  - generic [ref=f2e278]: Voice
+                  - generic [ref=f2e284]: Priya (female)
+                  - generic [ref=f2e285]: Sarvam (Bulbul) — recommended
+            - generic [ref=f2e286]:
+              - generic [ref=f2e287]:
+                - paragraph [ref=f2e288]: Phone
+                - generic [ref=f2e290]:
+                  - generic [ref=f2e291]:
+                    - generic [ref=f2e292]: Your phone number
+                    - button "Numbers →" [ref=f2e297] [cursor=pointer]
+                  - button [ref=f2e298] [cursor=pointer]:
+                    - generic [ref=f2e299]:
+                      - paragraph [ref=f2e300]: "+918065355944"
+                      - paragraph [ref=f2e301]: Live — click to reassign or remove
+              - generic [ref=f2e304]:
+                - generic [ref=f2e305]:
+                  - paragraph [ref=f2e306]: Knowledge
+                  - generic [ref=f2e307]: Optional
+                - generic [ref=f2e308]:
+                  - paragraph [ref=f2e309]: Documents searched during live calls and injected into context.
+                  - button "Select knowledge sources" [ref=f2e312] [cursor=pointer]
+            - generic [ref=f2e316]:
+              - paragraph [ref=f2e322]: Solo agent
+              - button "Add to team" [ref=f2e323] [cursor=pointer]
+  - region "Notifications (F8)":
+    - list

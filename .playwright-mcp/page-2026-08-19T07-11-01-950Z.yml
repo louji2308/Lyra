@@ -1,0 +1,100 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - link "SnapServe SnapServe" [ref=e7] [cursor=pointer]:
+            - /url: /app
+            - img "SnapServe" [ref=e8]
+            - generic "SnapServe" [ref=e13]
+          - button "Collapse" [ref=e14] [cursor=pointer]
+        - button "Search… ⌘K" [ref=e18] [cursor=pointer]:
+          - generic [ref=e22]: Search…
+          - generic [ref=e23]: ⌘K
+        - button "New agent" [ref=e25] [cursor=pointer]
+        - generic [ref=e28]:
+          - generic [ref=e30]:
+            - link "Home" [ref=e31] [cursor=pointer]:
+              - /url: /app/home
+            - link "Campaigns" [ref=e38] [cursor=pointer]:
+              - /url: /app/campaigns
+            - link "Agents" [ref=e47] [cursor=pointer]:
+              - /url: /app/agents
+            - link "Phone numbers" [ref=e55] [cursor=pointer]:
+              - /url: /app/phone-numbers
+            - link "Connections" [ref=e62] [cursor=pointer]:
+              - /url: /app/connections
+            - link "History" [ref=e71] [cursor=pointer]:
+              - /url: /app/history
+            - link "Analytics" [ref=e79] [cursor=pointer]:
+              - /url: /app/analytics
+          - generic [ref=e86]:
+            - paragraph [ref=e88]: MORE
+            - generic [ref=e89]:
+              - link "Knowledge" [ref=e90] [cursor=pointer]:
+                - /url: /app/knowledge-bases
+              - link "Memory" [ref=e98] [cursor=pointer]:
+                - /url: /app/memory
+              - link "Squads" [ref=e107] [cursor=pointer]:
+                - /url: /app/squads
+              - link "Bookings" [ref=e117] [cursor=pointer]:
+                - /url: /app/scheduling
+          - button "Settings" [ref=e129] [cursor=pointer]
+        - generic [ref=e143]:
+          - link "Documentation" [ref=e145] [cursor=pointer]:
+            - /url: /docs
+          - link "₹5500.00 ~1100m" [ref=e153] [cursor=pointer]:
+            - /url: /app/wallet
+            - generic [ref=e161]:
+              - generic [ref=e162]: ₹5500.00
+              - generic [ref=e163]: ~1100m
+          - button "L Loujan" [ref=e168] [cursor=pointer]:
+            - generic [ref=e169]: L
+            - generic [ref=e171]: Loujan
+    - main [ref=e174]:
+      - generic [ref=e175]:
+        - generic [ref=e176]:
+          - generic [ref=e177]: 🎙️ Live Event
+          - generic [ref=e178]:
+            - text: India's biggest Voice-a-thon powered by
+            - strong [ref=e179]: VoBiz
+            - text: "& organized by"
+            - strong [ref=e180]: SnapServe
+            - text: — Please register now!
+        - generic [ref=e181]:
+          - link "Register for Event" [ref=e182] [cursor=pointer]:
+            - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+          - button "Dismiss notification" [ref=e183] [cursor=pointer]
+      - generic [ref=e188]:
+        - button "Switch to dark theme" [ref=e189] [cursor=pointer]
+        - button [ref=e190] [cursor=pointer]
+      - generic [ref=e194]:
+        - button "Open Orcha AI assistant · drag to move" [ref=e195]
+        - generic [ref=e202]:
+          - generic [ref=e203]:
+            - button "Home" [ref=e204] [cursor=pointer]
+            - generic [ref=e207]:
+              - generic [ref=e208]:
+                - heading "Phone Numbers" [level=1] [ref=e209]
+                - paragraph [ref=e210]: Buy a number, assign it to an agent for inbound + caller ID, reassign or release anytime.
+              - button "Get number" [ref=e212] [cursor=pointer]
+            - generic [ref=e214]:
+              - button "My numbers" [ref=e215] [cursor=pointer]
+              - button "Verification" [ref=e217] [cursor=pointer]
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - generic [ref=e226]: Identity verified
+              - generic [ref=e227]: — You can purchase Aadhaar-required Indian numbers.
+            - generic [ref=e229]:
+              - generic [ref=e230]:
+                - paragraph [ref=e231]: "+918065355944"
+                - paragraph [ref=e232]: IN · Karnataka
+              - generic [ref=e233]: local
+              - generic [ref=e234]: Wallet renew
+              - generic [ref=e235]: Lyra
+              - generic [ref=e241]:
+                - button "Rules" [ref=e242] [cursor=pointer]
+                - button "Reassign" [ref=e243] [cursor=pointer]
+                - button [ref=e244] [cursor=pointer]
+  - region "Notifications (F8)":
+    - list

@@ -1,0 +1,331 @@
+- generic [ref=f33e1]:
+  - generic [ref=f33e2]:
+    - generic [ref=f33e3]:
+      - complementary [ref=f33e4]:
+        - generic [ref=f33e5]:
+          - generic [ref=f33e6]:
+            - link "SnapServe SnapServe" [ref=f33e7] [cursor=pointer]:
+              - /url: /app
+              - img "SnapServe" [ref=f33e8]
+              - generic "SnapServe" [ref=f33e13]
+            - button "Collapse" [ref=f33e14] [cursor=pointer]
+          - button "Search… ⌘K" [ref=f33e18] [cursor=pointer]:
+            - generic [ref=f33e22]: Search…
+            - generic [ref=f33e23]: ⌘K
+          - button "New agent" [ref=f33e25] [cursor=pointer]
+          - generic [ref=f33e28]:
+            - generic [ref=f33e30]:
+              - link "Home" [ref=f33e31] [cursor=pointer]:
+                - /url: /app/home
+              - link "Campaigns" [ref=f33e38] [cursor=pointer]:
+                - /url: /app/campaigns
+              - link "Agents" [ref=f33e47] [cursor=pointer]:
+                - /url: /app/agents
+              - link "Phone numbers" [ref=f33e55] [cursor=pointer]:
+                - /url: /app/phone-numbers
+              - link "Connections" [ref=f33e62] [cursor=pointer]:
+                - /url: /app/connections
+              - link "History" [ref=f33e71] [cursor=pointer]:
+                - /url: /app/history
+              - link "Analytics" [ref=f33e79] [cursor=pointer]:
+                - /url: /app/analytics
+            - generic [ref=f33e86]:
+              - paragraph [ref=f33e88]: MORE
+              - generic [ref=f33e89]:
+                - link "Knowledge" [ref=f33e90] [cursor=pointer]:
+                  - /url: /app/knowledge-bases
+                - link "Memory" [ref=f33e98] [cursor=pointer]:
+                  - /url: /app/memory
+                - link "Squads" [ref=f33e107] [cursor=pointer]:
+                  - /url: /app/squads
+                - link "Bookings" [ref=f33e117] [cursor=pointer]:
+                  - /url: /app/scheduling
+            - button "Settings" [ref=f33e129] [cursor=pointer]
+          - generic [ref=f33e143]:
+            - link "Documentation" [ref=f33e145] [cursor=pointer]:
+              - /url: /docs
+            - link "₹5500.00 ~1100m" [ref=f33e153] [cursor=pointer]:
+              - /url: /app/wallet
+              - generic [ref=f33e161]:
+                - generic [ref=f33e162]: ₹5500.00
+                - generic [ref=f33e163]: ~1100m
+            - button "L Loujan" [ref=f33e168] [cursor=pointer]:
+              - generic [ref=f33e169]: L
+              - generic [ref=f33e171]: Loujan
+      - main [ref=f33e174]:
+        - generic [ref=f33e175]:
+          - generic [ref=f33e176]:
+            - generic [ref=f33e177]: 🎙️ Live Event
+            - generic [ref=f33e178]:
+              - text: India's biggest Voice-a-thon powered by
+              - strong [ref=f33e179]: VoBiz
+              - text: "& organized by"
+              - strong [ref=f33e180]: SnapServe
+              - text: — Please register now!
+          - generic [ref=f33e181]:
+            - link "Register for Event" [ref=f33e182] [cursor=pointer]:
+              - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+            - button "Dismiss notification" [ref=f33e183] [cursor=pointer]
+        - generic [ref=f33e431]:
+          - generic [ref=f33e432]:
+            - generic [ref=f33e433]:
+              - button "Back" [ref=f33e434] [cursor=pointer]
+              - button "Agents" [ref=f33e436] [cursor=pointer]
+              - button "Editing Lyra" [ref=f33e439] [cursor=pointer]:
+                - generic [ref=f33e440]:
+                  - generic [ref=f33e441]: Editing
+                  - generic [ref=f33e442]: Lyra
+              - generic [ref=f33e446]: Draft
+              - generic [ref=f33e1851]: Unsaved
+            - generic [ref=f33e448]:
+              - generic [ref=f33e449]:
+                - generic [ref=f33e450]: Est.
+                - generic [ref=f33e451]: ₹5.00
+                - generic [ref=f33e452]: /min
+              - button "Call" [ref=f33e453] [cursor=pointer]
+              - button "Live test" [ref=f33e454] [cursor=pointer]
+              - button "Save" [ref=f33e1682] [cursor=pointer]
+              - button [ref=f33e456] [cursor=pointer]
+          - generic [ref=f33e457]:
+            - navigation "Editor sections" [ref=f33e458]:
+              - button "Overview" [ref=f33e459] [cursor=pointer]
+              - button "Prompt" [ref=f33e460] [cursor=pointer]
+              - button "Voice" [ref=f33e461] [cursor=pointer]
+              - button "Tools" [ref=f33e462] [cursor=pointer]
+              - button "Outcomes" [ref=f33e463] [cursor=pointer]
+              - button "Analytics" [ref=f33e464] [cursor=pointer]
+              - button "Voicemail" [ref=f33e465] [cursor=pointer]
+              - button "Settings" [ref=f33e466] [cursor=pointer]
+              - button "Versions" [ref=f33e467] [cursor=pointer]
+            - generic [ref=f33e1416]:
+              - generic [ref=f33e1417]:
+                - heading "Platform Tools" [level=3] [ref=f33e1418]
+                - paragraph [ref=f33e1419]: Built-in capabilities you can enable for this agent
+                - generic [ref=f33e1420]:
+                  - paragraph [ref=f33e1421]: Scheduling & Bookings
+                  - generic [ref=f33e1423]:
+                    - generic [ref=f33e1427]:
+                      - generic [ref=f33e1428]: Booking
+                      - paragraph [ref=f33e1430]: "One switch enables the full booking flow: check availability, book, list, reschedule, and cancel."
+                    - generic [ref=f33e1431]:
+                      - switch [ref=f33e1432] [cursor=pointer]
+                      - checkbox
+                  - paragraph [ref=f33e1433]: Messaging
+                  - generic [ref=f33e1435]:
+                    - generic [ref=f33e1441]:
+                      - generic [ref=f33e1442]: Send Email
+                      - paragraph [ref=f33e1444]: Lets the agent email mid-call. Connect Brevo under Connections first; pick templates there.
+                    - generic [ref=f33e1445]:
+                      - switch [ref=f33e1446] [cursor=pointer]
+                      - checkbox
+                  - generic [ref=f33e1448]:
+                    - generic [ref=f33e1453]:
+                      - generic [ref=f33e1454]: Send WhatsApp
+                      - paragraph [ref=f33e1456]: Mid-call WhatsApp only. After-call messages are on the Outcomes tab. Connect WhatsApp under Connections first.
+                    - generic [ref=f33e1457]:
+                      - switch [ref=f33e1458] [cursor=pointer]
+                      - checkbox
+                  - paragraph [ref=f33e1459]: Call Control
+                  - generic [ref=f33e1461]:
+                    - generic [ref=f33e1468]:
+                      - generic [ref=f33e1469]: End Call
+                      - paragraph [ref=f33e1471]: Lets the agent gracefully end the call when the conversation is complete.
+                    - generic [ref=f33e1472]:
+                      - switch [checked] [ref=f33e1473] [cursor=pointer]
+                      - checkbox [checked]
+                  - generic [ref=f33e1475]:
+                    - generic [ref=f33e1480]:
+                      - generic [ref=f33e1481]: Call Transfer
+                      - paragraph [ref=f33e1483]: Warm or cold transfer to a human number when the caller asks or the agent can’t resolve the issue.
+                    - generic [ref=f33e1484]:
+                      - switch [ref=f33e1485] [cursor=pointer]
+                      - checkbox
+                  - paragraph [ref=f33e1486]: Recording
+                  - button "Call Recording Records the full audio of each call (caller and agent) and stores it on the call. When enabled, recordings appear in the Call Recording tab on the call's detail page for playback and download." [ref=f33e1488] [cursor=pointer]:
+                    - generic [ref=f33e1493]:
+                      - generic [ref=f33e1494]: Call Recording
+                      - paragraph [ref=f33e1496]: Records the full audio of each call (caller and agent) and stores it on the call. When enabled, recordings appear in the Call Recording tab on the call's detail page for playback and download.
+                    - generic [ref=f33e1497]:
+                      - switch [checked] [ref=f33e1498]
+                      - checkbox [checked]
+                  - paragraph [ref=f33e1499]: After the call
+                  - button "Auto Summarization After each completed call, write a short AI summary on the History → Summary tab." [ref=f33e1501] [cursor=pointer]:
+                    - generic [ref=f33e1506]:
+                      - generic [ref=f33e1507]: Auto Summarization
+                      - paragraph [ref=f33e1509]: After each completed call, write a short AI summary on the History → Summary tab.
+                    - generic [ref=f33e1510]:
+                      - switch [ref=f33e1511]
+                      - checkbox
+                  - paragraph [ref=f33e1512]: Caller Intelligence
+                  - button "Gender Identification Beta Detects caller gender from voice at the start of the call. When enabled, the agent uses gender-appropriate salutations — \"Sir\", \"Ma'am\", or a neutral fallback." [ref=f33e1514] [cursor=pointer]:
+                    - generic [ref=f33e1519]:
+                      - generic [ref=f33e1520]:
+                        - generic [ref=f33e1521]: Gender Identification
+                        - generic [ref=f33e1522]: Beta
+                      - paragraph [ref=f33e1523]: Detects caller gender from voice at the start of the call. When enabled, the agent uses gender-appropriate salutations — "Sir", "Ma'am", or a neutral fallback.
+                    - generic [ref=f33e1524]:
+                      - switch [ref=f33e1525]
+                      - checkbox
+                  - button "Voice Memory Beta Remembers the caller's voiceprint. Detects mid-call handoffs (phone given to someone else) and can link the same voice across different phone numbers. Phone-number memory stays primary." [ref=f33e1527] [cursor=pointer]:
+                    - generic [ref=f33e1530]:
+                      - generic [ref=f33e1531]:
+                        - generic [ref=f33e1532]: Voice Memory
+                        - generic [ref=f33e1533]: Beta
+                      - paragraph [ref=f33e1534]: Remembers the caller's voiceprint. Detects mid-call handoffs (phone given to someone else) and can link the same voice across different phone numbers. Phone-number memory stays primary.
+                    - generic [ref=f33e1535]:
+                      - switch [ref=f33e1536]
+                      - checkbox
+              - generic [ref=f33e1537]:
+                - generic [ref=f33e1538]:
+                  - generic [ref=f33e1539]:
+                    - heading "Custom Tools" [level=3] [ref=f33e1540]
+                    - paragraph [ref=f33e1541]: Mid-call HTTP to your API (while talking). Not the same as post-call notify or Developers event subscriptions.
+                  - button "Mid-call HTTP" [ref=f33e1542] [cursor=pointer]
+                - generic [ref=f33e1543]:
+                  - generic [ref=f33e1755]:
+                    - generic [ref=f33e1756]:
+                      - generic [ref=f33e1757]: Mid-call HTTP
+                      - button [ref=f33e1762] [cursor=pointer]
+                    - generic [ref=f33e1763]:
+                      - generic [ref=f33e1764]:
+                        - text: Function Name
+                        - textbox "Function Name" [ref=f33e1765]:
+                          - /placeholder: snake_case_name
+                          - text: identify_shop_by_phone
+                      - generic [ref=f33e1766]:
+                        - text: Pre-call Message
+                        - textbox "Pre-call Message" [ref=f33e1767]:
+                          - /placeholder: One moment…
+                          - text: Identifying shop...
+                    - generic [ref=f33e1768]:
+                      - text: Description (shown to LLM)
+                      - textbox "Description (shown to LLM)" [ref=f33e1769]:
+                        - /placeholder: When should the LLM call this tool?
+                        - text: Identify shop by phone number from caller ID
+                    - generic [ref=f33e1770]:
+                      - generic [ref=f33e1771]:
+                        - generic [ref=f33e1772]:
+                          - text: Endpoint URL
+                          - textbox "Endpoint URL" [ref=f33e1773]:
+                            - /placeholder: https://your-api.com/webhook
+                            - text: https://prevent-deposit-purple-module.trycloudflare.com/api/shop-context
+                        - generic [ref=f33e1774]:
+                          - text: Method
+                          - combobox [ref=f33e1775] [cursor=pointer]:
+                            - generic: GET
+                          - combobox [ref=f33e1778]
+                      - generic [ref=f33e1779]:
+                        - text: X-Webhook-Secret (optional)
+                        - textbox "X-Webhook-Secret (optional)" [ref=f33e1780]:
+                          - /placeholder: shared-secret
+                      - generic [ref=f33e1782]:
+                        - generic [ref=f33e1783]:
+                          - generic [ref=f33e1784]: Parameters
+                          - button "Add" [ref=f33e1785] [cursor=pointer]
+                        - generic [ref=f33e1786]:
+                          - textbox "name" [ref=f33e1788]: phone
+                          - generic [ref=f33e1789]:
+                            - combobox [ref=f33e1790] [cursor=pointer]:
+                              - generic: string
+                            - combobox [ref=f33e1793]
+                          - textbox "description" [ref=f33e1795]: Caller's phone number
+                          - generic [ref=f33e1796]:
+                            - switch [ref=f33e1797] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=f33e1798]: req
+                          - button [ref=f33e1799] [cursor=pointer]
+                  - generic [ref=f33e1803]:
+                    - generic [ref=f33e1804]:
+                      - generic [ref=f33e1805]: Mid-call HTTP
+                      - button [ref=f33e1810] [cursor=pointer]
+                    - generic [ref=f33e1811]:
+                      - generic [ref=f33e1812]:
+                        - text: Function Name
+                        - textbox "Function Name" [ref=f33e1813]:
+                          - /placeholder: snake_case_name
+                          - text: get_shop_context
+                      - generic [ref=f33e1814]:
+                        - text: Pre-call Message
+                        - textbox "Pre-call Message" [ref=f33e1815]:
+                          - /placeholder: One moment…
+                          - text: Loading shop...
+                    - generic [ref=f33e1816]:
+                      - text: Description (shown to LLM)
+                      - textbox "Description (shown to LLM)" [ref=f33e1817]:
+                        - /placeholder: When should the LLM call this tool?
+                        - text: Get full shop context by shop_id
+                    - generic [ref=f33e1818]:
+                      - generic [ref=f33e1819]:
+                        - generic [ref=f33e1820]:
+                          - text: Endpoint URL
+                          - textbox "Endpoint URL" [ref=f33e1821]:
+                            - /placeholder: https://your-api.com/webhook
+                            - text: https://prevent-deposit-purple-module.trycloudflare.com/api/shop-context
+                        - generic [ref=f33e1822]:
+                          - text: Method
+                          - combobox [ref=f33e1823] [cursor=pointer]:
+                            - generic: GET
+                          - combobox [ref=f33e1826]
+                      - generic [ref=f33e1827]:
+                        - text: X-Webhook-Secret (optional)
+                        - textbox "X-Webhook-Secret (optional)" [ref=f33e1828]:
+                          - /placeholder: shared-secret
+                      - generic [ref=f33e1830]:
+                        - generic [ref=f33e1831]:
+                          - generic [ref=f33e1832]: Parameters
+                          - button "Add" [ref=f33e1833] [cursor=pointer]
+                        - generic [ref=f33e1834]:
+                          - textbox "name" [ref=f33e1836]: shop_id
+                          - generic [ref=f33e1837]:
+                            - combobox [ref=f33e1838] [cursor=pointer]:
+                              - generic: string
+                            - combobox [ref=f33e1841]
+                          - textbox "description" [ref=f33e1843]: Shop identifier
+                          - generic [ref=f33e1844]:
+                            - switch [ref=f33e1845] [cursor=pointer]
+                            - checkbox
+                            - generic [ref=f33e1846]: req
+                          - button [ref=f33e1847] [cursor=pointer]
+                  - generic [ref=f33e1852]:
+                    - generic [ref=f33e1853]:
+                      - generic [ref=f33e1854]: Mid-call HTTP
+                      - button [ref=f33e1859] [cursor=pointer]
+                    - generic [ref=f33e1860]:
+                      - generic [ref=f33e1861]:
+                        - text: Function Name
+                        - textbox "Function Name" [active] [ref=f33e1862]:
+                          - /placeholder: snake_case_name
+                          - text: custom_action
+                      - generic [ref=f33e1863]:
+                        - text: Pre-call Message
+                        - textbox "Pre-call Message" [ref=f33e1864]:
+                          - /placeholder: One moment…
+                          - text: One moment…
+                    - generic [ref=f33e1865]:
+                      - text: Description (shown to LLM)
+                      - textbox "Description (shown to LLM)" [ref=f33e1866]:
+                        - /placeholder: When should the LLM call this tool?
+                        - text: Invoke when caller requests a specific action.
+                    - generic [ref=f33e1867]:
+                      - generic [ref=f33e1868]:
+                        - generic [ref=f33e1869]:
+                          - text: Endpoint URL
+                          - textbox "Endpoint URL" [ref=f33e1870]:
+                            - /placeholder: https://your-api.com/webhook
+                        - generic [ref=f33e1871]:
+                          - text: Method
+                          - combobox [ref=f33e1872] [cursor=pointer]:
+                            - generic: POST
+                          - combobox [ref=f33e1875]
+                      - generic [ref=f33e1876]:
+                        - text: X-Webhook-Secret (optional)
+                        - textbox "X-Webhook-Secret (optional)" [ref=f33e1877]:
+                          - /placeholder: shared-secret
+                      - generic [ref=f33e1879]:
+                        - generic [ref=f33e1880]:
+                          - generic [ref=f33e1881]: Parameters
+                          - button "Add" [ref=f33e1882] [cursor=pointer]
+                        - paragraph [ref=f33e1883]: No parameters defined — LLM will pass a reason string.
+    - region "Notifications (F8)":
+      - list
+  - generic [ref=f33e366]: "0"

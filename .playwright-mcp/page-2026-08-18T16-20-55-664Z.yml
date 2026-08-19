@@ -1,0 +1,138 @@
+- generic [ref=f23e1]:
+  - generic [ref=f23e3]:
+    - generic [ref=f23e4]:
+      - list [ref=f23e6]:
+        - listitem [ref=f23e7]:
+          - button "CALL" [ref=f23e9] [cursor=pointer]
+        - listitem [ref=f23e10]:
+          - button "SMS" [ref=f23e11] [cursor=pointer]
+        - listitem [ref=f23e12]:
+          - link "API Credentials" [ref=f23e13] [cursor=pointer]:
+            - /url: https://my.exotel.com/lyra61/apisettings/site#api-credentials
+      - list [ref=f23e15]:
+        - listitem [ref=f23e16]:
+          - generic "09042113132" [ref=f23e18] [cursor=pointer]:
+            - checkbox [checked] [ref=f23e19]
+            - generic [ref=f23e20]: "ON"
+        - listitem [ref=f23e22]:
+          - generic [ref=f23e23]: "Credits: 500"
+        - listitem [ref=f23e29]:
+          - generic "Help" [ref=f23e31] [cursor=pointer]
+        - listitem [ref=f23e32]:
+          - generic "Loujan B" [ref=f23e34] [cursor=pointer]
+        - listitem [ref=f23e35]:
+          - generic [ref=f23e37] [cursor=pointer]
+    - generic [ref=f23e38]:
+      - generic [ref=f23e39]:
+        - heading [level=1] [ref=f23e40]:
+          - link [ref=f23e41] [cursor=pointer]:
+            - /url: https://my.exotel.com/
+            - img "OpenVBX" [ref=f23e42]
+        - list [ref=f23e46]:
+          - generic [ref=f23e47]:
+            - heading "My Account" [level=3] [ref=f23e48] [cursor=pointer]
+            - list [ref=f23e50]:
+              - listitem [ref=f23e51]:
+                - link "Personal Info" [ref=f23e52] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/account
+              - listitem [ref=f23e53]:
+                - link "Impersonation" [ref=f23e54] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/impersonation/#/impersonation
+              - listitem [ref=f23e55]:
+                - link "Company Info" [ref=f23e56] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/company_details/#/company-info
+              - listitem [ref=f23e57]:
+                - link "Personalization" [ref=f23e58] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/personalization
+              - listitem [ref=f23e59]:
+                - link "Notifications" [ref=f23e60] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/notifications
+              - listitem [ref=f23e61]:
+                - link "Heartbeat" [ref=f23e62] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/heartbeat
+              - listitem [ref=f23e63]:
+                - link "Access Control" [ref=f23e64] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/access_control
+          - generic [ref=f23e65]:
+            - heading "Call Settings" [level=3] [ref=f23e66] [cursor=pointer]
+            - list [ref=f23e68]:
+              - listitem [ref=f23e69]:
+                - link "Audio Library" [ref=f23e70] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/audio_library
+              - listitem [ref=f23e71]:
+                - link "Whitelist Numbers" [ref=f23e72] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/whitelist
+          - generic [ref=f23e73]:
+            - heading "SMS Settings" [level=3] [ref=f23e74] [cursor=pointer]
+            - list [ref=f23e76]:
+              - listitem [ref=f23e77]:
+                - link "SMS Templates" [ref=f23e78] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/sms_templates
+              - listitem [ref=f23e79]:
+                - link "Sender ID" [ref=f23e80] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/sms_senderid
+          - generic [ref=f23e81]:
+            - heading "Developer Settings" [level=3] [ref=f23e82] [cursor=pointer]
+            - list [ref=f23e84]:
+              - listitem [ref=f23e85]:
+                - link "API Settings" [ref=f23e86] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/apisettings/site
+          - generic [ref=f23e87]:
+            - heading "Payment and Bills" [level=3] [ref=f23e88] [cursor=pointer]
+            - list [ref=f23e90]:
+              - listitem [ref=f23e91]:
+                - link "Make a Payment" [ref=f23e92] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/npay
+              - listitem [ref=f23e93]:
+                - link "Payment History" [ref=f23e94] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/payments
+      - generic [ref=f23e100]:
+        - generic [ref=f23e168]:
+          - generic [ref=f23e170]:
+            - img [ref=f23e172]:
+              - generic [ref=f23e174]: "1"
+            - generic [ref=f23e175]: PAN Verification
+          - generic [ref=f23e180]:
+            - img [ref=f23e182]:
+              - generic [ref=f23e184]: "2"
+            - generic [ref=f23e185]: Business Details
+          - generic [ref=f23e190]:
+            - img [ref=f23e192]:
+              - generic [ref=f23e194]: "3"
+            - generic [ref=f23e195]: Authorised Signatory
+        - generic [ref=f23e102]:
+          - generic [ref=f23e199]:
+            - heading "Verify your PAN" [level=4] [ref=f23e205]
+            - paragraph [ref=f23e206]: We use your PAN to fetch and verify your business details from the Income Tax Department.
+            - generic [ref=f23e207]:
+              - generic [ref=f23e208]:
+                - generic: PAN Number
+                - generic [ref=f23e209]:
+                  - textbox "PAN Number" [active] [ref=f23e210]:
+                    - /placeholder: e.g., ABCDE1234F
+                  - group
+              - generic [ref=f23e211]: 5 letters · 4 digits · 1 letter
+            - paragraph [ref=f23e216]:
+              - strong [ref=f23e217]: Your PAN is safe.
+              - text: We verify it directly with NSDL using a secure encrypted channel. We never store or share your PAN.
+            - generic [ref=f23e221]:
+              - text: "By proceeding further, you understand, acknowledge, and agree that:"
+              - generic [ref=f23e222]: (i) this KYC/Business Verification is jointly conducted by Exotel Techcom Private Limited and its wholly-owned subsidiary, Veeno Communications Private Limited, both DoT-licensed providers;
+              - generic [ref=f23e223]: (ii) depending on the specific products/services you choose to avail, they will be provisioned by either entity; and
+              - generic [ref=f23e224]: (iii) the Customer Application Form (CAF) will be executed by you with both entities.
+          - generic [ref=f23e225]:
+            - button "Verify PAN" [disabled]
+    - paragraph [ref=f23e161]:
+      - text: Obelix by Exotel • Built in Bengaluru • Inspired also by OpenVBX • © 2026 -
+      - link "Exotel Techcom Pvt. Ltd." [ref=f23e162] [cursor=pointer]:
+        - /url: http://exotel.com/
+      - text: •
+      - link "Terms" [ref=f23e163] [cursor=pointer]:
+        - /url: https://exotel.com/terms-of-service-exotel/
+      - text: •
+      - link "Privacy" [ref=f23e164] [cursor=pointer]:
+        - /url: https://exotel.com/privacy-policy/
+      - text: •
+      - link "Support" [ref=f23e165] [cursor=pointer]:
+        - /url: https://docs.exotel.com/business-phone-system
+  - text: ★ ★ ★ ★ ★ ★ ★ ★ ★ ★

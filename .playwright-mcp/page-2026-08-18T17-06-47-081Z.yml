@@ -1,0 +1,168 @@
+- generic [ref=f33e1]:
+  - generic [ref=f33e2]:
+    - generic [ref=f33e3]:
+      - complementary [ref=f33e4]:
+        - generic [ref=f33e5]:
+          - generic [ref=f33e6]:
+            - link "SnapServe SnapServe" [ref=f33e7] [cursor=pointer]:
+              - /url: /app
+              - img "SnapServe" [ref=f33e8]
+              - generic "SnapServe" [ref=f33e13]
+            - button "Collapse" [ref=f33e14] [cursor=pointer]
+          - button "Search… ⌘K" [ref=f33e18] [cursor=pointer]:
+            - generic [ref=f33e22]: Search…
+            - generic [ref=f33e23]: ⌘K
+          - button "New agent" [ref=f33e25] [cursor=pointer]
+          - generic [ref=f33e28]:
+            - generic [ref=f33e30]:
+              - link "Home" [ref=f33e31] [cursor=pointer]:
+                - /url: /app/home
+              - link "Campaigns" [ref=f33e38] [cursor=pointer]:
+                - /url: /app/campaigns
+              - link "Agents" [ref=f33e47] [cursor=pointer]:
+                - /url: /app/agents
+              - link "Phone numbers" [ref=f33e55] [cursor=pointer]:
+                - /url: /app/phone-numbers
+              - link "Connections" [ref=f33e62] [cursor=pointer]:
+                - /url: /app/connections
+              - link "History" [ref=f33e71] [cursor=pointer]:
+                - /url: /app/history
+              - link "Analytics" [ref=f33e79] [cursor=pointer]:
+                - /url: /app/analytics
+            - generic [ref=f33e86]:
+              - paragraph [ref=f33e88]: MORE
+              - generic [ref=f33e89]:
+                - link "Knowledge" [ref=f33e90] [cursor=pointer]:
+                  - /url: /app/knowledge-bases
+                - link "Memory" [ref=f33e98] [cursor=pointer]:
+                  - /url: /app/memory
+                - link "Squads" [ref=f33e107] [cursor=pointer]:
+                  - /url: /app/squads
+                - link "Bookings" [ref=f33e117] [cursor=pointer]:
+                  - /url: /app/scheduling
+            - button "Settings" [ref=f33e129] [cursor=pointer]
+          - generic [ref=f33e143]:
+            - link "Documentation" [ref=f33e145] [cursor=pointer]:
+              - /url: /docs
+            - link "₹5500.00 ~1100m" [ref=f33e153] [cursor=pointer]:
+              - /url: /app/wallet
+              - generic [ref=f33e161]:
+                - generic [ref=f33e162]: ₹5500.00
+                - generic [ref=f33e163]: ~1100m
+            - button "L Loujan" [ref=f33e168] [cursor=pointer]:
+              - generic [ref=f33e169]: L
+              - generic [ref=f33e171]: Loujan
+      - main [ref=f33e174]:
+        - generic [ref=f33e175]:
+          - generic [ref=f33e176]:
+            - generic [ref=f33e177]: 🎙️ Live Event
+            - generic [ref=f33e178]:
+              - text: India's biggest Voice-a-thon powered by
+              - strong [ref=f33e179]: VoBiz
+              - text: "& organized by"
+              - strong [ref=f33e180]: SnapServe
+              - text: — Please register now!
+          - generic [ref=f33e181]:
+            - link "Register for Event" [ref=f33e182] [cursor=pointer]:
+              - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+            - button "Dismiss notification" [ref=f33e183] [cursor=pointer]
+        - generic [ref=f33e431]:
+          - generic [ref=f33e432]:
+            - generic [ref=f33e433]:
+              - button "Back" [ref=f33e434] [cursor=pointer]
+              - button "Agents" [ref=f33e436] [cursor=pointer]
+              - button "Editing Lyra" [ref=f33e439] [cursor=pointer]:
+                - generic [ref=f33e440]:
+                  - generic [ref=f33e441]: Editing
+                  - generic [ref=f33e442]: Lyra
+              - generic [ref=f33e446]: Draft
+            - generic [ref=f33e448]:
+              - generic [ref=f33e449]:
+                - generic [ref=f33e450]: Est.
+                - generic [ref=f33e451]: ₹5.00
+                - generic [ref=f33e452]: /min
+              - button "Call" [ref=f33e453] [cursor=pointer]
+              - button "Live test" [ref=f33e454] [cursor=pointer]
+              - button "Save" [ref=f33e455] [cursor=pointer]
+              - button [ref=f33e456] [cursor=pointer]
+          - generic [ref=f33e457]:
+            - navigation "Editor sections" [ref=f33e458]:
+              - button "Overview" [ref=f33e459] [cursor=pointer]
+              - button "Prompt" [ref=f33e460] [cursor=pointer]
+              - button "Voice" [active] [ref=f33e461] [cursor=pointer]
+              - button "Tools" [ref=f33e462] [cursor=pointer]
+              - button "Outcomes" [ref=f33e463] [cursor=pointer]
+              - button "Analytics" [ref=f33e464] [cursor=pointer]
+              - button "Voicemail" [ref=f33e465] [cursor=pointer]
+              - button "Settings" [ref=f33e466] [cursor=pointer]
+              - button "Versions" [ref=f33e467] [cursor=pointer]
+            - generic [ref=f33e664]:
+              - generic [ref=f33e665]:
+                - generic [ref=f33e666]:
+                  - heading "Speaking" [level=3] [ref=f33e667]
+                  - paragraph [ref=f33e668]: How the agent sounds on the call — provider, voice, speed, and model.
+                - generic [ref=f33e669]:
+                  - generic [ref=f33e670]:
+                    - generic [ref=f33e671]:
+                      - text: Provider
+                      - combobox [ref=f33e672] [cursor=pointer]:
+                        - generic: Cartesia (Sonic)
+                      - combobox [ref=f33e675]
+                    - generic [ref=f33e676]:
+                      - generic [ref=f33e677]:
+                        - generic [ref=f33e678]: Choose voice
+                        - button "Clone voice" [ref=f33e679] [cursor=pointer]
+                      - combobox [ref=f33e680] [cursor=pointer]:
+                        - generic: Customer Support Lady
+                      - combobox [ref=f33e683]
+                      - button "Preview Voice" [ref=f33e685] [cursor=pointer]
+                    - generic [ref=f33e686]:
+                      - text: Model
+                      - combobox [ref=f33e687] [cursor=pointer]:
+                        - generic: Sonic 3.5 — 42 languages, lowest latency
+                      - combobox [ref=f33e690]
+                  - generic [ref=f33e693]:
+                    - generic [ref=f33e694]:
+                      - text: Speaking speed
+                      - paragraph [ref=f33e695]: How fast the agent talks. 1.0× is normal.
+                    - generic [ref=f33e696]:
+                      - slider [ref=f33e699] [cursor=pointer]: "1"
+                      - spinbutton [ref=f33e700]: "1"
+                      - generic [ref=f33e701]: ×
+              - generic [ref=f33e702]:
+                - generic [ref=f33e703]:
+                  - heading "Listening" [level=3] [ref=f33e704]
+                  - paragraph [ref=f33e705]: How the agent hears the caller — noise cancel, backchannels, and ambient bed.
+                - generic [ref=f33e706]:
+                  - generic [ref=f33e707]:
+                    - generic [ref=f33e708]:
+                      - text: Noise Cancellation
+                      - paragraph [ref=f33e709]: Software noise filter — VoBiz & web calls are denoised upstream automatically
+                    - switch "Noise Cancellation" [checked] [ref=f33e710] [cursor=pointer]
+                    - checkbox [checked]
+                  - generic [ref=f33e711]:
+                    - generic [ref=f33e712]:
+                      - text: Backchanneling
+                      - paragraph [ref=f33e713]: Agent says "mm-hmm", "I see" while listening
+                    - switch "Backchanneling" [checked] [ref=f33e714] [cursor=pointer]
+                    - checkbox [checked]
+                  - generic [ref=f33e715]:
+                    - generic [ref=f33e716]:
+                      - text: Background Noise
+                      - paragraph [ref=f33e717]: Ambient bed under the agent — not the agent voice level
+                    - switch "Background Noise" [ref=f33e718] [cursor=pointer]
+                    - checkbox
+              - generic [ref=f33e719]:
+                - generic [ref=f33e720]:
+                  - heading "Phone feel" [level=3] [ref=f33e721]
+                  - paragraph [ref=f33e722]: How quickly the agent takes the turn — same Call Engine knobs as Settings → Engine.
+                  - paragraph [ref=f33e723]: Fast turns on quick pause detection (~0.13s) for Sarvam; Balanced and Patient use Sarvam's patient mode so slow speakers aren't cut off.
+                - generic [ref=f33e724]:
+                  - generic [ref=f33e725]:
+                    - button "Fast" [ref=f33e726] [cursor=pointer]
+                    - button "Balanced" [ref=f33e727] [cursor=pointer]
+                    - button "Patient" [ref=f33e728] [cursor=pointer]
+                  - paragraph [ref=f33e729]: Fine-tune endpointing, linear delay, and interrupt words on Settings → Engine.
+    - region "Notifications (F8)":
+      - list
+  - generic [ref=f33e366]: "0"

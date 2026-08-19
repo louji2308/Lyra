@@ -1,0 +1,21 @@
+- generic [ref=f25e2]:
+  - generic [ref=f25e4]:
+    - generic [ref=f25e5]: SnapServe
+    - heading "Sign in to SnapServe" [level=1] [ref=f25e12]
+    - paragraph [ref=f25e13]: Sign in to manage your voice agents.
+    - generic [ref=f25e14]: ₹500 free credit · ~100 minutes on us
+    - link "Continue with Google" [ref=f25e18] [cursor=pointer]:
+      - /url: /api/auth/google/connect?return_to=https%3A%2F%2Fapp.snapserve.ai
+    - generic [ref=f25e25]:
+      - text: Don't have an account?
+      - button "Sign up" [ref=f25e26] [cursor=pointer]
+    - paragraph [ref=f25e27]:
+      - text: By continuing, you agree to our
+      - link "Terms of Service" [ref=f25e28] [cursor=pointer]:
+        - /url: /terms
+      - text: and
+      - link "Privacy Policy" [ref=f25e29] [cursor=pointer]:
+        - /url: /privacy
+      - text: .
+  - region "Notifications (F8)":
+    - list

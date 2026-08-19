@@ -1,0 +1,119 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic:
+            - link:
+              - /url: /app
+              - generic: SnapServe
+            - button
+          - generic:
+            - button:
+              - generic: Search…
+              - generic: ⌘K
+          - generic:
+            - button:
+              - generic: New agent
+          - generic:
+            - generic:
+              - generic:
+                - link:
+                  - /url: /app/home
+                  - generic: Home
+                - link:
+                  - /url: /app/campaigns
+                  - generic: Campaigns
+                - link:
+                  - /url: /app/agents
+                  - generic: Agents
+                - link:
+                  - /url: /app/phone-numbers
+                  - generic: Phone numbers
+                - link:
+                  - /url: /app/connections
+                  - generic: Connections
+                - link:
+                  - /url: /app/history
+                  - generic: History
+                - link:
+                  - /url: /app/analytics
+                  - generic: Analytics
+            - generic:
+              - paragraph: MORE
+              - generic:
+                - link:
+                  - /url: /app/knowledge-bases
+                  - generic: Knowledge
+                - link:
+                  - /url: /app/memory
+                  - generic: Memory
+                - link:
+                  - /url: /app/squads
+                  - generic: Squads
+                - link:
+                  - /url: /app/scheduling
+                  - generic: Bookings
+            - button:
+              - generic: Settings
+          - generic:
+            - generic:
+              - link:
+                - /url: /docs
+                - generic: Documentation
+            - generic:
+              - link:
+                - /url: /app/wallet
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: ₹5500.00
+                      - generic: ~1100m
+            - generic:
+              - generic:
+                - button:
+                  - generic: L
+                  - generic: Loujan
+      - main:
+        - generic:
+          - generic:
+            - generic: 🎙️ Live Event
+            - generic:
+              - text: India's biggest Voice-a-thon powered by
+              - strong: VoBiz
+              - text: "& organized by"
+              - strong: SnapServe
+              - text: — Please register now!
+          - generic:
+            - link:
+              - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+              - text: Register for Event
+            - button
+        - generic:
+          - button
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=2]: Select an agent
+                  - paragraph: Pick one from the list, or create a new agent for phone — or phone plus meetings.
+                - generic:
+                  - button: New agent
+                  - button: Build with AI
+    - list
+  - generic: "0"
+  - dialog [ref=f33e368]:
+    - generic [ref=f33e369]:
+      - heading "Who is this for?" [level=2] [ref=f33e370]
+      - paragraph [ref=f33e371]: Start with one agent, or create two that hand off mid-call.
+    - generic [ref=f33e372]:
+      - button [active] [ref=f33e373] [cursor=pointer]:
+        - generic [ref=f33e378]:
+          - paragraph [ref=f33e379]: One agent
+          - paragraph [ref=f33e380]: Single voice personality
+      - button [ref=f33e381] [cursor=pointer]:
+        - generic [ref=f33e388]:
+          - paragraph [ref=f33e389]: Team
+          - paragraph [ref=f33e390]: Create two agents that hand off mid-call
+      - button "Or build with AI (guided)" [ref=f33e391] [cursor=pointer]
+    - button "Close" [ref=f33e395] [cursor=pointer]

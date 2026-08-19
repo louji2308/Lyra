@@ -1,0 +1,172 @@
+- generic [ref=f33e1]:
+  - generic [ref=f33e2]:
+    - generic [ref=f33e3]:
+      - complementary [ref=f33e4]:
+        - generic [ref=f33e5]:
+          - generic [ref=f33e6]:
+            - link "SnapServe SnapServe" [ref=f33e7] [cursor=pointer]:
+              - /url: /app
+              - img "SnapServe" [ref=f33e8]
+              - generic "SnapServe" [ref=f33e13]
+            - button "Collapse" [ref=f33e14] [cursor=pointer]
+          - button "Search… ⌘K" [ref=f33e18] [cursor=pointer]:
+            - generic [ref=f33e22]: Search…
+            - generic [ref=f33e23]: ⌘K
+          - button "New agent" [ref=f33e25] [cursor=pointer]
+          - generic [ref=f33e28]:
+            - generic [ref=f33e30]:
+              - link "Home" [ref=f33e31] [cursor=pointer]:
+                - /url: /app/home
+              - link "Campaigns" [ref=f33e38] [cursor=pointer]:
+                - /url: /app/campaigns
+              - link "Agents" [ref=f33e47] [cursor=pointer]:
+                - /url: /app/agents
+              - link "Phone numbers" [ref=f33e55] [cursor=pointer]:
+                - /url: /app/phone-numbers
+              - link "Connections" [ref=f33e62] [cursor=pointer]:
+                - /url: /app/connections
+              - link "History" [ref=f33e71] [cursor=pointer]:
+                - /url: /app/history
+              - link "Analytics" [ref=f33e79] [cursor=pointer]:
+                - /url: /app/analytics
+            - generic [ref=f33e86]:
+              - paragraph [ref=f33e88]: MORE
+              - generic [ref=f33e89]:
+                - link "Knowledge" [ref=f33e90] [cursor=pointer]:
+                  - /url: /app/knowledge-bases
+                - link "Memory" [ref=f33e98] [cursor=pointer]:
+                  - /url: /app/memory
+                - link "Squads" [ref=f33e107] [cursor=pointer]:
+                  - /url: /app/squads
+                - link "Bookings" [ref=f33e117] [cursor=pointer]:
+                  - /url: /app/scheduling
+            - button "Settings" [ref=f33e129] [cursor=pointer]
+          - generic [ref=f33e143]:
+            - link "Documentation" [ref=f33e145] [cursor=pointer]:
+              - /url: /docs
+            - link "₹5500.00 ~1100m" [ref=f33e153] [cursor=pointer]:
+              - /url: /app/wallet
+              - generic [ref=f33e161]:
+                - generic [ref=f33e162]: ₹5500.00
+                - generic [ref=f33e163]: ~1100m
+            - button "L Loujan" [ref=f33e168] [cursor=pointer]:
+              - generic [ref=f33e169]: L
+              - generic [ref=f33e171]: Loujan
+      - main [ref=f33e174]:
+        - generic [ref=f33e175]:
+          - generic [ref=f33e176]:
+            - generic [ref=f33e177]: 🎙️ Live Event
+            - generic [ref=f33e178]:
+              - text: India's biggest Voice-a-thon powered by
+              - strong [ref=f33e179]: VoBiz
+              - text: "& organized by"
+              - strong [ref=f33e180]: SnapServe
+              - text: — Please register now!
+          - generic [ref=f33e181]:
+            - link "Register for Event" [ref=f33e182] [cursor=pointer]:
+              - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+            - button "Dismiss notification" [ref=f33e183] [cursor=pointer]
+        - generic [ref=f33e431]:
+          - generic [ref=f33e432]:
+            - generic [ref=f33e433]:
+              - button "Back" [ref=f33e434] [cursor=pointer]
+              - button "Agents" [ref=f33e436] [cursor=pointer]
+              - button "Editing Lyra" [ref=f33e439] [cursor=pointer]:
+                - generic [ref=f33e440]:
+                  - generic [ref=f33e441]: Editing
+                  - generic [ref=f33e442]: Lyra
+              - generic [ref=f33e446]: Draft
+            - generic [ref=f33e448]:
+              - generic [ref=f33e449]:
+                - generic [ref=f33e450]: Est.
+                - generic [ref=f33e451]: ₹5.00
+                - generic [ref=f33e452]: /min
+              - button "Call" [ref=f33e453] [cursor=pointer]
+              - button "Live test" [ref=f33e454] [cursor=pointer]
+              - button "Save" [ref=f33e455] [cursor=pointer]
+              - button [ref=f33e456] [cursor=pointer]
+          - generic [ref=f33e457]:
+            - navigation "Editor sections" [ref=f33e458]:
+              - button "Overview" [ref=f33e459] [cursor=pointer]
+              - button "Prompt" [active] [ref=f33e460] [cursor=pointer]
+              - button "Voice" [ref=f33e461] [cursor=pointer]
+              - button "Tools" [ref=f33e462] [cursor=pointer]
+              - button "Outcomes" [ref=f33e463] [cursor=pointer]
+              - button "Analytics" [ref=f33e464] [cursor=pointer]
+              - button "Voicemail" [ref=f33e465] [cursor=pointer]
+              - button "Settings" [ref=f33e466] [cursor=pointer]
+              - button "Versions" [ref=f33e467] [cursor=pointer]
+            - generic [ref=f33e469]:
+              - generic [ref=f33e572]:
+                - generic [ref=f33e573]:
+                  - generic [ref=f33e574]:
+                    - heading "Welcome" [level=2] [ref=f33e575]
+                    - paragraph [ref=f33e576]: What callers hear at the start of the call.
+                  - generic [ref=f33e577]:
+                    - generic [ref=f33e578]:
+                      - generic [ref=f33e579]: Who speaks first
+                      - combobox [ref=f33e580] [cursor=pointer]:
+                        - generic: Assistant speaks first
+                      - combobox [ref=f33e583]
+                    - textbox "Hello, how can I help?" [ref=f33e585]: Hello! How can I help you today?
+                - generic [ref=f33e586]:
+                  - generic [ref=f33e587]:
+                    - generic [ref=f33e588]:
+                      - heading "Talk" [level=2] [ref=f33e589]
+                      - generic [ref=f33e590]: English (India)
+                    - paragraph [ref=f33e591]: Instructions for phone calls.
+                  - generic [ref=f33e592]:
+                    - generic [ref=f33e593]: 37 chars
+                    - button "Generate" [ref=f33e594] [cursor=pointer]
+                - generic [ref=f33e596]:
+                  - generic [ref=f33e597]:
+                    - generic [ref=f33e598]: Call prompt
+                    - generic [ref=f33e599]: markdown · plain text
+                  - textbox "You are a helpful voice assistant on phone calls…" [ref=f33e600]: You are a helpful AI voice assistant.
+                - generic [ref=f33e601]:
+                  - heading "Call behaviour" [level=3] [ref=f33e603]
+                  - generic [ref=f33e604]:
+                    - generic [ref=f33e605]:
+                      - generic [ref=f33e606]:
+                        - generic [ref=f33e607]: Timezone
+                        - paragraph [ref=f33e608]: Injected as current-time context
+                      - generic [ref=f33e610]:
+                        - combobox [ref=f33e611] [cursor=pointer]:
+                          - generic: Not set
+                        - combobox [ref=f33e614]
+                    - generic [ref=f33e615]:
+                      - generic [ref=f33e616]:
+                        - generic [ref=f33e617]: End-call phrases
+                        - paragraph [ref=f33e618]: Hang up after saying any of these
+                      - textbox "goodbye, bye, see you" [ref=f33e621]
+                - generic [ref=f33e622]:
+                  - generic [ref=f33e623]:
+                    - generic [ref=f33e624]:
+                      - heading "Prompt variables" [level=3] [ref=f33e625]
+                      - paragraph [ref=f33e626]: "Use {{variable}} in the prompt"
+                    - button "Add" [ref=f33e627] [cursor=pointer]
+                  - paragraph [ref=f33e628]: No variables yet.
+              - complementary [ref=f33e630]:
+                - generic [ref=f33e631]: At a glance
+                - generic [ref=f33e633]:
+                  - generic [ref=f33e634]:
+                    - paragraph [ref=f33e635]: Lyra
+                    - paragraph [ref=f33e636]: Draft
+                  - list [ref=f33e638]:
+                    - listitem [ref=f33e639]:
+                      - generic [ref=f33e643]:
+                        - paragraph [ref=f33e644]: Welcome
+                        - paragraph [ref=f33e645]: Assistant first
+                    - listitem [ref=f33e646]:
+                      - generic [ref=f33e650]:
+                        - paragraph [ref=f33e651]: Call prompt
+                        - paragraph [ref=f33e652]: 37 chars
+                    - listitem [ref=f33e653]:
+                      - generic [ref=f33e657]:
+                        - paragraph [ref=f33e658]: Voice
+                        - paragraph [ref=f33e659]: Set
+                  - button "Live test" [ref=f33e660] [cursor=pointer]
+                  - paragraph [ref=f33e661]: Save from the header when you are done. Overview shows phone, pipeline, and knowledge readiness.
+    - region "Notifications (F8)":
+      - list
+  - generic [ref=f33e366]: "0"

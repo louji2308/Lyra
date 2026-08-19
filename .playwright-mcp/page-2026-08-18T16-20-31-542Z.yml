@@ -1,0 +1,156 @@
+- generic [active] [ref=f23e1]:
+  - generic [ref=f23e3]:
+    - generic [ref=f23e4]:
+      - list [ref=f23e6]:
+        - listitem [ref=f23e7]:
+          - button "CALL" [ref=f23e9] [cursor=pointer]
+        - listitem [ref=f23e10]:
+          - button "SMS" [ref=f23e11] [cursor=pointer]
+        - listitem [ref=f23e12]:
+          - link "API Credentials" [ref=f23e13] [cursor=pointer]:
+            - /url: https://my.exotel.com/lyra61/apisettings/site#api-credentials
+      - list [ref=f23e15]:
+        - listitem [ref=f23e16]:
+          - generic "09042113132" [ref=f23e18] [cursor=pointer]:
+            - checkbox [checked] [ref=f23e19]
+            - generic [ref=f23e20]: "ON"
+        - listitem [ref=f23e22]:
+          - generic [ref=f23e23]: "Credits: 500"
+        - listitem [ref=f23e29]:
+          - generic "Help" [ref=f23e31] [cursor=pointer]
+        - listitem [ref=f23e32]:
+          - generic "Loujan B" [ref=f23e34] [cursor=pointer]
+        - listitem [ref=f23e35]:
+          - generic [ref=f23e37] [cursor=pointer]
+    - generic [ref=f23e38]:
+      - generic [ref=f23e39]:
+        - heading [level=1] [ref=f23e40]:
+          - link [ref=f23e41] [cursor=pointer]:
+            - /url: https://my.exotel.com/
+            - img "OpenVBX" [ref=f23e42]
+        - list [ref=f23e46]:
+          - generic [ref=f23e47]:
+            - heading "My Account" [level=3] [ref=f23e48] [cursor=pointer]
+            - list [ref=f23e50]:
+              - listitem [ref=f23e51]:
+                - link "Personal Info" [ref=f23e52] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/account
+              - listitem [ref=f23e53]:
+                - link "Impersonation" [ref=f23e54] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/impersonation/#/impersonation
+              - listitem [ref=f23e55]:
+                - link "Company Info" [ref=f23e56] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/company_details/#/company-info
+              - listitem [ref=f23e57]:
+                - link "Personalization" [ref=f23e58] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/personalization
+              - listitem [ref=f23e59]:
+                - link "Notifications" [ref=f23e60] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/notifications
+              - listitem [ref=f23e61]:
+                - link "Heartbeat" [ref=f23e62] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/heartbeat
+              - listitem [ref=f23e63]:
+                - link "Access Control" [ref=f23e64] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/access_control
+          - generic [ref=f23e65]:
+            - heading "Call Settings" [level=3] [ref=f23e66] [cursor=pointer]
+            - list [ref=f23e68]:
+              - listitem [ref=f23e69]:
+                - link "Audio Library" [ref=f23e70] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/audio_library
+              - listitem [ref=f23e71]:
+                - link "Whitelist Numbers" [ref=f23e72] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/whitelist
+          - generic [ref=f23e73]:
+            - heading "SMS Settings" [level=3] [ref=f23e74] [cursor=pointer]
+            - list [ref=f23e76]:
+              - listitem [ref=f23e77]:
+                - link "SMS Templates" [ref=f23e78] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/sms_templates
+              - listitem [ref=f23e79]:
+                - link "Sender ID" [ref=f23e80] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/settings/site/sms_senderid
+          - generic [ref=f23e81]:
+            - heading "Developer Settings" [level=3] [ref=f23e82] [cursor=pointer]
+            - list [ref=f23e84]:
+              - listitem [ref=f23e85]:
+                - link "API Settings" [ref=f23e86] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/apisettings/site
+          - generic [ref=f23e87]:
+            - heading "Payment and Bills" [level=3] [ref=f23e88] [cursor=pointer]
+            - list [ref=f23e90]:
+              - listitem [ref=f23e91]:
+                - link "Make a Payment" [ref=f23e92] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/npay
+              - listitem [ref=f23e93]:
+                - link "Payment History" [ref=f23e94] [cursor=pointer]:
+                  - /url: https://my.exotel.com/lyra61/payments
+      - generic [ref=f23e103]:
+        - generic [ref=f23e104]:
+          - generic [ref=f23e105]: BUSINESS VERIFICATION
+          - heading "Let's verify your business" [level=4] [ref=f23e107]
+          - paragraph [ref=f23e109]: To activate your full communication suite and comply with regulatory requirements, we need a few details about your entity. The process is streamlined and typically takes 3–5 minutes.
+        - generic [ref=f23e110]:
+          - generic [ref=f23e111]:
+            - heading "ℹ️ Why verification is required" [level=6] [ref=f23e112]
+            - generic [ref=f23e113]:
+              - paragraph [ref=f23e114]: ✓
+              - generic [ref=f23e115]:
+                - paragraph [ref=f23e116]: Regulatory Compliance
+                - generic [ref=f23e117]: Adhere to Government mandates from telecom regulators.
+            - generic [ref=f23e118]:
+              - paragraph [ref=f23e119]: 🛡
+              - generic [ref=f23e120]:
+                - paragraph [ref=f23e121]: Prevent Platform Misuse
+                - generic [ref=f23e122]: Protect the integrity of the network by verifying legitimate businesses.
+            - generic [ref=f23e123]:
+              - paragraph [ref=f23e124]: 👆
+              - generic [ref=f23e125]:
+                - paragraph [ref=f23e126]: Validate Identity
+                - generic [ref=f23e127]: Establish a secure link between your account and your legal entity.
+            - generic [ref=f23e128]:
+              - paragraph [ref=f23e129]: 👥
+              - generic [ref=f23e130]:
+                - paragraph [ref=f23e131]: Trusted Ecosystem
+                - generic [ref=f23e132]: Ensuring high deliverability for verified, high-quality traffic.
+          - generic [ref=f23e133]:
+            - heading "🚀 Once you're verified" [level=6] [ref=f23e134]
+            - generic [ref=f23e135]:
+              - paragraph [ref=f23e136]: ⚡
+              - generic [ref=f23e137]:
+                - paragraph [ref=f23e138]: Activate Products
+                - generic [ref=f23e139]: Unlock SMS, Voice, and API capabilities across all regions.
+            - generic [ref=f23e140]:
+              - paragraph [ref=f23e141]: 📞
+              - generic [ref=f23e142]:
+                - paragraph [ref=f23e143]: Purchase Numbers
+                - generic [ref=f23e144]: Get local or toll-free numbers from 50+ countries instantly.
+            - generic [ref=f23e145]:
+              - paragraph [ref=f23e146]: 🚀
+              - generic [ref=f23e147]:
+                - paragraph [ref=f23e148]: Faster Approvals
+                - generic [ref=f23e149]: Priority review for new campaigns and sender ID requests.
+            - generic [ref=f23e150]:
+              - paragraph [ref=f23e151]: 📈
+              - generic [ref=f23e152]:
+                - paragraph [ref=f23e153]: Higher Limits
+                - generic [ref=f23e154]: Access higher throughput and daily messaging volume caps.
+        - button "Start Business Verification →" [ref=f23e156] [cursor=pointer]:
+          - generic [ref=f23e157]:
+            - text: Start Business Verification
+            - generic [ref=f23e158]: →
+    - paragraph [ref=f23e161]:
+      - text: Obelix by Exotel • Built in Bengaluru • Inspired also by OpenVBX • © 2026 -
+      - link "Exotel Techcom Pvt. Ltd." [ref=f23e162] [cursor=pointer]:
+        - /url: http://exotel.com/
+      - text: •
+      - link "Terms" [ref=f23e163] [cursor=pointer]:
+        - /url: https://exotel.com/terms-of-service-exotel/
+      - text: •
+      - link "Privacy" [ref=f23e164] [cursor=pointer]:
+        - /url: https://exotel.com/privacy-policy/
+      - text: •
+      - link "Support" [ref=f23e165] [cursor=pointer]:
+        - /url: https://docs.exotel.com/business-phone-system
+  - text: ★ ★ ★ ★ ★ ★ ★ ★ ★ ★

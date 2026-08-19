@@ -1,0 +1,85 @@
+- generic [ref=f3e2]:
+  - generic [ref=f3e3]:
+    - complementary [ref=f3e4]:
+      - generic [ref=f3e5]:
+        - generic [ref=f3e6]:
+          - link "SnapServe SnapServe" [ref=f3e7] [cursor=pointer]:
+            - /url: /app
+            - img "SnapServe" [ref=f3e8]
+            - generic "SnapServe" [ref=f3e13]
+          - button "Collapse" [ref=f3e14] [cursor=pointer]
+        - button "Search… ⌘K" [ref=f3e18] [cursor=pointer]:
+          - generic [ref=f3e22]: Search…
+          - generic [ref=f3e23]: ⌘K
+        - button "New agent" [ref=f3e25] [cursor=pointer]
+        - generic [ref=f3e28]:
+          - generic [ref=f3e30]:
+            - link "Home" [ref=f3e31] [cursor=pointer]:
+              - /url: /app/home
+            - link "Campaigns" [ref=f3e38] [cursor=pointer]:
+              - /url: /app/campaigns
+            - link "Agents" [ref=f3e47] [cursor=pointer]:
+              - /url: /app/agents
+            - link "Phone numbers" [ref=f3e55] [cursor=pointer]:
+              - /url: /app/phone-numbers
+            - link "Connections" [ref=f3e62] [cursor=pointer]:
+              - /url: /app/connections
+            - link "History" [ref=f3e71] [cursor=pointer]:
+              - /url: /app/history
+            - link "Analytics" [ref=f3e79] [cursor=pointer]:
+              - /url: /app/analytics
+          - generic [ref=f3e86]:
+            - paragraph [ref=f3e88]: MORE
+            - generic [ref=f3e89]:
+              - link "Knowledge" [ref=f3e90] [cursor=pointer]:
+                - /url: /app/knowledge-bases
+              - link "Memory" [ref=f3e98] [cursor=pointer]:
+                - /url: /app/memory
+              - link "Squads" [ref=f3e107] [cursor=pointer]:
+                - /url: /app/squads
+              - link "Bookings" [ref=f3e117] [cursor=pointer]:
+                - /url: /app/scheduling
+          - button "Settings" [ref=f3e129] [cursor=pointer]
+        - generic [ref=f3e143]:
+          - link "Documentation" [ref=f3e145] [cursor=pointer]:
+            - /url: /docs
+          - link [ref=f3e153] [cursor=pointer]:
+            - /url: /app/wallet
+          - button "L Loujan" [ref=f3e165] [cursor=pointer]:
+            - generic [ref=f3e166]: L
+            - generic [ref=f3e168]: Loujan
+    - main [ref=f3e171]:
+      - generic [ref=f3e172]:
+        - generic [ref=f3e173]:
+          - generic [ref=f3e174]: 🎙️ Live Event
+          - generic [ref=f3e175]:
+            - text: India's biggest Voice-a-thon powered by
+            - strong [ref=f3e176]: VoBiz
+            - text: "& organized by"
+            - strong [ref=f3e177]: SnapServe
+            - text: — Please register now!
+        - generic [ref=f3e178]:
+          - link "Register for Event" [ref=f3e179] [cursor=pointer]:
+            - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+          - button "Dismiss notification" [ref=f3e180] [cursor=pointer]
+      - generic [ref=f3e185]:
+        - button "Switch to dark theme" [ref=f3e186] [cursor=pointer]
+        - button [ref=f3e187] [cursor=pointer]
+      - generic [ref=f3e191]:
+        - button "Open Orcha AI assistant · drag to move" [ref=f3e192]
+        - generic [ref=f3e199]:
+          - generic [ref=f3e200]:
+            - button "Home" [ref=f3e201] [cursor=pointer]
+            - generic [ref=f3e204]:
+              - generic [ref=f3e205]:
+                - heading "Phone Numbers" [level=1] [ref=f3e206]
+                - paragraph [ref=f3e207]: Buy a number, assign it to an agent for inbound + caller ID, reassign or release anytime.
+              - button "Get number" [ref=f3e209] [cursor=pointer]
+            - generic [ref=f3e211]:
+              - button "My numbers" [ref=f3e212] [cursor=pointer]
+              - button "Verification" [ref=f3e214] [cursor=pointer]
+          - generic [ref=f3e219]:
+            - generic [ref=f3e223]: Identity verified
+            - generic [ref=f3e224]: — You can purchase Aadhaar-required Indian numbers.
+  - region "Notifications (F8)":
+    - list

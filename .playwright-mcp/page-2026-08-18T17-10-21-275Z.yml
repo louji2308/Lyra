@@ -1,0 +1,241 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic:
+            - link:
+              - /url: /app
+              - generic: SnapServe
+            - button
+          - generic:
+            - button:
+              - generic: Search…
+              - generic: ⌘K
+          - generic:
+            - button:
+              - generic: New agent
+          - generic:
+            - generic:
+              - generic:
+                - link:
+                  - /url: /app/home
+                  - generic: Home
+                - link:
+                  - /url: /app/campaigns
+                  - generic: Campaigns
+                - link:
+                  - /url: /app/agents
+                  - generic: Agents
+                - link:
+                  - /url: /app/phone-numbers
+                  - generic: Phone numbers
+                - link:
+                  - /url: /app/connections
+                  - generic: Connections
+                - link:
+                  - /url: /app/history
+                  - generic: History
+                - link:
+                  - /url: /app/analytics
+                  - generic: Analytics
+            - generic:
+              - paragraph: MORE
+              - generic:
+                - link:
+                  - /url: /app/knowledge-bases
+                  - generic: Knowledge
+                - link:
+                  - /url: /app/memory
+                  - generic: Memory
+                - link:
+                  - /url: /app/squads
+                  - generic: Squads
+                - link:
+                  - /url: /app/scheduling
+                  - generic: Bookings
+            - button:
+              - generic: Settings
+          - generic:
+            - generic:
+              - link:
+                - /url: /docs
+                - generic: Documentation
+            - generic:
+              - link:
+                - /url: /app/wallet
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: ₹5500.00
+                      - generic: ~1100m
+            - generic:
+              - generic:
+                - button:
+                  - generic: L
+                  - generic: Loujan
+      - main:
+        - generic:
+          - generic:
+            - generic: 🎙️ Live Event
+            - generic:
+              - text: India's biggest Voice-a-thon powered by
+              - strong: VoBiz
+              - text: "& organized by"
+              - strong: SnapServe
+              - text: — Please register now!
+          - generic:
+            - link:
+              - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+              - text: Register for Event
+            - button
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - button:
+                    - generic: Back
+                  - button:
+                    - generic: Agents
+                  - button:
+                    - generic:
+                      - generic: Editing
+                      - generic: Lyra
+                  - generic: Draft
+                  - generic: Unsaved
+                - generic:
+                  - generic:
+                    - generic: Est.
+                    - generic: ₹5.00
+                    - generic: /min
+                  - button: Call
+                  - button: Live test
+                  - button: Save
+                  - button
+              - generic:
+                - navigation:
+                  - button: Overview
+                  - button: Prompt
+                  - button: Voice
+                  - button: Tools
+                  - button: Outcomes
+                  - button: Analytics
+                  - button: Voicemail
+                  - button: Settings
+                  - button: Versions
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - heading [level=3]: Speaking
+                            - paragraph: How the agent sounds on the call — provider, voice, speed, and model.
+                          - generic:
+                            - generic:
+                              - generic:
+                                - text: Provider
+                                - combobox:
+                                  - generic: Sarvam (Bulbul) — recommended
+                                - combobox
+                              - generic:
+                                - generic:
+                                  - generic: Choose voice
+                                  - button: Add Sarvam clone
+                                - paragraph: Default stack
+                                - combobox [expanded]
+                                - combobox
+                                - generic:
+                                  - button [disabled]: Preview Voice
+                                  - generic: Select a voice to preview
+                              - generic:
+                                - text: Model
+                                - combobox
+                                - combobox
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - text: Speaking speed
+                                    - paragraph: How fast the agent talks (Sarvam Bulbul pace). 1.0× is normal.
+                                  - generic:
+                                    - generic:
+                                      - slider: "1"
+                                    - spinbutton: "1"
+                                    - generic: ×
+                        - generic:
+                          - generic:
+                            - heading [level=3]: Listening
+                            - paragraph: How the agent hears the caller — noise cancel, backchannels, and ambient bed.
+                          - generic:
+                            - generic:
+                              - generic:
+                                - text: Noise Cancellation
+                                - paragraph: Software noise filter — VoBiz & web calls are denoised upstream automatically
+                              - switch [checked]
+                              - checkbox [checked]
+                            - generic:
+                              - generic:
+                                - text: Backchanneling
+                                - paragraph: Agent says "mm-hmm", "I see" while listening
+                              - switch [checked]
+                              - checkbox [checked]
+                            - generic:
+                              - generic:
+                                - text: Background Noise
+                                - paragraph: Ambient bed under the agent — not the agent voice level
+                              - switch
+                              - checkbox
+                        - generic:
+                          - generic:
+                            - heading [level=3]: Phone feel
+                            - paragraph: How quickly the agent takes the turn — same Call Engine knobs as Settings → Engine.
+                            - paragraph: Fast turns on quick pause detection (~0.13s) for Sarvam; Balanced and Patient use Sarvam's patient mode so slow speakers aren't cut off.
+                          - generic:
+                            - generic:
+                              - button: Fast
+                              - button: Balanced
+                              - button: Patient
+                            - paragraph: Fine-tune endpointing, linear delay, and interrupt words on Settings → Engine.
+    - list
+  - generic: "0"
+  - listbox [ref=f33e1162]:
+    - option "Ritu (female)" [active] [ref=f33e1163]
+    - option "Priya (female)" [ref=f33e1166]
+    - option "Neha (female)" [ref=f33e1169]
+    - option "Pooja (female)" [ref=f33e1172]
+    - option "Simran (female)" [ref=f33e1175]
+    - option "Kavya (female)" [ref=f33e1178]
+    - option "Ishita (female)" [ref=f33e1181]
+    - option "Shreya (female)" [ref=f33e1184]
+    - option "Roopa (female)" [ref=f33e1187]
+    - option "Tanya (female)" [ref=f33e1190]
+    - option "Shruti (female)" [ref=f33e1193]
+    - option "Suhani (female)" [ref=f33e1196]
+    - option "Kavitha (female)" [ref=f33e1199]
+    - option "Rupali (female)" [ref=f33e1202]
+    - option "Rahul (male)" [ref=f33e1205]
+    - option "Rohan (male)" [ref=f33e1208]
+    - option "Aditya (male)" [ref=f33e1211]
+    - option "Amit (male)" [ref=f33e1214]
+    - option "Dev (male)" [ref=f33e1217]
+    - option "Ratan (male)" [ref=f33e1220]
+    - option "Varun (male)" [ref=f33e1223]
+    - option "Manan (male)" [ref=f33e1226]
+    - option "Sumit (male)" [ref=f33e1229]
+    - option "Kabir (male)" [ref=f33e1232]
+    - option "Aayan (male)" [ref=f33e1235]
+    - option "Shubh (male)" [ref=f33e1238]
+    - option "Ashutosh (male)" [ref=f33e1241]
+    - option "Advait (male)" [ref=f33e1244]
+    - option "Anand (male)" [ref=f33e1247]
+    - option "Tarun (male)" [ref=f33e1250]
+    - option "Sunny (male)" [ref=f33e1253]
+    - option "Mani (male)" [ref=f33e1256]
+    - option "Gokul (male)" [ref=f33e1259]
+    - option "Vijay (male)" [ref=f33e1262]
+    - option "Mohit (male)" [ref=f33e1265]
+    - option "Rehan (male)" [ref=f33e1268]
+    - option "Soham (male)" [ref=f33e1271]
+    - option "Paste custom speaker ID" [ref=f33e1274]

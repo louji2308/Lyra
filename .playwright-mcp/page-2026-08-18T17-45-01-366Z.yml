@@ -1,0 +1,388 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic:
+            - link:
+              - /url: /app
+              - generic: SnapServe
+            - button
+          - generic:
+            - button:
+              - generic: Search…
+              - generic: ⌘K
+          - generic:
+            - button:
+              - generic: New agent
+          - generic:
+            - generic:
+              - generic:
+                - link:
+                  - /url: /app/home
+                  - generic: Home
+                - link:
+                  - /url: /app/campaigns
+                  - generic: Campaigns
+                - link:
+                  - /url: /app/agents
+                  - generic: Agents
+                - link:
+                  - /url: /app/phone-numbers
+                  - generic: Phone numbers
+                - link:
+                  - /url: /app/connections
+                  - generic: Connections
+                - link:
+                  - /url: /app/history
+                  - generic: History
+                - link:
+                  - /url: /app/analytics
+                  - generic: Analytics
+            - generic:
+              - paragraph: MORE
+              - generic:
+                - link:
+                  - /url: /app/knowledge-bases
+                  - generic: Knowledge
+                - link:
+                  - /url: /app/memory
+                  - generic: Memory
+                - link:
+                  - /url: /app/squads
+                  - generic: Squads
+                - link:
+                  - /url: /app/scheduling
+                  - generic: Bookings
+            - button:
+              - generic: Settings
+          - generic:
+            - generic:
+              - link:
+                - /url: /docs
+                - generic: Documentation
+            - generic:
+              - link:
+                - /url: /app/wallet
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: ₹5500.00
+                      - generic: ~1100m
+            - generic:
+              - generic:
+                - button:
+                  - generic: L
+                  - generic: Loujan
+      - main:
+        - generic:
+          - generic:
+            - generic: 🎙️ Live Event
+            - generic:
+              - text: India's biggest Voice-a-thon powered by
+              - strong: VoBiz
+              - text: "& organized by"
+              - strong: SnapServe
+              - text: — Please register now!
+          - generic:
+            - link:
+              - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+              - text: Register for Event
+            - button
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - button:
+                    - generic: Back
+                  - button:
+                    - generic: Agents
+                  - button:
+                    - generic:
+                      - generic: Editing
+                      - generic: Lyra
+                  - generic: Draft
+                  - generic: Unsaved
+                - generic:
+                  - generic:
+                    - generic: Est.
+                    - generic: ₹5.00
+                    - generic: /min
+                  - button: Call
+                  - button: Live test
+                  - button: Save
+                  - button
+              - generic:
+                - navigation:
+                  - button: Overview
+                  - button: Prompt
+                  - button: Voice
+                  - button: Tools
+                  - button: Outcomes
+                  - button: Analytics
+                  - button: Voicemail
+                  - button: Settings
+                  - button: Versions
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - heading [level=3]: Platform Tools
+                          - paragraph: Built-in capabilities you can enable for this agent
+                          - generic:
+                            - paragraph: Scheduling & Bookings
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: Booking
+                                  - paragraph: "One switch enables the full booking flow: check availability, book, list, reschedule, and cancel."
+                                - generic:
+                                  - switch
+                                  - checkbox
+                            - paragraph: Messaging
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: Send Email
+                                  - paragraph: Lets the agent email mid-call. Connect Brevo under Connections first; pick templates there.
+                                - generic:
+                                  - switch
+                                  - checkbox
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: Send WhatsApp
+                                  - paragraph: Mid-call WhatsApp only. After-call messages are on the Outcomes tab. Connect WhatsApp under Connections first.
+                                - generic:
+                                  - switch
+                                  - checkbox
+                            - paragraph: Call Control
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: End Call
+                                  - paragraph: Lets the agent gracefully end the call when the conversation is complete.
+                                - generic:
+                                  - switch [checked]
+                                  - checkbox [checked]
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: Call Transfer
+                                  - paragraph: Warm or cold transfer to a human number when the caller asks or the agent can’t resolve the issue.
+                                - generic:
+                                  - switch
+                                  - checkbox
+                            - paragraph: Recording
+                            - generic:
+                              - button:
+                                - generic:
+                                  - generic: Call Recording
+                                  - paragraph: Records the full audio of each call (caller and agent) and stores it on the call. When enabled, recordings appear in the Call Recording tab on the call's detail page for playback and download.
+                                - generic:
+                                  - switch [checked]
+                                  - checkbox [checked]
+                            - paragraph: After the call
+                            - generic:
+                              - button:
+                                - generic:
+                                  - generic: Auto Summarization
+                                  - paragraph: After each completed call, write a short AI summary on the History → Summary tab.
+                                - generic:
+                                  - switch
+                                  - checkbox
+                            - paragraph: Caller Intelligence
+                            - generic:
+                              - button:
+                                - generic:
+                                  - generic:
+                                    - generic: Gender Identification
+                                    - generic: Beta
+                                  - paragraph: Detects caller gender from voice at the start of the call. When enabled, the agent uses gender-appropriate salutations — "Sir", "Ma'am", or a neutral fallback.
+                                - generic:
+                                  - switch
+                                  - checkbox
+                            - generic:
+                              - button:
+                                - generic:
+                                  - generic:
+                                    - generic: Voice Memory
+                                    - generic: Beta
+                                  - paragraph: Remembers the caller's voiceprint. Detects mid-call handoffs (phone given to someone else) and can link the same voice across different phone numbers. Phone-number memory stays primary.
+                                - generic:
+                                  - switch
+                                  - checkbox
+                        - generic:
+                          - generic:
+                            - generic:
+                              - heading [level=3]: Custom Tools
+                              - paragraph: Mid-call HTTP to your API (while talking). Not the same as post-call notify or Developers event subscriptions.
+                            - button: Mid-call HTTP
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic: Mid-call HTTP
+                                - button
+                              - generic:
+                                - generic:
+                                  - text: Function Name
+                                  - textbox:
+                                    - /placeholder: snake_case_name
+                                    - text: identify_shop_by_phone
+                                - generic:
+                                  - text: Pre-call Message
+                                  - textbox:
+                                    - /placeholder: One moment…
+                                    - text: Identifying shop...
+                              - generic:
+                                - text: Description (shown to LLM)
+                                - textbox:
+                                  - /placeholder: When should the LLM call this tool?
+                                  - text: Identify shop by phone number from caller ID
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - text: Endpoint URL
+                                    - textbox:
+                                      - /placeholder: https://your-api.com/webhook
+                                      - text: https://prevent-deposit-purple-module.trycloudflare.com/api/shop-context
+                                  - generic:
+                                    - text: Method
+                                    - combobox:
+                                      - generic: GET
+                                    - combobox
+                                - generic:
+                                  - text: X-Webhook-Secret (optional)
+                                  - textbox:
+                                    - /placeholder: shared-secret
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: Parameters
+                                      - button: Add
+                                    - generic:
+                                      - generic:
+                                        - textbox:
+                                          - /placeholder: name
+                                          - text: phone
+                                      - generic:
+                                        - combobox:
+                                          - generic: string
+                                        - combobox
+                                      - generic:
+                                        - textbox:
+                                          - /placeholder: description
+                                          - text: Caller's phone number
+                                      - generic:
+                                        - switch
+                                        - checkbox
+                                        - generic: req
+                                      - button
+                            - generic:
+                              - generic:
+                                - generic: Mid-call HTTP
+                                - button
+                              - generic:
+                                - generic:
+                                  - text: Function Name
+                                  - textbox:
+                                    - /placeholder: snake_case_name
+                                    - text: get_shop_context
+                                - generic:
+                                  - text: Pre-call Message
+                                  - textbox:
+                                    - /placeholder: One moment…
+                                    - text: Loading shop...
+                              - generic:
+                                - text: Description (shown to LLM)
+                                - textbox:
+                                  - /placeholder: When should the LLM call this tool?
+                                  - text: Get full shop context by shop_id
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - text: Endpoint URL
+                                    - textbox:
+                                      - /placeholder: https://your-api.com/webhook
+                                      - text: https://prevent-deposit-purple-module.trycloudflare.com/api/shop-context
+                                  - generic:
+                                    - text: Method
+                                    - combobox:
+                                      - generic: GET
+                                    - combobox
+                                - generic:
+                                  - text: X-Webhook-Secret (optional)
+                                  - textbox:
+                                    - /placeholder: shared-secret
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: Parameters
+                                      - button: Add
+                                    - generic:
+                                      - generic:
+                                        - textbox:
+                                          - /placeholder: name
+                                          - text: shop_id
+                                      - generic:
+                                        - combobox:
+                                          - generic: string
+                                        - combobox
+                                      - generic:
+                                        - textbox:
+                                          - /placeholder: description
+                                          - text: Shop identifier
+                                      - generic:
+                                        - switch
+                                        - checkbox
+                                        - generic: req
+                                      - button
+                            - generic:
+                              - generic:
+                                - generic: Mid-call HTTP
+                                - button
+                              - generic:
+                                - generic:
+                                  - text: Function Name
+                                  - textbox:
+                                    - /placeholder: snake_case_name
+                                    - text: get_suggested_order
+                                - generic:
+                                  - text: Pre-call Message
+                                  - textbox:
+                                    - /placeholder: One moment…
+                                    - text: Loading last order...
+                              - generic:
+                                - text: Description (shown to LLM)
+                                - textbox:
+                                  - /placeholder: When should the LLM call this tool?
+                                  - text: Get repeat order from last purchase
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - text: Endpoint URL
+                                    - textbox:
+                                      - /placeholder: https://your-api.com/webhook
+                                      - text: https://prevent-deposit-purple-module.trycloudflare.com/api/suggested-order
+                                  - generic:
+                                    - text: Method
+                                    - combobox [expanded]:
+                                      - generic: POST
+                                    - combobox
+                                - generic:
+                                  - text: X-Webhook-Secret (optional)
+                                  - textbox:
+                                    - /placeholder: shared-secret
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: Parameters
+                                      - button: Add
+                                    - paragraph: No parameters defined — LLM will pass a reason string.
+    - list
+  - generic: "0"
+  - listbox [ref=f33e1884]:
+    - option "POST" [active] [selected] [ref=f33e1885]
+    - option "GET" [ref=f33e1891]

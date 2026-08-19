@@ -1,0 +1,141 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic:
+            - link:
+              - /url: /app
+              - generic: SnapServe
+            - button
+          - generic:
+            - button:
+              - generic: Search…
+              - generic: ⌘K
+          - generic:
+            - button:
+              - generic: New agent
+          - generic:
+            - generic:
+              - generic:
+                - link:
+                  - /url: /app/home
+                  - generic: Home
+                - link:
+                  - /url: /app/campaigns
+                  - generic: Campaigns
+                - link:
+                  - /url: /app/agents
+                  - generic: Agents
+                - link:
+                  - /url: /app/phone-numbers
+                  - generic: Phone numbers
+                - link:
+                  - /url: /app/connections
+                  - generic: Connections
+                - link:
+                  - /url: /app/history
+                  - generic: History
+                - link:
+                  - /url: /app/analytics
+                  - generic: Analytics
+            - generic:
+              - paragraph: MORE
+              - generic:
+                - link:
+                  - /url: /app/knowledge-bases
+                  - generic: Knowledge
+                - link:
+                  - /url: /app/memory
+                  - generic: Memory
+                - link:
+                  - /url: /app/squads
+                  - generic: Squads
+                - link:
+                  - /url: /app/scheduling
+                  - generic: Bookings
+            - button:
+              - generic: Settings
+          - generic:
+            - generic:
+              - link:
+                - /url: /docs
+                - generic: Documentation
+            - generic:
+              - link:
+                - /url: /app/wallet
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: ₹5500.00
+                      - generic: ~1100m
+            - generic:
+              - generic:
+                - button:
+                  - generic: L
+                  - generic: Loujan
+      - main:
+        - generic:
+          - generic:
+            - generic: 🎙️ Live Event
+            - generic:
+              - text: India's biggest Voice-a-thon powered by
+              - strong: VoBiz
+              - text: "& organized by"
+              - strong: SnapServe
+              - text: — Please register now!
+          - generic:
+            - link:
+              - /url: https://luma.com/event/evt-rA5tJIW6SmKBcGQ
+              - text: Register for Event
+            - button
+        - generic:
+          - generic:
+            - button
+            - button
+        - generic:
+          - button
+          - generic:
+            - generic:
+              - button: Home
+              - generic:
+                - generic:
+                  - heading [level=1]: Phone Numbers
+                  - paragraph: Buy a number, assign it to an agent for inbound + caller ID, reassign or release anytime.
+                - generic:
+                  - button: Get number
+              - generic:
+                - generic:
+                  - button: My numbers
+                  - button: Verification
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Identity verified
+                      - generic: — You can purchase Aadhaar-required Indian numbers.
+                    - generic:
+                      - generic:
+                        - generic:
+                          - paragraph: "+918065355944"
+                          - paragraph: IN · Karnataka
+                        - generic: local
+                        - generic: Wallet renew
+                        - generic: Lyra
+                        - generic:
+                          - button: Rules
+                          - button: Reassign
+                          - button
+    - list
+  - dialog [ref=e246]:
+    - generic [ref=e247]:
+      - heading "Routing Rules — +918065355944" [level=2] [ref=e248]
+      - paragraph [ref=e249]: Rules are evaluated top-to-bottom; the first match routes the call to the target agent.
+    - generic [ref=e250]:
+      - paragraph [ref=e251]: No rules — all calls go to the assigned agent.
+      - button "+ Add rule" [ref=e252] [cursor=pointer]
+    - generic [ref=e253]:
+      - button "Cancel" [active] [ref=e254] [cursor=pointer]
+      - button "Save Rules" [ref=e255] [cursor=pointer]
+    - button "Close" [ref=e256] [cursor=pointer]

@@ -1,0 +1,62 @@
+- generic [ref=f9e2]:
+  - generic [ref=f9e3]:
+    - complementary [ref=f9e4]:
+      - generic [ref=f9e5]:
+        - generic [ref=f9e6]:
+          - link "SnapServe SnapServe" [ref=f9e7] [cursor=pointer]:
+            - /url: /app
+            - img "SnapServe" [ref=f9e8]
+            - generic "SnapServe" [ref=f9e13]
+          - button "Collapse" [ref=f9e14] [cursor=pointer]
+        - button "Search… ⌘K" [ref=f9e18] [cursor=pointer]:
+          - generic [ref=f9e22]: Search…
+          - generic [ref=f9e23]: ⌘K
+        - button "New agent" [ref=f9e25] [cursor=pointer]
+        - generic [ref=f9e28]:
+          - generic [ref=f9e30]:
+            - link "Home" [ref=f9e31] [cursor=pointer]:
+              - /url: /app/home
+            - link "Campaigns" [ref=f9e38] [cursor=pointer]:
+              - /url: /app/campaigns
+            - link "Agents" [ref=f9e47] [cursor=pointer]:
+              - /url: /app/agents
+            - link "Phone numbers" [ref=f9e55] [cursor=pointer]:
+              - /url: /app/phone-numbers
+            - link "Connections" [ref=f9e62] [cursor=pointer]:
+              - /url: /app/connections
+            - link "History" [ref=f9e71] [cursor=pointer]:
+              - /url: /app/history
+            - link "Analytics" [ref=f9e79] [cursor=pointer]:
+              - /url: /app/analytics
+          - generic [ref=f9e86]:
+            - paragraph [ref=f9e88]: MORE
+            - generic [ref=f9e89]:
+              - link "Knowledge" [ref=f9e90] [cursor=pointer]:
+                - /url: /app/knowledge-bases
+              - link "Memory" [ref=f9e98] [cursor=pointer]:
+                - /url: /app/memory
+              - link "Squads" [ref=f9e107] [cursor=pointer]:
+                - /url: /app/squads
+              - link "Bookings" [ref=f9e117] [cursor=pointer]:
+                - /url: /app/scheduling
+          - button "Settings" [ref=f9e129] [cursor=pointer]
+        - generic [ref=f9e143]:
+          - link "Documentation" [ref=f9e145] [cursor=pointer]:
+            - /url: /docs
+          - link [ref=f9e153] [cursor=pointer]:
+            - /url: /app/wallet
+          - button "L Loujan" [ref=f9e165] [cursor=pointer]:
+            - generic [ref=f9e166]: L
+            - generic [ref=f9e168]: Loujan
+    - main [ref=f9e171]:
+      - generic [ref=f9e172]:
+        - button "Open Orcha AI assistant · drag to move" [ref=f9e173]
+        - generic [ref=f9e182]:
+          - generic [ref=f9e189]:
+            - heading "Select an agent" [level=2] [ref=f9e190]
+            - paragraph [ref=f9e191]: Pick one from the list, or create a new agent for phone — or phone plus meetings.
+          - generic [ref=f9e192]:
+            - button "New agent" [ref=f9e193] [cursor=pointer]
+            - button "Build with AI" [ref=f9e194] [cursor=pointer]
+  - region "Notifications (F8)":
+    - list
