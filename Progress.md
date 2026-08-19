@@ -244,11 +244,11 @@ Enable real phone calls via Twilio: inbound/outbound → Deepgram STT → intent
 - `err` typed as `unknown`.
 
 ### Credentials (in `.env.local`)
-- Twilio Account SID: `****`
-- Twilio Auth Token: `ad91468a1b0ccc3b624159d04dba95c1`
+- Twilio Account SID: `****` (stored in .env.local)
+- Twilio Auth Token: `****` (stored in .env.local)
 - Twilio Phone: `+917372212163`
-- Deepgram API Key: `9715c7f359e2778acce1233ceab758022eee92b9`
-- Sarvam AI API Key: `sk_0g1jfrls_TmqNAdfHZgryGy6tpzpS7Ozg`
+- Deepgram API Key: `****` (stored in .env.local)
+- Sarvam AI API Key: `****` (stored in .env.local)
 - Live Lyra Number: `+918065355944` (`LYRA_PHONE_NUMBER`)
 
 ### Running
