@@ -30,10 +30,10 @@ export function generateTwiML(streamUrl: string): string {
 }
 
 export function getStreamUrl(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.TUNNEL_URL ?? "https://lyra-gray.vercel.app";
   const wsPort = process.env.TWILIO_WS_PORT ?? "3001";
   const wsHost = baseUrl.replace(/^https?:\/\//, "").split(":")[0];
-  return `ws://${wsHost}:${wsPort}`;
+  return `wss://${wsHost}`;
 }
 
 export const TWILIO_WS_PORT: string = process.env.TWILIO_WS_PORT ?? "3001";

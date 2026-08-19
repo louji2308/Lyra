@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const wsUrl = process.env.TUNNEL_URL?.replace(/^https?:\/\//, "wss://") ?? "wss://localhost:3001";
+  const wsUrl = process.env.TUNNEL_URL?.replace(/^https?:\/\//, "wss://") ?? process.env.NEXT_PUBLIC_APP_URL?.replace(/^https?:\/\//, "wss://") ?? "wss://lyra-gray.vercel.app";
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>

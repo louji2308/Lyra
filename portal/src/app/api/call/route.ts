@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (provider === "exotel") {
-      const baseUrl = process.env.TUNNEL_URL ?? `http://localhost:${process.env.TWILIO_WS_PORT ?? "3001"}`;
+      const baseUrl = process.env.TUNNEL_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://lyra-gray.vercel.app";
       const webhookUrl = `${baseUrl.replace(/\/$/, "")}/api/exotel/voice`;
 
       const call = await makeExotelCall({
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const baseUrl = process.env.TUNNEL_URL ?? `http://localhost:${process.env.TWILIO_WS_PORT ?? "3001"}`;
+    const baseUrl = process.env.TUNNEL_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://lyra-gray.vercel.app";
     const webhookUrl = `${baseUrl.replace(/\/$/, "")}/api/twilio/voice`;
 
     const call = await makeOutboundCall({
