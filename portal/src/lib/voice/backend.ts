@@ -81,6 +81,7 @@ export interface CheckStockResult {
   requested_qty: number | null;
   available: boolean;
   low_stock: boolean;
+  language_detected: AppLanguage | null;
 }
 
 export interface CheckCreditResult {
@@ -92,6 +93,96 @@ export interface CheckCreditResult {
   order_total: number;
   approved: boolean;
   extra_payment_needed: number;
+  language_detected: AppLanguage | null;
+}
+
+export interface CheckBlacklistResult {
+  shop_id: string;
+  product_id: string;
+  is_blacklisted: boolean;
+  reason: string | null;
+  language_detected: AppLanguage | null;
+}
+
+export interface CreateOrderResult {
+  order_id: string;
+  shop_id: string;
+  shop_name: string;
+  total_amount: number;
+  credit_used: number;
+  payment_status: PaymentStatus;
+  order_status: OrderStatus;
+  items: CreatedOrderItem[];
+  language_detected: AppLanguage | null;
+}
+
+export interface CreateReturnResult {
+  return_id: number;
+  shop_id: string;
+  order_id: string | null;
+  product_id: string | null;
+  quantity: number;
+  reason: string | null;
+  status: ReturnStatus;
+  language_detected: AppLanguage | null;
+}
+
+export interface SaveComplaintResult {
+  complaint_id: number;
+  shop_id: string;
+  complaint_type: string;
+  description: string | null;
+  severity: string;
+  status: string;
+  language_detected: AppLanguage | null;
+}
+
+export interface MarkOptOutResult {
+  shop_id: string;
+  shop_name: string;
+  opt_out: boolean;
+  voice_consent: boolean;
+  language_detected: AppLanguage | null;
+}
+
+export interface SendWhatsAppResult {
+  shop_id: string;
+  order_id: string;
+  whatsapp_sent: boolean;
+  message_preview: string;
+  language_detected: AppLanguage | null;
+}
+
+export interface SchemeItem {
+  scheme_id: string;
+  scheme_name: string;
+  benefit_type: string;
+  benefit_value: number;
+  eligible_products: string[];
+  start_date: string;
+  end_date: string | null;
+  minimum_quantity: number;
+}
+
+export interface GetSchemesResult {
+  shop_id: string;
+  schemes: SchemeItem[];
+  language_detected: AppLanguage | null;
+}
+
+export interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  language: AppLanguage | null;
+}
+
+export interface ConversationHistoryResult {
+  call_id: string | null;
+  shop_id: string;
+  turns: ConversationTurn[];
+  summary: string;
+  language_detected: AppLanguage | null;
 }
 
 export interface CreatedOrderItem {
@@ -358,6 +449,7 @@ export async function checkStock(
     requested_qty: requestedQty != null ? Number(requestedQty) : null,
     available: requestedQty == null || Number(requestedQty) <= availableQty,
     low_stock: availableQty <= Number(data.low_stock_threshold),
+    language_detected: null,
   };
 }
 
@@ -388,6 +480,7 @@ export async function checkCredit(
     order_total: total,
     approved: total <= available,
     extra_payment_needed: Math.max(0, total - available),
+    language_detected: null,
   };
 }
 
@@ -530,6 +623,7 @@ export async function createOrder(
     payment_status: order.payment_status,
     order_status: order.order_status,
     items: lineItems,
+    language_detected: null,
   };
 }
 
@@ -580,7 +674,15 @@ export async function saveComplaint(
     .select()
     .single();
   if (error) throw new VoiceApiError(500, "db_error", error.message);
-  return data;
+  return {
+    complaint_id: data.complaint_id,
+    shop_id: data.shop_id,
+    complaint_type: data.complaint_type,
+    description: data.description,
+    severity: data.severity,
+    status: data.status,
+    language_detected: null,
+  };
 }
 
 export async function markOptOut(shopId: string) {
@@ -594,7 +696,13 @@ export async function markOptOut(shopId: string) {
     .single();
   if (error) throw new VoiceApiError(500, "db_error", error.message);
   if (!data) throw new VoiceApiError(404, "shop_not_found");
-  return data;
+  return {
+    shop_id: data.shop_id,
+    shop_name: data.shop_name,
+    opt_out: data.opt_out,
+    voice_consent: data.voice_consent,
+    language_detected: null,
+  };
 }
 
 export interface CheckBlacklistResult {
@@ -624,6 +732,7 @@ export async function checkBlacklist(
     product_id: productId,
     is_blacklisted: !!data,
     reason: data?.reason ?? null,
+    language_detected: null,
   };
 }
 
@@ -687,6 +796,7 @@ export async function sendWhatsAppSummary(
     order_id: orderId,
     whatsapp_sent: true,
     message_preview: msg.slice(0, 200),
+    language_detected: null,
   };
 }
 
@@ -744,5 +854,134 @@ export async function createReturn(
     quantity,
     reason: reason ?? null,
     status: data.status as ReturnStatus,
+    language_detected: null,
+  };
+}
+
+export async function getSchemes(
+  shopId: string,
+  languageDetected?: AppLanguage | null
+): Promise<GetSchemesResult> {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+
+  const { data: shop, error: shopError } = await supabase
+    .from("shops")
+    .select("shop_id, shop_name")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (shopError) throw new VoiceApiError(500, "db_error", shopError.message);
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  const { data: schemes, error: schemesError } = await supabase
+    .from("schemes")
+    .select("scheme_id, scheme_name, benefit_type, benefit_value, eligible_product_ids, start_date, end_date, minimum_quantity")
+    .eq("is_active", true)
+    .or(`start_date.lte.${new Date().toISOString().slice(0,10)},start_date.is.null`)
+    .or(`end_date.gte.${new Date().toISOString().slice(0,10)},end_date.is.null`);
+
+  if (schemesError) throw new VoiceApiError(500, "db_error", schemesError.message);
+
+  const { data: blacklistRows } = await supabase
+    .from("blacklist")
+    .select("product_id")
+    .eq("shop_id", shopId);
+  const blacklistedIds = new Set((blacklistRows ?? []).map((b) => b.product_id));
+
+  const filteredSchemes = (schemes ?? []).map((s) => ({
+    scheme_id: s.scheme_id,
+    scheme_name: s.scheme_name,
+    benefit_type: s.benefit_type,
+    benefit_value: Number(s.benefit_value),
+    eligible_products: (s.eligible_product_ids ?? []).filter((pid: string) => !blacklistedIds.has(pid)),
+    start_date: s.start_date,
+    end_date: s.end_date,
+    minimum_quantity: Number(s.minimum_quantity ?? 1),
+  })).filter((s) => s.eligible_products.length > 0);
+
+  return {
+    shop_id: shop.shop_id,
+    schemes: filteredSchemes,
+    language_detected: languageDetected ?? null,
+  };
+}
+
+export async function getConversationHistory(
+  callId: string | null,
+  shopId: string | null,
+  languageDetected?: AppLanguage | null
+): Promise<ConversationHistoryResult> {
+  if (!callId && !shopId) {
+    throw new VoiceApiError(400, "call_id_or_shop_id_required");
+  }
+
+  let targetShopId = shopId;
+  let targetCallId = callId;
+
+  if (callId && !shopId) {
+    const { data: callLog, error } = await supabase
+      .from("call_logs")
+      .select("shop_id")
+      .eq("call_id", callId)
+      .maybeSingle();
+    if (error) throw new VoiceApiError(500, "db_error", error.message);
+    if (!callLog) throw new VoiceApiError(404, "call_not_found");
+    targetShopId = callLog.shop_id;
+  }
+
+  if (!targetShopId) {
+    throw new VoiceApiError(400, "shop_id_required");
+  }
+
+  let turns: ConversationTurn[] = [];
+
+  if (targetCallId) {
+    const { data: callLog, error } = await supabase
+      .from("call_logs")
+      .select("transcript_summary, language_detected, start_time, end_time")
+      .eq("call_id", targetCallId)
+      .maybeSingle();
+    if (error) throw new VoiceApiError(500, "db_error", error.message);
+    if (callLog) {
+      if (callLog.transcript_summary) {
+        turns.push({
+          role: "assistant",
+          content: callLog.transcript_summary,
+          timestamp: callLog.end_time ?? callLog.start_time,
+          language: callLog.language_detected as AppLanguage | null,
+        });
+      }
+    }
+  }
+
+  const { data: recentCalls } = await supabase
+    .from("call_logs")
+    .select("call_id, transcript_summary, language_detected, start_time, end_time")
+    .eq("shop_id", targetShopId)
+    .order("start_time", { ascending: false })
+    .limit(5);
+
+  if (recentCalls && recentCalls.length > 0) {
+    for (const call of recentCalls) {
+      if (call.call_id !== targetCallId && call.transcript_summary) {
+        turns.unshift({
+          role: "assistant",
+          content: call.transcript_summary,
+          timestamp: call.end_time ?? call.start_time,
+          language: call.language_detected as AppLanguage | null,
+        });
+      }
+    }
+  }
+
+  const summary = turns
+    .map((t) => `[${t.language || "unknown"}] ${t.role}: ${t.content}`)
+    .join("\n");
+
+  return {
+    call_id: targetCallId,
+    shop_id: targetShopId,
+    turns,
+    summary: summary || "No previous conversation history.",
+    language_detected: languageDetected ?? null,
   };
 }
