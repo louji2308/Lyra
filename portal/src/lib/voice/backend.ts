@@ -51,6 +51,7 @@ export interface ShopContextResult {
   phone_number: string;
   owner_name: string | null;
   language: AppLanguage;
+  language_detected: AppLanguage | null;
   preferred_call_time: string | null;
   is_within_call_time: boolean;
   credit_limit: number;
@@ -69,6 +70,7 @@ export interface SuggestedOrderResult {
   repeat_order: LastOrderItem[];
   missing_categories: string[];
   new_product: { product_id: string; product_name: string; price: number } | null;
+  language_detected: AppLanguage | null;
 }
 
 export interface CheckStockResult {
@@ -154,7 +156,7 @@ export async function identifyShopByPhone(phone: string) {
   return shop as { shop_id: string; shop_name: string; phone_number: string };
 }
 
-export async function getShopContext(shopId: string): Promise<ShopContextResult> {
+export async function getShopContext(shopId: string, languageDetected?: AppLanguage | null): Promise<ShopContextResult> {
   const { data: shop, error: shopError } = await supabase
     .from("shops")
     .select("*")
@@ -212,12 +214,15 @@ export async function getShopContext(shopId: string): Promise<ShopContextResult>
     products: Array<{ product_id: string; product_name: string }> | { product_id: string; product_name: string } | null;
   }> | null) ?? [];
 
+  const detectedLanguage = languageDetected ?? shop.preferred_language as AppLanguage;
+
   return {
     shop_id: shop.shop_id,
     shop_name: shop.shop_name,
     phone_number: shop.phone_number,
     owner_name: shop.owner_name,
     language: shop.preferred_language as AppLanguage,
+    language_detected: detectedLanguage,
     preferred_call_time: preferredCallTime,
     is_within_call_time: isWithinCallTime,
     credit_limit: Number(shop.credit_limit),
@@ -274,7 +279,7 @@ async function fetchLatestOrderItems(shopId: string): Promise<LastOrderItem[]> {
   }));
 }
 
-export async function getSuggestedOrder(shopId: string): Promise<SuggestedOrderResult> {
+export async function getSuggestedOrder(shopId: string, languageDetected?: AppLanguage | null): Promise<SuggestedOrderResult> {
   const { data: shop, error: shopError } = await supabase
     .from("shops")
     .select("shop_id, shop_name")
@@ -321,6 +326,7 @@ export async function getSuggestedOrder(shopId: string): Promise<SuggestedOrderR
           price: Number(newProduct.price),
         }
       : null,
+    language_detected: languageDetected ?? null,
   };
 }
 
