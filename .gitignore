@@ -49,6 +49,9 @@ Desktop.ini
 $RECYCLE.BIN/
 *.lnk
 
+# --- Playwright MCP --------------------------
+.playwright-mcp/
+
 # --- Editors / IDEs -------------------------------------------------------
 .vscode/*
 !.vscode/extensions.json
