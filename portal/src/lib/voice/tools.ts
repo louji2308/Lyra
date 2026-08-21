@@ -51,7 +51,8 @@ export const VOICE_TOOLS: VoiceTool[] = [
     parameters: {
       type: "object",
       properties: {
-        product_id: { type: "string" },
+        product_id: { type: "string", description: "The product ID to check" },
+        quantity: { type: "number", description: "How many units needed" },
       },
       required: ["product_id"],
     },
@@ -59,13 +60,14 @@ export const VOICE_TOOLS: VoiceTool[] = [
   {
     name: "check_credit",
     description:
-      "Check whether the shop's credit limit allows another order. Returns available credit.",
+      "Check whether the shop's credit limit allows another order. Returns available credit and whether order is approved.",
     parameters: {
       type: "object",
       properties: {
-        shop_id: { type: "string" },
+        shop_id: { type: "string", description: "The shop ID" },
+        order_total: { type: "number", description: "Total order amount to check against credit" },
       },
-      required: ["shop_id"],
+      required: ["shop_id", "order_total"],
     },
   },
   {
