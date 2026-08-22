@@ -3,17 +3,18 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Card, CardHeader } from "@/components/ui";
 import { languageLabel } from "@/lib/format";
-import { STATE_LABELS, startCall, step, summarize } from "@/lib/voice/engine";
+import { STATE_LABELS, startCall, step, summarize, summarizeCart } from "@/lib/voice/engine";
 import { LYRA_SYSTEM_PROMPT } from "@/lib/voice/prompt";
 import { VOICE_TOOLS } from "@/lib/voice/tools";
 import { speakLyra, stopLyraSpeech, type LyraVoice } from "@/lib/voice/tts";
-import { voiceApi, type CreatedOrderPayload } from "@/lib/voice/client";
+import { voiceApi, type CreatedOrderPayload, type ProductCatalogItem } from "@/lib/voice/client";
 import type { AppLanguage } from "@/lib/types";
 import type {
   RepeatItem,
   VoiceContext,
   VoiceMessage,
   VoiceState,
+  CartItem,
 } from "@/lib/voice/types";
 
 type ShopOption = {
@@ -54,10 +55,17 @@ const FLOW_STEPS: VoiceState[] = [
   "good_time",
   "repeat_order",
   "changes",
+  "catalog_query",
   "read_back",
   "confirm",
+  "upsell_repeat",
   "complaint",
   "return_product",
+  "onboarding_name",
+  "onboarding_area",
+  "onboarding_owner",
+  "onboarding_language",
+  "onboarding_complete",
   "end",
 ];
 
@@ -76,6 +84,9 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
   const [orderResult, setOrderResult] = useState<CreatedOrderPayload | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [callLanguage, setCallLanguage] = useState<AppLanguage>("tanglish");
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [catalogResults, setCatalogResults] = useState<ProductCatalogItem[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
 
   const phaseRef = useRef(phase);
   const stateRef = useRef(state);
@@ -150,11 +161,10 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
 
   const placeOrder = useCallback(
     async (ctxFinal: VoiceContext) => {
-      const items = ctxFinal.repeatItems.map((i) => ({
-        product_id: i.product_id,
-        quantity: i.quantity,
-      }));
-      const summary = ctxFinal.currentSummary ?? summarize(ctxFinal.repeatItems) ?? "";
+      const items = (ctxFinal.currentCart && ctxFinal.currentCart.length > 0)
+        ? ctxFinal.currentCart.map((i) => ({ product_id: i.product_id, quantity: i.quantity }))
+        : ctxFinal.repeatItems.map((i) => ({ product_id: i.product_id, quantity: i.quantity }));
+      const summary = ctxFinal.currentSummary ?? summarizeCart(ctxFinal.currentCart ?? []) ?? summarize(ctxFinal.repeatItems) ?? "";
       try {
         pushTrace("create_order", `shop_id=${ctxFinal.shopId} · ${items.length} item(s)`);
         const order = await voiceApi.createOrder({
@@ -197,29 +207,59 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
   }, []);
 
   const runStep = useCallback(
-    (text: string) => {
+    async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || phaseRef.current !== "active" || !ctxRef.current) return;
       const prevState = stateRef.current;
       setInput("");
       setMessages((m) => [...m, { role: "user", text: trimmed }]);
-      const result = step(prevState, trimmed, ctxRef.current);
+      let result = step(prevState, trimmed, ctxRef.current);
       hydrateState(result.state, result.ctx);
       if (result.agentText) {
         setMessages((m) => [...m, { role: "agent", text: result.agentText }]);
         speak(result.agentText);
       }
+
+      // Handle catalog_query state - call API to search catalog
+      if (result.state === "catalog_query" && result.ctx) {
+        try {
+          pushTrace("search_catalog", `query="${trimmed}"`);
+          const searchResult = await voiceApi.searchCatalog(trimmed);
+          setCatalogResults(searchResult.products);
+          setCatalogLoading(false);
+          // Continue the flow with catalog results
+          const updatedCtx = { ...result.ctx, catalogResults: searchResult.products };
+          hydrateState("changes", updatedCtx);
+          const continueResult = step("changes", "", updatedCtx);
+          hydrateState(continueResult.state, continueResult.ctx);
+          if (continueResult.agentText) {
+            setMessages((m) => [...m, { role: "agent", text: continueResult.agentText }]);
+            speak(continueResult.agentText);
+          }
+        } catch (err) {
+          pushTrace("search_catalog", err instanceof Error ? err.message : String(err), "error");
+          const errorCtx = { ...result.ctx, catalogResults: [] };
+          hydrateState("changes", errorCtx);
+          const continueResult = step("changes", "", errorCtx);
+          hydrateState(continueResult.state, continueResult.ctx);
+          if (continueResult.agentText) {
+            setMessages((m) => [...m, { role: "agent", text: continueResult.agentText }]);
+            speak(continueResult.agentText);
+          }
+        }
+      }
+
       if (result.done) {
         phaseRef.current = "done";
         setPhase("done");
         if (result.ctx.optedOut) {
           void recordOptOut(result.ctx);
-        } else if (prevState === "confirm") {
+        } else if (prevState === "confirm" || prevState === "upsell_repeat") {
           void placeOrder(result.ctx);
         }
       }
     },
-    [hydrateState, speak, recordOptOut, placeOrder]
+    [hydrateState, speak, recordOptOut, placeOrder, pushTrace]
   );
 
   const resetCallState = useCallback(() => {
@@ -262,6 +302,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
         shopId: context.shop_id,
         shopName: context.shop_name,
         repeatItems: repeat,
+        currentCart: [],
         currentSummary: null,
         corrections: 0,
         optedOut: false,
@@ -269,6 +310,9 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
         pendingReturnProductId: null,
         pendingReturnProductName: null,
         pendingReturnOrderId: null,
+        isNewShop: false,
+        onboardingStep: null,
+        onboardingData: {},
       };
       const first = startCall(ctx0);
       hydrateState(first.state, first.ctx);
@@ -619,6 +663,105 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
               ))}
             </ol>
           )}
+        </Card>
+
+        {/* Catalog Search Panel */}
+        <Card>
+          <CardHeader
+            title="Product Catalog Search"
+            subtitle="Search HUL products by name, brand, or category"
+          />
+          <div className="p-4 space-y-3">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={catalogSearch}
+                onChange={(e) => setCatalogSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && catalogSearch.trim()) {
+                    setCatalogLoading(true);
+                    voiceApi.searchCatalog(catalogSearch.trim()).then((res) => {
+                      setCatalogResults(res.products);
+                      setCatalogLoading(false);
+                    });
+                  }
+                }}
+                placeholder="Search products (e.g. lifebuoy, shampoo, tea)..."
+                className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none"
+              />
+              <button
+                onClick={() => {
+                  if (catalogSearch.trim()) {
+                    setCatalogLoading(true);
+                    voiceApi.searchCatalog(catalogSearch.trim()).then((res) => {
+                      setCatalogResults(res.products);
+                      setCatalogLoading(false);
+                    });
+                  }
+                }}
+                disabled={catalogLoading || !catalogSearch.trim()}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {catalogLoading ? "Searching..." : "Search"}
+              </button>
+            </div>
+            {catalogResults.length > 0 && (
+              <div className="max-h-64 overflow-y-auto space-y-1">
+                {catalogResults.slice(0, 15).map((p) => (
+                  <div
+                    key={p.product_id}
+                    className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-zinc-900 truncate">{p.product_name}</p>
+                      <p className="text-xs text-zinc-500">{p.brand} · {p.category} · {p.unit_type}</p>
+                    </div>
+                    <div className="flex items-center gap-3 ml-2">
+                      <span className="font-semibold text-emerald-700">₹{p.price.toFixed(0)}</span>
+                      {p.available_qty !== undefined && (
+                        <span
+                          className={`text-xs font-medium px-2 py-0.5 rounded ${
+                            (p.available_qty ?? 0) <= 5 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                          }`}
+                        >
+                          Stock: {p.available_qty}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {catalogSearch && catalogResults.length === 0 && !catalogLoading && (
+              <p className="text-sm text-zinc-400">No products found for "{catalogSearch}"</p>
+            )}
+          </div>
+        </Card>
+
+        {/* Current Cart Panel */}
+        <Card>
+          <CardHeader title="Current Cart" subtitle="Items added in this call" />
+          <div className="p-4 space-y-2">
+            {ctx?.currentCart && ctx.currentCart.length > 0 ? (
+              <>
+                {ctx.currentCart.map((item, idx) => (
+                  <div key={`${item.product_id}-${idx}`} className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-zinc-900 truncate">{item.product_name}</p>
+                      <p className="text-xs text-zinc-500">{item.quantity} x {item.unit} @ ₹{item.price.toFixed(0)}</p>
+                    </div>
+                    <span className="font-semibold text-emerald-700 ml-2">₹{item.line_total.toFixed(0)}</span>
+                  </div>
+                ))}
+                <div className="border-t border-zinc-200 pt-2 flex justify-between font-semibold text-zinc-900">
+                  <span>Total</span>
+                  <span>₹{ctx.currentCart.reduce((sum, i) => sum + i.line_total, 0).toFixed(0)}</span>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-zinc-400 text-center py-4">Cart is empty</p>
+            )}
+          </div>
         </Card>
 
         <Card>

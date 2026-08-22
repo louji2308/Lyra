@@ -137,6 +137,37 @@ export interface SchemePayload {
   is_active: boolean;
 }
 
+export interface ProductCatalogItem {
+  product_id: string;
+  product_name: string;
+  brand: string;
+  category: string;
+  unit_type: string;
+  price: number;
+  tax_rate: number;
+  is_active: boolean;
+  available_qty?: number;
+}
+
+export interface ListProductsResult {
+  products: ProductCatalogItem[];
+  total: number;
+}
+
+export interface SearchCatalogResult {
+  products: ProductCatalogItem[];
+  query: string;
+}
+
+export interface CreateShopResult {
+  shop_id: string;
+  shop_name: string;
+  phone_number: string;
+  owner_name: string;
+  area: string;
+  preferred_language: string;
+}
+
 async function req<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const res = await fetch(input, {
     ...init,
@@ -211,4 +242,18 @@ export const voiceApi = {
   }) => post<CreateReturnPayload>("/api/create-return", body),
 
   getSchemes: () => req<SchemePayload[]>("/api/schemes"),
+
+  listProducts: (params?: { category?: string; brand?: string; in_stock_only?: boolean }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.category) searchParams.set("category", params.category);
+    if (params?.brand) searchParams.set("brand", params.brand);
+    if (params?.in_stock_only) searchParams.set("in_stock_only", "true");
+    return req<ListProductsResult>(`/api/list-products?${searchParams.toString()}`);
+  },
+
+  searchCatalog: (query: string) =>
+    req<SearchCatalogResult>(`/api/search-catalog?query=${encodeURIComponent(query)}`),
+
+  createShop: (body: { phone_number: string; shop_name: string; owner_name: string; area: string; preferred_language: string }) =>
+    post<CreateShopResult>("/api/create-shop", body),
 };

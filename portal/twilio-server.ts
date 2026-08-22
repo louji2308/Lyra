@@ -164,6 +164,7 @@ async function processUserSpeech(session: CallSession, userText: string) {
         shopId: "",
         shopName: "Unknown Shop",
         repeatItems: [],
+        currentCart: [],
         currentSummary: null,
         corrections: 0,
         optedOut: false,
@@ -171,6 +172,9 @@ async function processUserSpeech(session: CallSession, userText: string) {
         pendingReturnProductId: null,
         pendingReturnProductName: null,
         pendingReturnOrderId: null,
+        isNewShop: false,
+        onboardingStep: null,
+        onboardingData: {},
       } as VoiceContext;
       const first = startCall(session.ctx);
       session.state = first.state;

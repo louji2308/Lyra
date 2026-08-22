@@ -3,7 +3,7 @@
 -- Sample universe for the Shree Agencies demo (run AFTER the schema migration)
 --
 -- Contents:
---   1 route    | 5 shops   | 15 products (4 categories) | inventory
+--   1 route    | 5 shops   | HUL-only SKU products | inventory
 --   3 schemes  | 5 past orders | call logs | memory | blacklist | complaint | return
 --
 -- Demo-critical scenarios baked in:
@@ -40,111 +40,163 @@ INSERT INTO public.shops (
   ('S105', 'Anand Provision Store', 'Anand', '919840055678', '919840055678', 'english', '09:30', '12:30', 'R001', 7, 6000.00, 5500.00, TRUE,  TRUE,  FALSE, '2026-08-09');
 
 -- ============================================================================
--- PRODUCTS (database-only pricing)
+-- PRODUCTS (HUL-only SKU catalog with pack-size variants)
 -- ============================================================================
 
 INSERT INTO public.products (product_id, product_name, brand, category, unit_type, price, tax_rate, is_active, launch_date) VALUES
-  ('P001', 'Clinic Plus Shampoo',        'Clinic Plus', 'Personal Care', 'carton', 1200.00, 18.00, TRUE,  NULL),
-  ('P002', 'Clinic Plus Sachet',         'Clinic Plus', 'Personal Care', 'box',    250.00, 18.00, TRUE,  '2026-08-01'),
-  ('P003', 'Lux Soap',                   'Lux',         'Personal Care', 'carton',  900.00, 18.00, TRUE,  NULL),
-  ('P004', 'Santoor Soap',               'Santoor',     'Personal Care', 'carton',  840.00, 18.00, TRUE,  NULL),
-  ('P005', 'Dettol Soap',                'Dettol',      'Personal Care', 'carton',  960.00, 18.00, TRUE,  NULL),
-  ('P006', 'Surf Excel Detergent',       'Surf Excel',  'Home Care',     'carton', 2400.00, 18.00, TRUE,  NULL),
-  ('P007', 'Vim Bar',                    'Vim',         'Home Care',     'box',     320.00, 18.00, TRUE,  NULL),
-  ('P008', 'Rin Soap',                   'Rin',         'Home Care',     'box',     280.00, 18.00, TRUE,  NULL),
-  ('P009', 'Wheel Detergent',            'Wheel',       'Home Care',     'box',     220.00, 18.00, TRUE,  NULL),
-  ('P010', 'Pepsodent Toothpaste',       'Pepsodent',   'Oral Care',     'box',     600.00, 18.00, TRUE,  NULL),
-  ('P011', 'Colgate MaxFresh',           'Colgate',     'Oral Care',     'box',     700.00, 18.00, TRUE,  NULL),
-  ('P012', 'Dettol Mouthwash',           'Dettol',      'Oral Care',     'box',     380.00, 18.00, TRUE,  NULL),
-  ('P013', 'Red Label Tea',              'Red Label',   'Beverages',     'carton', 1200.00, 18.00, TRUE,  NULL),
-  ('P014', 'Brooke Bond Taj Mahal Tea',  'Brooke Bond', 'Beverages',     'carton', 1800.00, 18.00, TRUE,  NULL),
-  ('P015', 'Boost',                      'Boost',       'Beverages',     'box',    1300.00, 18.00, TRUE,  NULL);
+  -- Clinic Plus Shampoo variants
+  ('P001', 'Clinic Plus Shampoo 180ml',        'Clinic Plus', 'Personal Care', 'bottle',  85.00, 18.00, TRUE,  NULL),
+  ('P002', 'Clinic Plus Shampoo 340ml',        'Clinic Plus', 'Personal Care', 'bottle', 155.00, 18.00, TRUE,  NULL),
+  ('P003', 'Clinic Plus Shampoo 650ml',        'Clinic Plus', 'Personal Care', 'bottle', 285.00, 18.00, TRUE,  NULL),
+  ('P004', 'Clinic Plus Shampoo Sachet 6ml x 50', 'Clinic Plus', 'Personal Care', 'box',    250.00, 18.00, TRUE,  '2026-08-01'),
+  -- Lux Soap variants
+  ('P005', 'Lux Soap 100g x 10',               'Lux',         'Personal Care', 'carton',  450.00, 18.00, TRUE,  NULL),
+  ('P006', 'Lux Soap 100g x 20',               'Lux',         'Personal Care', 'carton',  880.00, 18.00, TRUE,  NULL),
+  ('P007', 'Lux Soap 50g x 40',                'Lux',         'Personal Care', 'carton',  840.00, 18.00, TRUE,  NULL),
+  -- Surf Excel Detergent variants
+  ('P008', 'Surf Excel Matic Top Load 1kg',    'Surf Excel',  'Home Care',     'pack',    195.00, 18.00, TRUE,  NULL),
+  ('P009', 'Surf Excel Matic Top Load 2kg',    'Surf Excel',  'Home Care',     'pack',    375.00, 18.00, TRUE,  NULL),
+  ('P010', 'Surf Excel Matic Top Load 4kg',    'Surf Excel',  'Home Care',     'pack',    720.00, 18.00, TRUE,  NULL),
+  ('P011', 'Surf Excel Easy Wash 1kg',         'Surf Excel',  'Home Care',     'pack',    155.00, 18.00, TRUE,  NULL),
+  ('P012', 'Surf Excel Easy Wash 2kg',         'Surf Excel',  'Home Care',     'pack',    295.00, 18.00, TRUE,  NULL),
+  -- Rin Soap variants
+  ('P013', 'Rin Soap 250g x 12',               'Rin',         'Home Care',     'carton',  360.00, 18.00, TRUE,  NULL),
+  ('P014', 'Rin Soap 250g x 24',               'Rin',         'Home Care',     'carton',  700.00, 18.00, TRUE,  NULL),
+  -- Wheel Detergent variants
+  ('P015', 'Wheel Active 1kg',                 'Wheel',       'Home Care',     'pack',    125.00, 18.00, TRUE,  NULL),
+  ('P016', 'Wheel Active 2kg',                 'Wheel',       'Home Care',     'pack',    240.00, 18.00, TRUE,  NULL),
+  -- Pepsodent Toothpaste variants
+  ('P017', 'Pepsodent Germicheck 80g',         'Pepsodent',   'Oral Care',     'tube',     55.00, 18.00, TRUE,  NULL),
+  ('P018', 'Pepsodent Germicheck 150g',        'Pepsodent',   'Oral Care',     'tube',     95.00, 18.00, TRUE,  NULL),
+  ('P019', 'Pepsodent Germicheck 200g',        'Pepsodent',   'Oral Care',     'tube',    125.00, 18.00, TRUE,  NULL),
+  -- Boost variants
+  ('P020', 'Boost Chocolate 200g',             'Boost',       'Beverages',     'jar',     110.00, 18.00, TRUE,  NULL),
+  ('P021', 'Boost Chocolate 500g',             'Boost',       'Beverages',     'jar',     250.00, 18.00, TRUE,  NULL),
+  ('P022', 'Boost Chocolate 1kg',              'Boost',       'Beverages',     'jar',     460.00, 18.00, TRUE,  NULL),
+  -- Red Label Tea variants
+  ('P023', 'Red Label Tea 250g',               'Red Label',   'Beverages',     'pack',    110.00, 18.00, TRUE,  NULL),
+  ('P024', 'Red Label Tea 500g',               'Red Label',   'Beverages',     'pack',    210.00, 18.00, TRUE,  NULL),
+  ('P025', 'Red Label Tea 1kg',                'Red Label',   'Beverages',     'pack',    395.00, 18.00, TRUE,  NULL),
+  -- Brooke Bond Taj Mahal Tea variants
+  ('P026', 'Brooke Bond Taj Mahal 250g',       'Brooke Bond', 'Beverages',     'pack',    150.00, 18.00, TRUE,  NULL),
+  ('P027', 'Brooke Bond Taj Mahal 500g',       'Brooke Bond', 'Beverages',     'pack',    285.00, 18.00, TRUE,  NULL),
+  -- Lifebuoy Soap variants (new HUL additions)
+  ('P028', 'Lifebuoy Total 100g x 10',         'Lifebuoy',    'Personal Care', 'carton',  380.00, 18.00, TRUE,  NULL),
+  ('P029', 'Lifebuoy Total 100g x 20',         'Lifebuoy',    'Personal Care', 'carton',  740.00, 18.00, TRUE,  NULL),
+  ('P030', 'Lifebuoy Handwash 200ml',          'Lifebuoy',    'Personal Care', 'bottle',   85.00, 18.00, TRUE,  NULL),
+  ('P031', 'Lifebuoy Handwash 500ml Refill',   'Lifebuoy',    'Personal Care', 'pack',    165.00, 18.00, TRUE,  NULL),
+  -- Dove Soap variants (premium HUL)
+  ('P032', 'Dove Cream Beauty 75g x 12',       'Dove',        'Personal Care', 'carton',  720.00, 18.00, TRUE,  NULL),
+  ('P033', 'Dove Cream Beauty 100g x 10',      'Dove',        'Personal Care', 'carton',  840.00, 18.00, TRUE,  NULL);
 
 -- ============================================================================
--- INVENTORY  (Surf Excel P006 is the low-stock demo: only 3 in stock)
+-- INVENTORY  (Surf Excel 4kg P010 is the low-stock demo: only 3 in stock)
 -- ============================================================================
 
 INSERT INTO public.inventory (product_id, available_qty, reserved_qty, restock_date, low_stock_threshold) VALUES
   ('P001', 45, 0, '2026-08-20', 5),
-  ('P002', 100, 0, '2026-08-20', 20),
-  ('P003', 30, 0, '2026-08-20', 5),
-  ('P004', 25, 0, '2026-08-20', 5),
-  ('P005', 18, 0, '2026-08-20', 5),
-  ('P006',  3, 0, '2026-08-18', 5),
-  ('P007', 60, 0, '2026-08-20', 10),
-  ('P008', 40, 0, '2026-08-20', 10),
-  ('P009', 50, 0, '2026-08-20', 10),
-  ('P010', 35, 0, '2026-08-20', 5),
-  ('P011', 28, 0, '2026-08-20', 5),
-  ('P012', 22, 0, '2026-08-20', 5),
-  ('P013', 40, 0, '2026-08-20', 5),
-  ('P014', 20, 0, '2026-08-20', 5),
-  ('P015', 33, 0, '2026-08-20', 5);
+  ('P002', 30, 0, '2026-08-20', 5),
+  ('P003', 20, 0, '2026-08-20', 5),
+  ('P004', 100, 0, '2026-08-20', 20),
+  ('P005', 25, 0, '2026-08-20', 5),
+  ('P006', 18, 0, '2026-08-20', 5),
+  ('P007', 22, 0, '2026-08-20', 5),
+  ('P008', 40, 0, '2026-08-20', 5),
+  ('P009', 25, 0, '2026-08-20', 5),
+  ('P010',  3, 0, '2026-08-18', 5),   -- LOW STOCK DEMO
+  ('P011', 35, 0, '2026-08-20', 5),
+  ('P012', 20, 0, '2026-08-20', 5),
+  ('P013', 30, 0, '2026-08-20', 5),
+  ('P014', 15, 0, '2026-08-20', 5),
+  ('P015', 50, 0, '2026-08-20', 10),
+  ('P016', 30, 0, '2026-08-20', 5),
+  ('P017', 40, 0, '2026-08-20', 5),
+  ('P018', 25, 0, '2026-08-20', 5),
+  ('P019', 18, 0, '2026-08-20', 5),
+  ('P020', 35, 0, '2026-08-20', 5),
+  ('P021', 22, 0, '2026-08-20', 5),
+  ('P022', 12, 0, '2026-08-20', 5),
+  ('P023', 40, 0, '2026-08-20', 5),
+  ('P024', 20, 0, '2026-08-20', 5),
+  ('P025', 10, 0, '2026-08-20', 5),
+  ('P026', 25, 0, '2026-08-20', 5),
+  ('P027', 15, 0, '2026-08-20', 5),
+  ('P028', 30, 0, '2026-08-20', 5),
+  ('P029', 18, 0, '2026-08-20', 5),
+  ('P030', 40, 0, '2026-08-20', 5),
+  ('P031', 25, 0, '2026-08-20', 5),
+  ('P032', 20, 0, '2026-08-20', 5),
+  ('P033', 15, 0, '2026-08-20', 5);
 
 -- ============================================================================
--- SCHEMES
+-- SCHEMES (HUL products only)
 -- ============================================================================
 
 INSERT INTO public.schemes (scheme_id, scheme_name, start_date, end_date, eligible_product_ids, minimum_quantity, benefit_type, benefit_value, is_active) VALUES
-  ('SCH01', 'Surf Excel Buy 5 Get 1 Free',      '2026-08-01', '2026-08-31', ARRAY['P006']::TEXT[], 5, 'free_units', 1,     TRUE),
-  ('SCH02', 'New Launch: Clinic Plus Sachet',   '2026-08-01', '2026-08-31', ARRAY['P002']::TEXT[], 10, 'discount', 10.00,  TRUE),
-  ('SCH03', 'Festive Combo: Boost + Red Label', '2026-08-01', '2026-08-31', ARRAY['P013','P015']::TEXT[], 3, 'cashback', 100.00, TRUE);
+  ('SCH01', 'Surf Excel Matic 4kg Buy 5 Get 1 Free',  '2026-08-01', '2026-08-31', ARRAY['P010']::TEXT[], 5, 'free_units', 1,     TRUE),
+  ('SCH02', 'New Launch: Clinic Plus Sachet Box',     '2026-08-01', '2026-08-31', ARRAY['P004']::TEXT[], 10, 'discount', 10.00,  TRUE),
+  ('SCH03', 'Festive Combo: Boost 500g + Red Label 500g', '2026-08-01', '2026-08-31', ARRAY['P021','P024']::TEXT[], 3, 'cashback', 100.00, TRUE);
 
 -- ============================================================================
 -- CALL LOGS  (one per past order)
 -- ============================================================================
 
 INSERT INTO public.call_logs (call_id, shop_id, start_time, end_time, language_detected, sentiment, order_placed, whatsapp_sent, escalated_to_human, transcript_summary) VALUES
-  ('CALL101', 'S101', '2026-08-10 09:12:00+00', '2026-08-10 09:14:00+00', 'tanglish', 'positive', TRUE,  TRUE,  FALSE, 'Repeat order confirmed: Clinic Plus 2, Red Label 1, Dettol Soap 1.'),
-  ('CALL102', 'S102', '2026-08-12 10:05:00+00', '2026-08-12 10:06:30+00', 'tamil',    'positive', TRUE,  TRUE,  FALSE, 'Order: Santoor 1 carton, Vim Bar 1 box.'),
-  ('CALL103', 'S103', '2026-08-13 16:20:00+00', '2026-08-13 16:22:00+00', 'tamil',    'positive', TRUE,  TRUE,  FALSE, 'Order: Red Label 2 cartons, Boost 1 box.'),
-  ('CALL104', 'S104', '2026-08-14 11:30:00+00', '2026-08-14 11:32:00+00', 'hindi',    'positive', TRUE,  TRUE,  FALSE, 'Order in Hindi: Surf Excel 1, Vim Bar 2.'),
-  ('CALL105', 'S105', '2026-08-09 09:45:00+00', '2026-08-09 09:47:00+00', 'english',  'neutral',  TRUE,  TRUE,  FALSE, 'Order: Colgate MaxFresh 1, Wheel 1.');
+  ('CALL101', 'S101', '2026-08-10 09:12:00+00', '2026-08-10 09:14:00+00', 'tanglish', 'positive', TRUE,  TRUE,  FALSE, 'Repeat order confirmed: Clinic Plus 340ml 2, Red Label 500g 1, Lux Soap 100gx20 1.'),
+  ('CALL102', 'S102', '2026-08-12 10:05:00+00', '2026-08-12 10:06:30+00', 'tamil',    'positive', TRUE,  TRUE,  FALSE, 'Order: Rin Soap 250gx24 1 carton, Wheel Active 1kg 1.'),
+  ('CALL103', 'S103', '2026-08-13 16:20:00+00', '2026-08-13 16:22:00+00', 'tamil',    'positive', TRUE,  TRUE,  FALSE, 'Order: Red Label 500g 2 packs, Boost 500g 1.'),
+  ('CALL104', 'S104', '2026-08-14 11:30:00+00', '2026-08-14 11:32:00+00', 'hindi',    'positive', TRUE,  TRUE,  FALSE, 'Order in Hindi: Surf Excel Matic 4kg 1, Wheel Active 2kg 2.'),
+  ('CALL105', 'S105', '2026-08-09 09:45:00+00', '2026-08-09 09:47:00+00', 'english',  'neutral',  TRUE,  TRUE,  FALSE, 'Order: Pepsodent 150g 1, Wheel Active 1kg 1.');
 
 -- ============================================================================
--- ORDERS + ORDER ITEMS  (5 past orders)
+-- ORDERS + ORDER ITEMS  (5 past orders, updated to new SKUs)
 -- ============================================================================
 
 -- ORD1019 — Kannan Stores (S101), last order, 2026-08-10
+-- Clinic Plus 340ml 2 (155*2=310) + Red Label 500g 1 (210) + Lux Soap 100gx20 1 (880) = 1400
 INSERT INTO public.orders (order_id, shop_id, call_id, order_date, delivery_date, delivery_slot, total_amount, credit_used, payment_status, order_status, created_by) VALUES
-  ('ORD1019', 'S101', 'CALL101', '2026-08-10', '2026-08-11', '2 PM - 5 PM', 4560.00, 4560.00, 'paid', 'delivered', 'AI');
+  ('ORD1019', 'S101', 'CALL101', '2026-08-10', '2026-08-11', '2 PM - 5 PM', 1400.00, 1400.00, 'paid', 'delivered', 'AI');
 
 INSERT INTO public.order_items (order_id, product_id, quantity, unit, price, discount, line_total) VALUES
-  ('ORD1019', 'P001', 2, 'carton', 1200.00, 0, 2400.00),
-  ('ORD1019', 'P013', 1, 'carton', 1200.00, 0, 1200.00),
-  ('ORD1019', 'P005', 1, 'carton',  960.00, 0,  960.00);
+  ('ORD1019', 'P002', 2, 'bottle', 155.00, 0, 310.00),
+  ('ORD1019', 'P024', 1, 'pack', 210.00, 0, 210.00),
+  ('ORD1019', 'P006', 1, 'carton', 880.00, 0, 880.00);
 
 -- ORD1020 — Murugan Store (S102)
+-- Rin 250gx24 1 (700) + Wheel 1kg 1 (125) = 825
 INSERT INTO public.orders (order_id, shop_id, call_id, order_date, delivery_date, delivery_slot, total_amount, credit_used, payment_status, order_status, created_by) VALUES
-  ('ORD1020', 'S102', 'CALL102', '2026-08-12', '2026-08-13', '2 PM - 5 PM', 1160.00, 1160.00, 'paid', 'delivered', 'AI');
+  ('ORD1020', 'S102', 'CALL102', '2026-08-12', '2026-08-13', '2 PM - 5 PM', 825.00, 825.00, 'paid', 'delivered', 'AI');
 
 INSERT INTO public.order_items (order_id, product_id, quantity, unit, price, discount, line_total) VALUES
-  ('ORD1020', 'P004', 1, 'carton', 840.00, 0,  840.00),
-  ('ORD1020', 'P007', 1, 'box',    320.00, 0,  320.00);
+  ('ORD1020', 'P014', 1, 'carton', 700.00, 0, 700.00),
+  ('ORD1020', 'P015', 1, 'pack',   125.00, 0, 125.00);
 
 -- ORD1021 — Shanthi General Store (S103)
+-- Red Label 500g 2 (210*2=420) + Boost 500g 1 (250) = 670
 INSERT INTO public.orders (order_id, shop_id, call_id, order_date, delivery_date, delivery_slot, total_amount, credit_used, payment_status, order_status, created_by) VALUES
-  ('ORD1021', 'S103', 'CALL103', '2026-08-13', '2026-08-14', '2 PM - 5 PM', 3700.00, 3700.00, 'paid', 'delivered', 'AI');
+  ('ORD1021', 'S103', 'CALL103', '2026-08-13', '2026-08-14', '2 PM - 5 PM', 670.00, 670.00, 'paid', 'delivered', 'AI');
 
 INSERT INTO public.order_items (order_id, product_id, quantity, unit, price, discount, line_total) VALUES
-  ('ORD1021', 'P013', 2, 'carton', 1200.00, 0, 2400.00),
-  ('ORD1021', 'P015', 1, 'box',    1300.00, 0, 1300.00);
+  ('ORD1021', 'P024', 2, 'pack', 210.00, 0, 420.00),
+  ('ORD1021', 'P021', 1, 'jar',  250.00, 0, 250.00);
 
 -- ORD1022 — Lakshmi Traders (S104)
+-- Surf Excel 4kg 1 (720) + Wheel 2kg 2 (240*2=480) = 1200
 INSERT INTO public.orders (order_id, shop_id, call_id, order_date, delivery_date, delivery_slot, total_amount, credit_used, payment_status, order_status, created_by) VALUES
-  ('ORD1022', 'S104', 'CALL104', '2026-08-14', '2026-08-15', '2 PM - 5 PM', 3040.00, 3040.00, 'paid', 'delivered', 'AI');
+  ('ORD1022', 'S104', 'CALL104', '2026-08-14', '2026-08-15', '2 PM - 5 PM', 1200.00, 1200.00, 'paid', 'delivered', 'AI');
 
 INSERT INTO public.order_items (order_id, product_id, quantity, unit, price, discount, line_total) VALUES
-  ('ORD1022', 'P006', 1, 'carton', 2400.00, 0, 2400.00),
-  ('ORD1022', 'P007', 2, 'box',     320.00, 0,  640.00);
+  ('ORD1022', 'P010', 1, 'pack', 720.00, 0, 720.00),
+  ('ORD1022', 'P016', 2, 'pack', 240.00, 0, 480.00);
 
 -- ORD1023 — Anand Provision Store (S105)
+-- Pepsodent 150g 1 (95) + Wheel 1kg 1 (125) = 220
 INSERT INTO public.orders (order_id, shop_id, call_id, order_date, delivery_date, delivery_slot, total_amount, credit_used, payment_status, order_status, created_by) VALUES
-  ('ORD1023', 'S105', 'CALL105', '2026-08-09', '2026-08-10', '2 PM - 5 PM',  920.00,  920.00, 'paid', 'delivered', 'AI');
+  ('ORD1023', 'S105', 'CALL105', '2026-08-09', '2026-08-10', '2 PM - 5 PM',  220.00,  220.00, 'paid', 'delivered', 'AI');
 
 INSERT INTO public.order_items (order_id, product_id, quantity, unit, price, discount, line_total) VALUES
-  ('ORD1023', 'P011', 1, 'box', 700.00, 0, 700.00),
-  ('ORD1023', 'P009', 1, 'box', 220.00, 0, 220.00);
+  ('ORD1023', 'P018', 1, 'tube',  95.00, 0,  95.00),
+  ('ORD1023', 'P015', 1, 'pack', 125.00, 0, 125.00);
 
 -- ============================================================================
 -- SHOP MEMORY
@@ -153,28 +205,29 @@ INSERT INTO public.order_items (order_id, product_id, quantity, unit, price, dis
 INSERT INTO public.shop_memory (shop_id, memory_text, memory_type, confidence_score, confirmed_by_user) VALUES
   ('S101', 'Prefers calls after 9 AM',             'timing',            0.95, TRUE),
   ('S101', 'Do not pitch Lux Soap',                'negative_memory',   0.98, TRUE),
-  ('S101', 'Orders Clinic Plus weekly',            'product_preference',0.90, TRUE),
+  ('S101', 'Orders Clinic Plus 340ml weekly',      'product_preference',0.90, TRUE),
   ('S102', 'Prefers pure Tamil on calls',          'language',          0.95, TRUE),
   ('S103', 'Prefers evening call window 4-6 PM',   'timing',            0.90, TRUE),
   ('S104', 'Prefers Hindi on calls',               'language',          0.95, TRUE);
 
 -- ============================================================================
--- BLACKLIST
+-- BLACKLIST (S101 blacklists Lux Soap)
 -- ============================================================================
 
 INSERT INTO public.blacklist (shop_id, product_id, reason) VALUES
-  ('S101', 'P003', 'Owner said Lux Soap does not sell'),
-  ('S101', 'P007', 'Vim bar venaam, adhu sell aagala. Innum kekkadheenga'),
-  ('S102', 'P007', 'Does not stock Vim');
+  ('S101', 'P005', 'Owner said Lux Soap does not sell'),
+  ('S101', 'P006', 'Lux Soap venaam, adhu sell aagala. Innum kekkadheenga'),
+  ('S101', 'P007', 'Lux Soap 50g also not needed'),
+  ('S102', 'P013', 'Does not stock Rin 250gx12');
 
 -- ============================================================================
 -- COMPLAINT + RETURN  (one open exception, one return in progress)
 -- ============================================================================
 
 INSERT INTO public.complaints (complaint_id, shop_id, call_id, complaint_type, description, severity, status, callback_requested) VALUES
-  (1, 'S102', 'CALL102', 'damaged_goods', '2 Dettol packets damaged on delivery', 'medium', 'open', TRUE);
+  (1, 'S102', 'CALL102', 'damaged_goods', '2 Pepsodent tubes damaged on delivery', 'medium', 'open', TRUE);
 
 INSERT INTO public.returns (return_id, shop_id, order_id, product_id, quantity, reason, photo_url, credit_note_amount, status) VALUES
-  (1, 'S102', 'ORD1020', 'P005', 2, 'damaged_goods', NULL, 0.00, 'photo_received');
+  (1, 'S102', 'ORD1020', 'P014', 1, 'damaged_goods', NULL, 0.00, 'photo_received');
 
 COMMIT;

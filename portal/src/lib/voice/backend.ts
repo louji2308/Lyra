@@ -741,6 +741,41 @@ export interface SendWhatsAppResult {
   order_id: string;
   whatsapp_sent: boolean;
   message_preview: string;
+  language_detected: AppLanguage | null;
+}
+
+export interface ProductCatalogItem {
+  product_id: string;
+  product_name: string;
+  brand: string;
+  category: string;
+  unit_type: string;
+  price: number;
+  tax_rate: number;
+  is_active: boolean;
+  available_qty?: number;
+}
+
+export interface ListProductsResult {
+  products: ProductCatalogItem[];
+  total: number;
+  language_detected: AppLanguage | null;
+}
+
+export interface SearchCatalogResult {
+  products: ProductCatalogItem[];
+  query: string;
+  language_detected: AppLanguage | null;
+}
+
+export interface CreateShopResult {
+  shop_id: string;
+  shop_name: string;
+  phone_number: string;
+  owner_name: string;
+  area: string;
+  preferred_language: string;
+  language_detected: AppLanguage | null;
 }
 
 export async function sendWhatsAppSummary(
@@ -982,6 +1017,201 @@ export async function getConversationHistory(
     shop_id: targetShopId,
     turns,
     summary: summary || "No previous conversation history.",
+    language_detected: languageDetected ?? null,
+  };
+}
+
+export async function listProducts(
+  opts: {
+    category?: string;
+    brand?: string;
+    in_stock_only?: boolean;
+    languageDetected?: AppLanguage | null;
+  } = {}
+): Promise<ListProductsResult> {
+  const { category, brand, in_stock_only, languageDetected } = opts;
+
+  let query = supabase
+    .from("products")
+    .select(
+      "product_id, product_name, brand, category, unit_type, price, tax_rate, is_active, inventory(available_qty)"
+    )
+    .eq("is_active", true);
+
+  if (category) query = query.eq("category", category);
+  if (brand) query = query.eq("brand", brand);
+
+  const { data, error } = await query.order("brand", { ascending: true }).order("product_name", { ascending: true });
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  const products: ProductCatalogItem[] = ((data ?? []) as Array<{
+    product_id: string;
+    product_name: string;
+    brand: string;
+    category: string;
+    unit_type: string;
+    price: number;
+    tax_rate: number;
+    is_active: boolean;
+    inventory: Array<{ available_qty: number }> | { available_qty: number } | null;
+  }>).map((p) => {
+    const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
+    return {
+      product_id: p.product_id,
+      product_name: p.product_name,
+      brand: p.brand,
+      category: p.category,
+      unit_type: p.unit_type,
+      price: Number(p.price),
+      tax_rate: Number(p.tax_rate),
+      is_active: p.is_active,
+      available_qty: inv ? Number(inv.available_qty) : 0,
+    };
+  });
+
+  const filtered = in_stock_only ? products.filter((p) => (p.available_qty ?? 0) > 0) : products;
+
+  return {
+    products: filtered,
+    total: filtered.length,
+    language_detected: languageDetected ?? null,
+  };
+}
+
+export async function searchCatalog(
+  query: string,
+  languageDetected?: AppLanguage | null
+): Promise<SearchCatalogResult> {
+  if (!query?.trim()) {
+    return { products: [], query: query ?? "", language_detected: languageDetected ?? null };
+  }
+
+  const searchTerm = query.trim();
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "product_id, product_name, brand, category, unit_type, price, tax_rate, is_active, inventory(available_qty)"
+    )
+    .eq("is_active", true)
+    .or(`product_name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`)
+    .order("brand", { ascending: true })
+    .order("product_name", { ascending: true })
+    .limit(20);
+
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  const products: ProductCatalogItem[] = ((data ?? []) as Array<{
+    product_id: string;
+    product_name: string;
+    brand: string;
+    category: string;
+    unit_type: string;
+    price: number;
+    tax_rate: number;
+    is_active: boolean;
+    inventory: Array<{ available_qty: number }> | { available_qty: number } | null;
+  }>).map((p) => {
+    const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
+    return {
+      product_id: p.product_id,
+      product_name: p.product_name,
+      brand: p.brand,
+      category: p.category,
+      unit_type: p.unit_type,
+      price: Number(p.price),
+      tax_rate: Number(p.tax_rate),
+      is_active: p.is_active,
+      available_qty: inv ? Number(inv.available_qty) : 0,
+    };
+  });
+
+  return {
+    products,
+    query: searchTerm,
+    language_detected: languageDetected ?? null,
+  };
+}
+
+export async function createShop(
+  input: {
+    phone_number: string;
+    shop_name: string;
+    owner_name: string;
+    area: string;
+    preferred_language: string;
+  },
+  languageDetected?: AppLanguage | null
+): Promise<CreateShopResult> {
+  const { phone_number, shop_name, owner_name, area, preferred_language } = input;
+
+  const digits = normalizePhone(phone_number);
+  if (!digits) throw new VoiceApiError(400, "phone_required");
+  if (!shop_name?.trim()) throw new VoiceApiError(400, "shop_name_required");
+  if (!owner_name?.trim()) throw new VoiceApiError(400, "owner_name_required");
+  if (!area?.trim()) throw new VoiceApiError(400, "area_required");
+
+  const validLanguages = ["tanglish", "tamil", "hindi", "english"];
+  const lang = validLanguages.includes(preferred_language.toLowerCase()) ? preferred_language.toLowerCase() : "tanglish";
+
+  // Check if shop already exists with this phone
+  const { data: existing } = await supabase
+    .from("shops")
+    .select("shop_id")
+    .ilike("phone_number", `%${digits.slice(-10)}`)
+    .maybeSingle();
+  if (existing) throw new VoiceApiError(409, "shop_already_exists");
+
+  // Get default route (R001)
+  const { data: route } = await supabase
+    .from("routes")
+    .select("route_id")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+
+  const routeId = route?.route_id ?? "R001";
+
+  const { data, error } = await supabase
+    .from("shops")
+    .insert({
+      shop_id: `S${Date.now().toString().slice(-3)}`,
+      shop_name: shop_name.trim(),
+      owner_name: owner_name.trim(),
+      phone_number: digits,
+      whatsapp_number: digits,
+      preferred_language: lang,
+      preferred_call_start: "09:00",
+      preferred_call_end: "18:00",
+      beat_route_id: routeId,
+      visit_gap_days: 7,
+      credit_limit: 5000,
+      outstanding_balance: 0,
+      voice_consent: true,
+      whatsapp_consent: true,
+      opt_out: false,
+    })
+    .select()
+    .single();
+
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  if (!data) throw new VoiceApiError(500, "db_error", "Shop creation failed");
+
+  // Initialize shop_credit
+  await supabase.from("shop_credit").insert({
+    shop_id: data.shop_id,
+    credit_limit: 5000,
+    outstanding_balance: 0,
+    available_credit: 5000,
+  });
+
+  return {
+    shop_id: data.shop_id,
+    shop_name: data.shop_name,
+    phone_number: data.phone_number,
+    owner_name: data.owner_name,
+    area,
+    preferred_language: lang,
     language_detected: languageDetected ?? null,
   };
 }

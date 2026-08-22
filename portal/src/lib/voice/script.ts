@@ -1,20 +1,55 @@
 export const SCRIPT = {
+  // ========== GREETING & TIME CHECK ==========
   greet: (shopName: string) =>
     `Vanakkam! ${shopName} aa? Shree Agencies la irundhu call pannuren.`,
 
   goodTime: "Ippo pesa convenient aa? Stock order confirm pannalama?",
 
+  // ========== REPEAT ORDER ==========
   repeatOrder: (summary: string) =>
     `Last time ${summary} order pannirukeenga. Same order venuma?`,
 
   whatDoYouNeed: "Sari, innaikku enna venum sollunga.",
 
-  changes: "Sari, enna maathanum sollunga. Add panala, remove panala, sollunga.",
+  // ========== CHANGES / CART ==========
+  changes: "Sari, enna maathanum sollunga. Add panala, remove panala, sollunga. Mudichu na 'seri' nu sollunga.",
 
-  readBack: (summary: string) => `Confirming: ${summary}. Correct aa?`,
+  addingToCart: (productQuery: string, qty: number) =>
+    `${qty} x ${productQuery} cart la add pannuren. Vera enna venum?`,
 
-  confirm: "Order confirm. WhatsApp la summary anuppuren.",
+  removingFromCart: (productQuery: string, qty: number) =>
+    `${qty} x ${productQuery} cart la irunthu remove pannuren. Vera enna venum?`,
 
+  cartEmpty: "Cart la onnum illai. Enna venum sollunga.",
+
+  readBack: (summary: string) =>
+    summary ? `Confirming: ${summary}. Correct aa?` : "Order la onnum illai. Enna venum?",
+
+  confirm: "Order confirm pannuren. WhatsApp la summary anuppuren.",
+
+  // ========== CATALOG QUERIES ==========
+  catalogThinking: "Sari, catalog la paarkuren...",
+
+  catalogResults: (products: Array<{ product_name: string; brand: string; category: string; price: number; unit_type: string; available_qty?: number }>) => {
+    if (!products || products.length === 0) return "Catalog la onnum irukkala. Vera search pannunga.";
+    const lines = products.slice(0, 8).map((p) =>
+      `${p.product_name} (${p.brand}) — ₹${p.price.toFixed(0)}/${p.unit_type}${p.available_qty !== undefined ? ` [Stock: ${p.available_qty}]` : ""}`
+    );
+    return `Shree Agencies la ${products.length} products irukku:\n${lines.join("\n")}\nEnna venum sollunga.`;
+  },
+
+  catalogNone: "Search panna product catalog la illai. Vera enna venum?",
+
+  // ========== UPSELL REPEAT ORDER ==========
+  upsellRepeat: (repeatItems: Array<{ product_name: string; quantity: number; unit: string }>) => {
+    const items = repeatItems.map((r) => `${r.quantity} ${r.unit} ${r.product_name}`).join(", ");
+    return `Anna, ungaloda repeated orders la konjam product iruku: ${items}. Idha adika venuma?`;
+  },
+
+  endGoodWithUpsell: (summary: string) =>
+    `Nandri! ${summary} — order confirm aachu. WhatsApp la summary anuppuren. Vanakkam!`,
+
+  // ========== COMPLAINT ==========
   complaintAsk: "Enna problem irukku sollunga. Damaged goods? Wrong item? Late delivery?",
 
   complaintConfirm: (complaintType: string) =>
@@ -23,6 +58,7 @@ export const SCRIPT = {
   complaintEscalate:
     "Sari, idhu mukkiyama irukku. Naan onnoda manager kitta solren. 24 hrs la callback pannuvaanga. Vanakkam!",
 
+  // ========== RETURN ==========
   returnAsk: "Enna product return venum? Name sollunga.",
 
   returnQty: (productName: string) =>
@@ -34,6 +70,7 @@ export const SCRIPT = {
   returnAskReason: (productName: string, qty: number) =>
     `Yena reason ${productName} x ${qty} return pannuringa? Damaged aa? Wrong item aa?`,
 
+  // ========== ENDINGS ==========
   endGood: "Nandri, vanakkam!",
 
   endWrongNumber:
@@ -53,4 +90,28 @@ export const SCRIPT = {
 
   blacklistedProduct: (productName: string, reason: string | null) =>
     `Sorry, ${productName} indha shop ku order panna mudiyathu${reason ? ` — ${reason}` : ""}. Vera enna venum?`,
+
+  // ========== ONBOARDING (NEW SHOP) ==========
+  onboardingGreeting:
+    "Vanakkam! Shree Agencies la irundhu. Intha number ku register aana shop irukkala. New shop aa register pannalama?",
+
+  onboardingAskName: "Sari, shop peru enna?",
+
+  onboardingAskNameRetry: (name: string) =>
+    `Sari, ${name} correct aa? Area/location enna?`,
+
+  onboardingAskArea: (name: string) =>
+    name ? `${name} — sari. Area/location enna?` : "Shop peru enna?",
+
+  onboardingAskOwner: (area: string) =>
+    `${area} — sari. Owner peru enna?`,
+
+  onboardingAskLanguage: (owner: string) =>
+    `${owner} — sari. Language preference enna? (Tanglish / Tamil / Hindi / English)`,
+
+  onboardingConfirm: (shopName: string, language: string) =>
+    `Confirm: ${shopName}, Language: ${language}. Sari aagidhaa?`,
+
+  onboardingDone:
+    "Sari! Shop register aachu. Ippo stock order edhava venuma? Vanakkam!",
 };

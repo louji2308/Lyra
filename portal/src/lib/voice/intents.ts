@@ -1,4 +1,4 @@
-export type Intent = "yes" | "no" | "stop" | "change" | "complaint" | "return" | "other";
+export type Intent = "yes" | "no" | "stop" | "change" | "complaint" | "return" | "catalog_query" | "other";
 
 const BOUNDARY = "[\\s.,!?;:'\"()\\-—–]";
 
@@ -37,6 +37,14 @@ const RETURN_TOKENS = [
   "edukka", "thirupi", "mattum", "கொடு", "திரும்ப",
 ];
 
+const CATALOG_QUERY_TOKENS = [
+  "enna", "enna product", "what product", "what do you have", "catalog", "list",
+  "irukku", "ulladhu", "available", "lifebuoy", "dove", "clinic plus", "lux",
+  "surf excel", "wheel", "rin", "pepsodent", "boost", "red label", "brooke bond",
+  "soap", "shampoo", "detergent", "tea", "toothpaste", "handwash",
+  "என்ன", "என்ன உ렁ின", "கதவு", "உள்ளது", "இருக்கு",
+];
+
 function buildTokenRegex(tokens: string[]): RegExp {
   const escaped = tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   const alternation = escaped.join("|");
@@ -49,6 +57,7 @@ const RETURN_RE = buildTokenRegex(RETURN_TOKENS);
 const CHANGE_RE = buildTokenRegex(CHANGE_TOKENS);
 const YES_RE = buildTokenRegex(YES_TOKENS);
 const NO_RE = buildTokenRegex(NO_TOKENS);
+const CATALOG_QUERY_RE = buildTokenRegex(CATALOG_QUERY_TOKENS);
 
 export function detectIntent(raw: string): Intent {
   const text = raw
@@ -62,6 +71,7 @@ export function detectIntent(raw: string): Intent {
   if (COMPLAINT_RE.test(text)) return "complaint";
   if (RETURN_RE.test(text)) return "return";
   if (CHANGE_RE.test(text)) return "change";
+  if (CATALOG_QUERY_RE.test(text)) return "catalog_query";
   if (YES_RE.test(text)) return "yes";
   if (NO_RE.test(text)) return "no";
 
