@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
-import { supabase } from "@/lib/supabase";
+import { getProducts } from "@/lib/data";
 import { CatalogContent } from "./CatalogContent";
 
 export const metadata: Metadata = {
@@ -8,7 +8,10 @@ export const metadata: Metadata = {
   description: "Browse HUL product catalog with SKU-level pricing and stock",
 };
 
-export default function CatalogPage() {
+export const dynamic = "force-dynamic";
+
+export default async function CatalogPage() {
+  const products = await getProducts();
   return (
     <div className="min-h-screen bg-zinc-50">
       <header className="border-b border-zinc-200 bg-white sticky top-0 z-10">
@@ -19,7 +22,7 @@ export default function CatalogPage() {
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <Suspense fallback={<CatalogSkeleton />}>
-          <CatalogContent />
+          <CatalogContent products={products} />
         </Suspense>
       </main>
     </div>

@@ -1,248 +1,349 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardHeader, Badge } from "@/components/ui";
-import { supabase } from "@/lib/supabase";
-import type { ProductCatalogItem } from "@/lib/voice/client";
+import { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
+import { FormField, SelectField, NumberInput, TextareaField } from "@/components/ui/FormFields";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Card, CardHeader, Badge, EmptyState, Stat, PageHeader } from "@/components/ui";
+import { DataTable } from "@/components/ui/DataTable";
+import { createProduct, updateProduct, deactivateProduct, adjustInventory } from "@/lib/actions";
+import type { Product } from "@/lib/types";
+import { formatINR } from "@/lib/format";
 
-const CATEGORIES = ["All", "Personal Care", "Home Care", "Beverages", "Oral Care"];
-const BRANDS = ["All", "Clinic Plus", "Lux", "Surf Excel", "Rin", "Wheel", "Pepsodent", "Boost", "Red Label", "Brooke Bond", "Lifebuoy", "Dove"];
+const CATEGORIES = ["Personal Care", "Home Care", "Beverages", "Oral Care", "Food", "Other"];
+const UNITS = ["bottle", "pack", "box", "kg", "litre", "piece", "sachet", "tube", "can", "jar"];
 
-export function CatalogContent() {
-  const [products, setProducts] = useState<ProductCatalogItem[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<ProductCatalogItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState("All");
-  const [brand, setBrand] = useState("All");
-  const [search, setSearch] = useState("");
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+interface CatalogContentProps {
+  products: Product[];
+}
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+export function CatalogContent({ products: initialProducts }: CatalogContentProps) {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [adjustInventoryModal, setAdjustInventoryModal] = useState<{ product: Product | null; isOpen: boolean }>({ product: null, isOpen: false });
+  const [inventoryForm, setInventoryForm] = useState({ change_qty: 0, reason: "restock", notes: "" });
+  const [productForm, setProductForm] = useState({
+    product_id: "",
+    product_name: "",
+    brand: "",
+    category: "",
+    unit_type: "bottle",
+    price: 0,
+    tax_rate: 18,
+    supplier_id: "",
+    is_active: true,
+  });
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-  async function fetchProducts() {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("product_id, product_name, brand, category, unit_type, price, tax_rate, is_active, inventory(available_qty)")
-        .eq("is_active", true)
-        .order("brand", { ascending: true })
-        .order("product_name", { ascending: true });
-
-      if (error) throw error;
-
-      const mapped: ProductCatalogItem[] = ((data ?? []) as Array<{
-        product_id: string;
-        product_name: string;
-        brand: string;
-        category: string;
-        unit_type: string;
-        price: number;
-        tax_rate: number;
-        is_active: boolean;
-        inventory: Array<{ available_qty: number }> | { available_qty: number } | null;
-      }>).map((p) => {
-        const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
-        return {
-          product_id: p.product_id,
-          product_name: p.product_name,
-          brand: p.brand,
-          category: p.category,
-          unit_type: p.unit_type,
-          price: Number(p.price),
-          tax_rate: Number(p.tax_rate),
-          is_active: p.is_active,
-          available_qty: inv ? Number(inv.available_qty) : 0,
-        };
-      });
-
-      setProducts(mapped);
-      setFilteredProducts(mapped);
-    } catch (err) {
-      console.error("Failed to fetch products:", err);
-    } finally {
-      setLoading(false);
+  const handleAddProduct = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoadingAction("create-product");
+    const formData = new FormData(e.currentTarget);
+    const result = await createProduct({
+      product_id: formData.get("product_id") as string,
+      product_name: formData.get("product_name") as string,
+      brand: formData.get("brand") as string || undefined,
+      category: formData.get("category") as string,
+      unit_type: formData.get("unit_type") as string,
+      price: Number(formData.get("price")),
+      tax_rate: Number(formData.get("tax_rate")) || 18,
+      supplier_id: formData.get("supplier_id") as string || undefined,
+    });
+    setLoadingAction(null);
+    if (result.success) {
+      setProducts([result.data, ...products]);
+      setIsAddProductOpen(false);
+setProductForm({ product_id: "", product_name: "", brand: "", category: "", unit_type: "bottle", price: 0, tax_rate: 18, supplier_id: "", is_active: true });
+      (e.target as HTMLFormElement).reset();
+    } else {
+      alert(result.error);
     }
-  }
+  };
 
-  useEffect(() => {
-    let filtered = products;
-
-    if (category !== "All") filtered = filtered.filter((p) => p.category === category);
-    if (brand !== "All") filtered = filtered.filter((p) => p.brand === brand);
-    if (inStockOnly) filtered = filtered.filter((p) => (p.available_qty ?? 0) > 0);
-    if (search.trim()) {
-      const q = search.toLowerCase().trim();
-      filtered = filtered.filter(
-        (p) =>
-          p.product_name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q)
-      );
+  const handleEditProduct = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    setLoadingAction(`edit-${editingProduct.product_id}`);
+    const formData = new FormData(e.currentTarget);
+    const result = await updateProduct(editingProduct.product_id, {
+      product_name: formData.get("product_name") as string,
+      brand: formData.get("brand") as string || undefined,
+      category: formData.get("category") as string,
+      unit_type: formData.get("unit_type") as string,
+      price: Number(formData.get("price")),
+      tax_rate: Number(formData.get("tax_rate")) || 18,
+      supplier_id: formData.get("supplier_id") as string || undefined,
+      is_active: formData.get("is_active") === "on",
+    });
+    setLoadingAction(null);
+    if (result.success) {
+      setProducts(products.map(p => p.product_id === editingProduct.product_id ? result.data : p));
+      setEditingProduct(null);
+    } else {
+      alert(result.error);
     }
+  };
 
-    setFilteredProducts(filtered);
-  }, [products, category, brand, search, inStockOnly]);
+  const handleDeactivateProduct = async (productId: string) => {
+    if (!confirm("Are you sure you want to deactivate this product?")) return;
+    setLoadingAction(`deactivate-${productId}`);
+    const result = await deactivateProduct(productId);
+    setLoadingAction(null);
+    if (result.success) {
+      setProducts(products.filter(p => p.product_id !== productId));
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const openAdjustInventory = (product: Product) => {
+    setAdjustInventoryModal({ product, isOpen: true });
+    setInventoryForm({ change_qty: 0, reason: "restock", notes: "" });
+  };
+
+  const handleAdjustInventory = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!adjustInventoryModal.product) return;
+    setLoadingAction(`adjust-${adjustInventoryModal.product.product_id}`);
+    const formData = new FormData(e.currentTarget);
+    const result = await adjustInventory({
+      product_id: adjustInventoryModal.product.product_id,
+      change_qty: Number(formData.get("change_qty")),
+      reason: formData.get("reason") as any,
+      reference_type: "manual",
+      performed_by: "MANUAL",
+    });
+    setLoadingAction(null);
+    if (result.success) {
+      setProducts(products.map(p => p.product_id === adjustInventoryModal.product?.product_id
+        ? { ...p, available_qty: Math.max(0, (p.available_qty ?? 0) + Number(formData.get("change_qty"))) }
+        : p
+      ));
+      setAdjustInventoryModal({ product: null, isOpen: false });
+      setInventoryForm({ change_qty: 0, reason: "restock", notes: "" });
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const startEdit = (product: Product) => {
+    setEditingProduct(product);
+    setProductForm({
+      product_id: product.product_id,
+      product_name: product.product_name,
+      brand: product.brand ?? "",
+      category: product.category,
+      unit_type: product.unit_type,
+      price: product.price,
+      tax_rate: product.tax_rate,
+      supplier_id: product.supplier_id ?? "",
+      is_active: product.is_active,
+    });
+  };
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <Card className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Search</label>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name, brand, category..."
-                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2 sm:w-64">
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-emerald-500 focus:outline-none"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              <select
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-emerald-500 focus:outline-none"
-              >
-                {BRANDS.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-end gap-2">
-              <label className="flex items-center gap-2 text-sm text-zinc-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={inStockOnly}
-                  onChange={(e) => setInStockOnly(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                In stock only
-              </label>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-lg ${viewMode === "grid" ? "bg-emerald-600 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
-                  aria-label="Grid view"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-lg ${viewMode === "list" ? "bg-emerald-600 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
-                  aria-label="List view"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+      <PageHeader
+        title="Product Catalog"
+        subtitle={`${products.length} products`}
+        right={
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => setIsAdminMode(!isAdminMode)}>
+              {isAdminMode ? "Exit Admin" : "Admin Mode"}
+            </Button>
+            {isAdminMode && <Button onClick={() => setIsAddProductOpen(true)}>Add Product</Button>}
           </div>
-        </Card>
+        }
+      />
 
-      {/* Results Count */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-600">
-          {filteredProducts.length} of {products.length} products
-        </p>
+      {isAdminMode && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-4">
+          <span className="text-sm text-amber-800 font-medium">⚠ Admin Mode - Changes affect live data</span>
+        </div>
+      )}
+
+      <Card className="p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Search</label>
+            <FormField
+              placeholder="Search by name, brand, category..."
+              value=""
+              onChange={() => {}}
+            />
+          </div>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label="Total Products" value={products.length} />
+        <Stat label="Active" value={products.filter(p => p.is_active).length} />
+        <Stat label="Inactive" value={products.filter(p => !p.is_active).length} valueTone="text-amber-600" />
+        <Stat label="Low Stock" value={products.filter(p => (p.available_qty ?? 0) > 0 && (p.available_qty ?? 0) <= 5).length} valueTone="text-rose-600" />
       </div>
 
-      {/* Product Grid/List */}
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-48 bg-zinc-200 rounded animate-pulse" />
-          ))}
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <Card className="py-12 text-center">
-          <p className="text-zinc-500">No products match your filters</p>
-        </Card>
-      ) : (
-        viewMode === "grid" ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.product_id} product={product} />
-            ))}
+      <Card>
+        <CardHeader title="Products" right={isAdminMode ? <Button size="sm" onClick={() => setIsAddProductOpen(true)}>Add Product</Button> : null} />
+        <DataTable
+          columns={[
+            { key: "product_id", header: "SKU", className: "w-24 font-mono text-xs", render: (p) => p.product_id },
+            { key: "product_name", header: "Product", className: "w-48", render: (p) => p.product_name },
+            { key: "brand", header: "Brand", className: "w-28", render: (p) => p.brand ?? "—" },
+            { key: "category", header: "Category", className: "w-28", render: (p) => p.category },
+            { key: "unit_type", header: "Unit", className: "w-20", render: (p) => p.unit_type },
+            { key: "price", header: "Price", className: "w-24 text-right", render: (p) => formatINR(p.price) },
+            { key: "tax_rate", header: "GST", className: "w-16 text-right", render: (p) => p.tax_rate + "%" },
+            { key: "available_qty", header: "Stock", className: "w-20 text-right",
+              render: (p) => {
+                const stock = p.available_qty ?? 0;
+                if (stock === 0) return <span className="text-rose-600 font-medium">0</span>;
+                if (stock <= 5) return <span className="text-amber-600 font-medium">{stock}</span>;
+                return <span className="text-emerald-600 font-medium">{stock}</span>;
+              }
+            },
+            { key: "is_active", header: "Status", className: "w-20", render: (p) => <Badge tone={p.is_active ? "emerald" : "zinc"}>{p.is_active ? "Active" : "Inactive"}</Badge> },
+          ]}
+          data={products}
+          keyExtractor={(p) => p.product_id}
+          rowActions={(p) => (
+            <div className="flex items-center gap-1">
+              {isAdminMode && (
+                <>
+                  <Button variant="ghost" size="sm" onClick={() => startEdit(p)}>Edit</Button>
+                  <Button variant="ghost" size="sm" onClick={() => openAdjustInventory(p)}>Stock</Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeactivateProduct(p.product_id)} disabled={loadingAction === `deactivate-${p.product_id}`}>
+                    {p.is_active ? "Deactivate" : "Delete"}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        />
+      </Card>
+
+      {/* Add Product Modal */}
+      <ConfirmDialog
+        isOpen={isAddProductOpen}
+        onClose={() => { setIsAddProductOpen(false); setProductForm({ product_id: "", product_name: "", brand: "", category: "", unit_type: "bottle", price: 0, tax_rate: 18, supplier_id: "", is_active: true }); }}
+        onConfirm={() => {}}
+        title="Add New Product"
+        confirmText="Create Product"
+        cancelText="Cancel"
+        variant="primary"
+      >
+        <form onSubmit={handleAddProduct} className="space-y-4 max-h-[70vh] overflow-y-auto">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Product ID (SKU)" id="add_product_id" name="product_id" value={productForm.product_id} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, product_id: e.target.value })} required placeholder="e.g., P034" />
+            <FormField label="Product Name" id="add_product_name" name="product_name" value={productForm.product_name} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, product_name: e.target.value })} required />
+            <FormField label="Brand" id="add_brand" name="brand" value={productForm.brand} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, brand: e.target.value })} />
+            <SelectField
+              label="Category"
+              id="add_category"
+              name="category"
+              value={productForm.category}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setProductForm({ ...productForm, category: e.target.value })}
+              options={CATEGORIES.map(c => ({ value: c, label: c }))}
+              required
+            />
+            <SelectField
+              label="Unit Type"
+              id="add_unit_type"
+              name="unit_type"
+              value={productForm.unit_type}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setProductForm({ ...productForm, unit_type: e.target.value })}
+              options={UNITS.map(u => ({ value: u, label: u }))}
+              required
+            />
+            <NumberInput label="Price" id="add_price" name="price" value={productForm.price} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, price: Number(e.target.value) })} min={0} step={0.01} required />
+            <NumberInput label="GST Rate %" id="add_tax_rate" name="tax_rate" value={productForm.tax_rate} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, tax_rate: Number(e.target.value) })} min={0} step={0.01} defaultValue={18} />
+            <FormField label="Supplier ID" id="add_supplier" name="supplier_id" value={productForm.supplier_id} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, supplier_id: e.target.value })} placeholder="Optional" />
           </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredProducts.map((product) => (
-              <ProductRow key={product.product_id} product={product} />
-            ))}
-          </div>
-        )
+        </form>
+      </ConfirmDialog>
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <ConfirmDialog
+          isOpen={!!editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onConfirm={() => {}}
+          title={`Edit Product: ${editingProduct.product_name}`}
+          confirmText="Save Changes"
+          cancelText="Cancel"
+          variant="primary"
+        >
+          <form onSubmit={handleEditProduct} className="space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField label="Product Name" id="edit_product_name" value={productForm.product_name} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, product_name: e.target.value })} required />
+              <FormField label="Brand" id="edit_brand" value={productForm.brand} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, brand: e.target.value })} />
+              <SelectField
+                label="Category"
+                id="edit_category"
+                value={productForm.category}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => setProductForm({ ...productForm, category: e.target.value })}
+                options={CATEGORIES.map(c => ({ value: c, label: c }))}
+                required
+              />
+              <SelectField
+                label="Unit Type"
+                id="edit_unit_type"
+                value={productForm.unit_type}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => setProductForm({ ...productForm, unit_type: e.target.value })}
+                options={UNITS.map(u => ({ value: u, label: u }))}
+                required
+              />
+              <NumberInput label="Price" id="edit_price" value={productForm.price} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, price: Number(e.target.value) })} min={0} step={0.01} required />
+              <NumberInput label="GST Rate %" id="edit_tax_rate" value={productForm.tax_rate} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, tax_rate: Number(e.target.value) })} min={0} step={0.01} />
+              <FormField label="Supplier ID" id="edit_supplier" value={productForm.supplier_id} onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, supplier_id: e.target.value })} />
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editingProduct.is_active}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setProductForm({ ...productForm, is_active: e.target.checked })}
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-sm text-zinc-700">Active</span>
+              </label>
+            </div>
+          </form>
+        </ConfirmDialog>
+      )}
+
+      {/* Adjust Inventory Modal */}
+      {adjustInventoryModal.isOpen && adjustInventoryModal.product && (
+        <ConfirmDialog
+          isOpen={adjustInventoryModal.isOpen}
+          onClose={() => setAdjustInventoryModal({ product: null, isOpen: false })}
+          onConfirm={() => {}}
+          title={`Adjust Inventory: ${adjustInventoryModal.product.product_name}`}
+          confirmText="Adjust Stock"
+          cancelText="Cancel"
+          variant="primary"
+        >
+          <form onSubmit={handleAdjustInventory} className="space-y-4">
+            <p className="text-sm text-zinc-600">Current Stock: <span className="font-medium text-emerald-700">{adjustInventoryModal.product.available_qty ?? 0}</span> {adjustInventoryModal.product.unit_type}</p>
+            <NumberInput label="Quantity Change (+/-)" id="inv_change_qty" name="change_qty" value={inventoryForm.change_qty} onChange={(e: ChangeEvent<HTMLInputElement>) => setInventoryForm({ ...inventoryForm, change_qty: Number(e.target.value) })} required step={1} placeholder="e.g., +50 or -10" />
+            <SelectField
+              label="Reason"
+              id="inv_reason"
+              name="reason"
+              value={inventoryForm.reason}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setInventoryForm({ ...inventoryForm, reason: e.target.value as any })}
+              options={[
+                { value: "restock", label: "Restock" },
+                { value: "adjustment", label: "Adjustment" },
+                { value: "damage", label: "Damage" },
+                { value: "transfer", label: "Transfer" },
+              ]}
+            />
+            <TextareaField label="Notes" id="inv_notes" value={inventoryForm.notes} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setInventoryForm({ ...inventoryForm, notes: e.target.value })} rows={2} placeholder="Optional notes..." />
+          </form>
+        </ConfirmDialog>
       )}
     </div>
   );
 }
 
-function ProductCard({ product }: { product: ProductCatalogItem }) {
-  const stock = product.available_qty ?? 0;
-  const isLowStock = stock > 0 && stock <= 5;
-  const isOutOfStock = stock === 0;
-
-  return (
-    <Card className="flex flex-col h-full p-4">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-900 truncate">{product.product_name}</h3>
-          <p className="text-sm text-zinc-500">{product.brand} · {product.category}</p>
-        </div>
-        <Badge tone={isOutOfStock ? "rose" : isLowStock ? "amber" : "emerald"}>
-          {isOutOfStock ? "Out of Stock" : isLowStock ? `Low: ${stock}` : `Stock: ${stock}`}
-        </Badge>
-      </div>
-      <div className="flex-1 flex flex-col justify-between">
-        <div className="space-y-1">
-          <p className="text-sm text-zinc-500">{product.unit_type} · ₹{product.price.toFixed(0)} + {product.tax_rate}% GST</p>
-          <p className="text-lg font-bold text-emerald-700">₹{product.price.toFixed(0)}</p>
-        </div>
-        <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
-          <span className="text-xs text-zinc-400">SKU: {product.product_id}</span>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function ProductRow({ product }: { product: ProductCatalogItem }) {
-  const stock = product.available_qty ?? 0;
-  const isLowStock = stock > 0 && stock <= 5;
-  const isOutOfStock = stock === 0;
-
-  return (
-    <Card className="p-3">
-      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 items-center">
-        <div className="min-w-0">
-          <h3 className="font-medium text-zinc-900 truncate">{product.product_name}</h3>
-          <p className="text-sm text-zinc-500">{product.brand} · {product.category} · {product.unit_type}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-lg font-bold text-emerald-700">₹{product.price.toFixed(0)}</p>
-          <p className="text-xs text-zinc-400">+ {product.tax_rate}% GST</p>
-        </div>
-        <Badge tone={isOutOfStock ? "rose" : isLowStock ? "amber" : "emerald"}>
-          {isOutOfStock ? "Out of Stock" : isLowStock ? `Low: ${stock}` : `Stock: ${stock}`}
-        </Badge>
-        <span className="text-xs text-zinc-400 font-mono">SKU: {product.product_id}</span>
-      </div>
-    </Card>
-  );
-}

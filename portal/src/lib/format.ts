@@ -97,3 +97,35 @@ export const complaintTypeLabel: Record<string, string> = {
   price_issue: "Price issue",
   other: "Other",
 };
+
+export const severityLabel: Record<string, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  critical: "Critical",
+};
+
+export const returnStatusLabel: Record<string, string> = {
+  requested: "Requested",
+  photo_received: "Photo received",
+  approved: "Approved",
+  collected: "Collected",
+  credit_issued: "Credit issued",
+  rejected: "Rejected",
+};
+
+export const returnStatusTone: Record<string, string> = {
+  requested: "amber",
+  photo_received: "amber",
+  approved: "sky",
+  collected: "sky",
+  credit_issued: "emerald",
+  rejected: "zinc",
+};
+
+export const severityTone: Record<string, string> = {
+  low: "zinc",
+  medium: "amber",
+  high: "orange",
+  critical: "rose",
+};

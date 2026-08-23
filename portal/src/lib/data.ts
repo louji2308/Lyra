@@ -40,6 +40,16 @@ export async function getRouteName(routeId: string): Promise<string | null> {
   return data?.route_name ?? null;
 }
 
+export async function getRoutes() {
+  const { data, error } = await supabase
+    .from("routes")
+    .select("route_id, route_name, salesperson, coverage_area, is_active")
+    .eq("is_active", true)
+    .order("route_name");
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
@@ -320,6 +330,33 @@ export async function getActiveSchemes() {
     .select("*")
     .eq("is_active", true)
     .order("start_date", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getDeliveries() {
+  const { data, error } = await supabase
+    .from("delivery_summary")
+    .select("*")
+    .order("delivery_date", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getPayments() {
+  const { data, error } = await supabase
+    .from("shop_payment_ledger")
+    .select("*")
+    .order("collected_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getSchemes() {
+  const { data, error } = await supabase
+    .from("schemes")
+    .select("*")
+    .order("start_date", { ascending: false });
   if (error) throw error;
   return data ?? [];
 }

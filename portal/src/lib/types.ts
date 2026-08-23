@@ -60,6 +60,8 @@ export interface Shop {
   last_order_date: string | null;
   created_at: string;
   updated_at: string;
+  address?: string;
+  gst_number?: string;
 }
 
 export interface ShopCredit {
@@ -81,6 +83,9 @@ export interface Product {
   tax_rate: number;
   is_active: boolean;
   launch_date: string | null;
+  supplier_id: string | null;
+  is_deleted: boolean;
+  available_qty: number;
 }
 
 export interface LowStockProduct {
@@ -162,6 +167,95 @@ export interface ReturnRecord {
   credit_note_amount: number;
   status: ReturnStatus;
   created_at: string;
+}
+
+export interface Payment {
+  payment_id: number;
+  shop_id: string;
+  order_id: string | null;
+  amount: number;
+  method: string;
+  reference: string | null;
+  collected_by: string | null;
+  collected_at: string;
+  notes: string | null;
+}
+
+export interface Delivery {
+  delivery_id: number;
+  order_id: string;
+  delivery_date: string;
+  delivery_slot: string | null;
+  vehicle_no: string | null;
+  delivery_person: string | null;
+  status: string;
+  pod_photo_url: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface DeliveryItem {
+  delivery_item_id: number;
+  delivery_id: number;
+  order_item_id: number;
+  delivered_qty: number;
+  returned_qty: number;
+}
+
+export interface StockMovement {
+  movement_id: number;
+  product_id: string;
+  change_qty: number;
+  reason: string;
+  reference_id: string | null;
+  reference_type: string | null;
+  performed_by: string | null;
+  created_at: string;
+}
+
+export interface OrderStatusLog {
+  log_id: number;
+  order_id: string;
+  old_status: OrderStatus | null;
+  new_status: OrderStatus;
+  changed_by: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface ShopPaymentLedger {
+  shop_id: string;
+  shop_name: string;
+  credit_limit: number;
+  outstanding_balance: number;
+  available_credit: number;
+  credit_exceeded: boolean;
+  entry_id: string;
+  amount: number;
+  method: string;
+  reference: string | null;
+  collected_by: string | null;
+  collected_at: string;
+  notes: string | null;
+  entry_type: string;
+}
+
+export interface DeliverySummary {
+  delivery_id: number;
+  order_id: string;
+  shop_id: string;
+  shop_name: string;
+  delivery_date: string;
+  delivery_slot: string | null;
+  vehicle_no: string | null;
+  delivery_person: string | null;
+  status: string;
+  pod_photo_url: string | null;
+  notes: string | null;
+  created_at: string;
+  total_lines: number;
+  total_qty_delivered: number;
+  total_qty_returned: number;
 }
 
 export interface CallLog {

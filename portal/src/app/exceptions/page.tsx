@@ -27,6 +27,7 @@ import {
   Stat,
 } from "@/components/ui";
 import { OrderCard } from "@/components/order-card";
+import { ReturnsClient } from "./components/ReturnsClient";
 
 export const metadata: Metadata = { title: "Exceptions" };
 
@@ -48,6 +49,8 @@ export default async function ExceptionsPage() {
     complaints.length +
     returns.length +
     pendingOrders.length;
+
+  const orders = await getOrders();
 
   return (
     <div className="space-y-8">
@@ -259,46 +262,13 @@ export default async function ExceptionsPage() {
       </section>
 
       <section>
-        <CardHeader
-          title="Open returns"
-          subtitle="Returns not yet issued as credit"
-        />
-        <Card className="mt-2">
-          {returns.length === 0 ? (
-            <div className="p-4">
-              <EmptyState title="No open returns" body="All returns resolved." />
-            </div>
-          ) : (
-            <ul className="divide-y divide-zinc-100">
-              {returns.map((r) => (
-                <li key={r.return_id} className="px-4 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        href={`/shops/${r.shop_id}`}
-                        className="text-sm font-medium text-emerald-700 hover:underline"
-                      >
-                        {r.shop_name}
-                      </Link>
-                      <span className="text-sm text-zinc-700">
-                        {r.product_name ?? r.product_id ?? "Item"} × {r.quantity}
-                      </span>
-                    </div>
-                    <Badge tone={returnStatusTone[r.status]}>
-                      {returnStatusLabel[r.status]}
-                    </Badge>
-                  </div>
-                  {r.reason && (
-                    <p className="mt-1 text-sm text-zinc-500">
-                      {complaintTypeLabel[r.reason] ?? r.reason}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+        <ReturnsClient returns={returns} orders={orders} />
       </section>
     </div>
   );
+}
+
+async function getOrders() {
+  const { getOrders: getOrdersFn } = await import("@/lib/data");
+  return getOrdersFn();
 }
