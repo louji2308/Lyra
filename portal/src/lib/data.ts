@@ -78,8 +78,13 @@ export async function getShops(): Promise<ShopWithExtras[]> {
 
   const { data: blacklist, error: blacklistError } = await supabase
     .from("blacklist")
-    .select("shop_id, blacklist_id");
+    .select("shop_id, blacklist_id, product_id, reason, created_at");
   if (blacklistError) throw blacklistError;
+
+  const { data: memories, error: memoriesError } = await supabase
+    .from("shop_memory")
+    .select("shop_id, memory_id, memory_text, memory_type, confidence_score, confirmed_by_user, created_at");
+  if (memoriesError) throw memoriesError;
 
   const creditById = new Map(credit.map((c: ShopCredit) => [c.shop_id, c]));
   const orderCount = new Map<string, number>();
@@ -87,8 +92,18 @@ export async function getShops(): Promise<ShopWithExtras[]> {
     orderCount.set(o.shop_id, (orderCount.get(o.shop_id) ?? 0) + 1);
   }
   const blacklistCount = new Map<string, number>();
+  const blacklistByShop = new Map<string, { blacklist_id: number; product_id: string; reason: string | null; created_at: string }[]>();
   for (const b of blacklist ?? []) {
     blacklistCount.set(b.shop_id, (blacklistCount.get(b.shop_id) ?? 0) + 1);
+    const list = blacklistByShop.get(b.shop_id) ?? [];
+    list.push({ blacklist_id: b.blacklist_id, product_id: b.product_id, reason: b.reason, created_at: b.created_at });
+    blacklistByShop.set(b.shop_id, list);
+  }
+  const memoriesByShop = new Map<string, { memory_id: number; memory_text: string; memory_type: "timing" | "language" | "product_preference" | "negative_memory" | "payment_behavior" | "complaint_history"; confidence_score: number; confirmed_by_user: boolean; created_at: string }[]>();
+  for (const m of memories ?? []) {
+    const list = memoriesByShop.get(m.shop_id) ?? [];
+    list.push({ memory_id: m.memory_id, memory_text: m.memory_text, memory_type: m.memory_type, confidence_score: m.confidence_score, confirmed_by_user: m.confirmed_by_user, created_at: m.created_at });
+    memoriesByShop.set(m.shop_id, list);
   }
 
   return (shops ?? []).map((s: Shop) => {
@@ -99,6 +114,8 @@ export async function getShops(): Promise<ShopWithExtras[]> {
       credit_exceeded: c?.credit_exceeded ?? false,
       order_count: orderCount.get(s.shop_id) ?? 0,
       blacklist_count: blacklistCount.get(s.shop_id) ?? 0,
+      blacklist: blacklistByShop.get(s.shop_id) ?? [],
+      memories: memoriesByShop.get(s.shop_id) ?? [],
     };
   });
 }

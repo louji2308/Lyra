@@ -289,6 +289,8 @@ export interface ShopWithExtras extends Shop {
   credit_exceeded: boolean;
   order_count: number;
   blacklist_count: number;
+  blacklist?: { blacklist_id: number; product_id: string; reason: string | null; created_at: string }[];
+  memories?: { memory_id: number; memory_text: string; memory_type: MemoryType; confidence_score: number; confirmed_by_user: boolean; created_at: string }[];
 }
 
 export interface OrderWithShop extends Order {

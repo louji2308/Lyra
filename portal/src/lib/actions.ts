@@ -51,21 +51,24 @@ export async function createShop(input: {
   preferred_call_end?: string;
 }): Promise<ActionResult<Shop>> {
   try {
+    const shopId = `S${Date.now().toString().slice(-3)}`;
+    const digits = input.phone_number.replace(/\D/g, "").slice(-10);
     const { data, error } = await supabaseAdmin
       .from("shops")
       .insert({
+        shop_id: shopId,
         shop_name: input.shop_name,
         owner_name: input.owner_name,
-        phone_number: input.phone_number,
-        whatsapp_number: input.whatsapp_number ?? null,
+        phone_number: digits,
+        whatsapp_number: input.whatsapp_number ?? digits,
         preferred_language: input.preferred_language ?? "tanglish",
         beat_route_id: input.beat_route_id ?? null,
         visit_gap_days: input.visit_gap_days ?? 7,
         credit_limit: input.credit_limit ?? 0,
         address: input.address ?? null,
         gst_number: input.gst_number ?? null,
-        preferred_call_start: input.preferred_call_start ?? null,
-        preferred_call_end: input.preferred_call_end ?? null,
+        preferred_call_start: input.preferred_call_start ?? "09:00",
+        preferred_call_end: input.preferred_call_end ?? "18:00",
       })
       .select()
       .single();

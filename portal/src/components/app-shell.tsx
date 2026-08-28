@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { navItems, NavLink } from "./nav";
+import { Navigation } from "./nav";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -16,11 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <p className="text-[11px] text-zinc-400">Shree Agencies · Co-Pilot</p>
           </div>
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-1 lg:flex-col lg:pb-0">
-          {navItems.map((item) => (
-            <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
-          ))}
-        </nav>
+        <Navigation />
         <div className="hidden border-t border-zinc-800 px-4 py-4 lg:block">
           <p className="text-[11px] leading-relaxed text-zinc-500">
             AI Order Co-Pilot for FMCG distributors.

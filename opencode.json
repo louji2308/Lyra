@@ -14,6 +14,18 @@
         "{file:.supabase-token}"
       ],
       "enabled": true
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": [
+        "cmd",
+        "/c",
+        "npx",
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--isolated"
+      ],
+      "enabled": true
     }
   }
 }
