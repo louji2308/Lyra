@@ -11,6 +11,7 @@ import {
   getPendingOrders,
   getDeliveries,
   getPayments,
+  getAllTodayNotes,
 } from "@/lib/data";
 import {
   formatINR,
@@ -60,6 +61,8 @@ async function getDashboardData() {
   const todayDeliveries = deliveries.filter(d => d.delivery_date === new Date().toISOString().split('T')[0]);
   const todayPayments = payments.filter(p => p.collected_at?.split('T')[0] === new Date().toISOString().split('T')[0]);
 
+  const todayNotes = await getAllTodayNotes();
+
   const totalRevenue = orders
     .filter(o => o.order_status === 'delivered')
     .reduce((sum, o) => sum + o.total_amount, 0);
@@ -86,6 +89,7 @@ async function getDashboardData() {
     todayOrders,
     todayDeliveries,
     todayPayments,
+    todayNotes,
     totalRevenue,
     todayRevenue,
     overdueVisits,
@@ -296,6 +300,44 @@ function RecentActivityTable({ payments, returns, complaints }: { payments: any[
   );
 }
 
+function TodaysDetailsPanel({ todayNotes, todayOrders, todayDeliveries }: {
+  todayNotes: { note_id: number; shop_id: string; shop_name: string; note_type: string; note_text: string; source: string; agent_role: string | null; created_at: string }[];
+  todayOrders: any[];
+  todayDeliveries: any[];
+}) {
+  if (todayNotes.length === 0) {
+    return (
+      <Card className="p-4">
+        <EmptyState
+          title="No notes today"
+          body={`${todayOrders.length} order(s) and ${todayDeliveries.length} delivery(s) on record today.`}
+        />
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader
+        title="Today's Details"
+        subtitle={`${todayNotes.length} notes · ${todayOrders.length} orders · ${todayDeliveries.length} deliveries`}
+      />
+      <ul className="divide-y divide-zinc-100">
+        {todayNotes.slice(0, 12).map(n => (
+          <li key={n.note_id} className="px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <a href={`/shops/${n.shop_id}`} className="text-sm font-medium text-emerald-700 hover:underline">{n.shop_name}</a>
+              <Badge tone="violet">{n.note_type}</Badge>
+              {n.agent_role && <span className="text-xs text-zinc-400">by {n.agent_role}</span>}
+            </div>
+            <p className="mt-1 text-sm text-zinc-800">{n.note_text}</p>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
 export default async function DashboardPage() {
   const data = await getDashboardData();
 
@@ -312,6 +354,7 @@ export default async function DashboardPage() {
     todayOrders,
     todayDeliveries,
     todayPayments,
+    todayNotes,
     totalRevenue,
     todayRevenue,
     overdueVisits,
@@ -425,6 +468,11 @@ export default async function DashboardPage() {
       {/* Recent Activity */}
       <Suspense fallback={<Card className="h-96 animate-pulse bg-zinc-100">Loading...</Card>}>
         <RecentActivityTable payments={payments} returns={returns} complaints={complaints} />
+      </Suspense>
+
+      {/* Today's Details */}
+      <Suspense fallback={<Card className="h-96 animate-pulse bg-zinc-100">Loading...</Card>}>
+        <TodaysDetailsPanel todayNotes={todayNotes} todayOrders={todayOrders} todayDeliveries={todayDeliveries} />
       </Suspense>
     </div>
   );

@@ -28,6 +28,8 @@ export default async function ShopDetailPage({
     complaints,
     callLogs,
     returns,
+    phones,
+    todayNotes,
   } = detail;
 
   const routeName = shop.beat_route_id
@@ -44,6 +46,8 @@ export default async function ShopDetailPage({
       complaints={complaints}
       callLogs={callLogs}
       returns={returns}
+      phones={phones}
+      todayNotes={todayNotes}
       routeName={routeName}
     />
   );

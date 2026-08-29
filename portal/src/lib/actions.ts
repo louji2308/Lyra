@@ -1037,3 +1037,121 @@ export async function deactivateRoute(routeId: string): Promise<ActionResult<voi
     return handleError(err, "deactivateRoute");
   }
 }
+
+// ============================================================================
+// SHOP PHONES (multi-number per shop)
+// ============================================================================
+
+export interface ShopPhone {
+  phone_id: number;
+  shop_id: string;
+  phone_number: string;
+  label: string | null;
+  is_primary: boolean;
+}
+
+export async function addShopPhone(
+  shopId: string,
+  phoneNumber: string,
+  label?: string
+): Promise<ActionResult<ShopPhone>> {
+  try {
+    const digits = phoneNumber.replace(/\D/g, "").slice(-10);
+    if (!digits) return { success: false, error: "Valid phone number required" };
+
+    const { data, error } = await supabaseAdmin
+      .from("shop_phones")
+      .insert({ shop_id: shopId, phone_number: digits, label: label ?? "alt", is_primary: false })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === "23505") return { success: false, error: "This phone number is already added for the shop" };
+      throw error;
+    }
+    revalidateShop(shopId);
+    return { success: true, data };
+  } catch (err) {
+    return handleError(err, "addShopPhone");
+  }
+}
+
+export async function removeShopPhone(phoneId: number): Promise<ActionResult<void>> {
+  try {
+    const { data: existing } = await supabaseAdmin
+      .from("shop_phones")
+      .select("shop_id, is_primary")
+      .eq("phone_id", phoneId)
+      .single();
+
+    if (existing?.is_primary) {
+      return { success: false, error: "Cannot remove the primary phone number" };
+    }
+
+    const { error } = await supabaseAdmin
+      .from("shop_phones")
+      .delete()
+      .eq("phone_id", phoneId);
+
+    if (error) throw error;
+    if (existing) revalidateShop(existing.shop_id);
+    return { success: true, data: undefined };
+  } catch (err) {
+    return handleError(err, "removeShopPhone");
+  }
+}
+
+// ============================================================================
+// TODAY'S DETAILS (notes stream per shop)
+// ============================================================================
+
+export async function writeTodayNote(input: {
+  shop_id: string;
+  note_text: string;
+  note_type?: string;
+  source?: "AI" | "human";
+}): Promise<ActionResult<{ note_id: number; shop_id: string; note_date: string; note_type: string; note_text: string; source: string; created_at: string }>> {
+  try {
+    if (!input.note_text?.trim()) return { success: false, error: "Note text required" };
+
+    const { data, error } = await supabaseAdmin
+      .from("today_notes")
+      .insert({
+        shop_id: input.shop_id,
+        note_date: new Date().toISOString().slice(0, 10),
+        note_type: input.note_type ?? "general",
+        note_text: input.note_text.trim(),
+        source: input.source ?? "human",
+        agent_role: "portal",
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    revalidateShop(input.shop_id);
+    return { success: true, data };
+  } catch (err) {
+    return handleError(err, "writeTodayNote");
+  }
+}
+
+export async function clearTodayNote(noteId: number): Promise<ActionResult<void>> {
+  try {
+    const { data: existing } = await supabaseAdmin
+      .from("today_notes")
+      .select("shop_id")
+      .eq("note_id", noteId)
+      .single();
+
+    const { error } = await supabaseAdmin
+      .from("today_notes")
+      .delete()
+      .eq("note_id", noteId);
+
+    if (error) throw error;
+    if (existing) revalidateShop(existing.shop_id);
+    return { success: true, data: undefined };
+  } catch (err) {
+    return handleError(err, "clearTodayNote");
+  }
+}

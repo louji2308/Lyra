@@ -131,6 +131,8 @@ export async function getShopDetail(
   complaints: Complaint[];
   callLogs: CallLog[];
   returns: ReturnWithShop[];
+  phones: { phone_id: number; phone_number: string; label: string | null; is_primary: boolean }[];
+  todayNotes: { note_id: number; note_type: string; note_text: string; source: string; agent_role: string | null; created_at: string }[];
 } | null> {
   const { data: shop, error: shopError } = await supabase
     .from("shops")
@@ -139,6 +141,20 @@ export async function getShopDetail(
     .maybeSingle();
   if (shopError) throw shopError;
   if (!shop) return null;
+
+  const { data: phones } = await supabase
+    .from("shop_phones")
+    .select("phone_id, phone_number, label, is_primary")
+    .eq("shop_id", shopId)
+    .order("is_primary", { ascending: false });
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: todayNotes } = await supabase
+    .from("today_notes")
+    .select("note_id, note_type, note_text, source, agent_role, created_at")
+    .eq("shop_id", shopId)
+    .eq("note_date", today)
+    .order("created_at", { ascending: false });
 
   const { data: credit, error: creditError } = await supabase
     .from("shop_credit")
@@ -221,7 +237,81 @@ export async function getShopDetail(
       ...r,
       product_name: r.products?.product_name ?? null,
     })) as ReturnWithShop[],
+    phones: (phones ?? []).map((p) => ({
+      phone_id: p.phone_id,
+      phone_number: p.phone_number,
+      label: p.label,
+      is_primary: p.is_primary,
+    })),
+    todayNotes: (todayNotes ?? []).map((n) => ({
+      note_id: n.note_id,
+      note_type: n.note_type,
+      note_text: n.note_text,
+      source: n.source,
+      agent_role: n.agent_role,
+      created_at: n.created_at,
+    })),
   };
+}
+
+export async function getTodayNotes(
+  shopId: string
+): Promise<{ note_id: number; note_type: string; note_text: string; source: string; agent_role: string | null; created_at: string }[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data } = await supabase
+    .from("today_notes")
+    .select("note_id, note_type, note_text, source, agent_role, created_at")
+    .eq("shop_id", shopId)
+    .eq("note_date", today)
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((n) => ({
+    note_id: n.note_id,
+    note_type: n.note_type,
+    note_text: n.note_text,
+    source: n.source,
+    agent_role: n.agent_role,
+    created_at: n.created_at,
+  }));
+}
+
+export async function getAllTodayNotes(): Promise<{
+  note_id: number;
+  shop_id: string;
+  shop_name: string;
+  note_type: string;
+  note_text: string;
+  source: string;
+  agent_role: string | null;
+  created_at: string;
+}[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("today_notes")
+    .select("note_id, shop_id, note_type, note_text, source, agent_role, created_at, shops(shop_name)")
+    .eq("note_date", today)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  type TodayNoteRow = {
+    note_id: number;
+    shop_id: string;
+    note_type: string;
+    note_text: string;
+    source: string;
+    agent_role: string | null;
+    created_at: string;
+    shops?: { shop_name: string }[] | null;
+  };
+  const rows = (data ?? []) as unknown as TodayNoteRow[];
+  return rows.map((n) => ({
+    note_id: n.note_id,
+    shop_id: n.shop_id,
+    shop_name: n.shops?.[0]?.shop_name ?? n.shop_id,
+    note_type: n.note_type,
+    note_text: n.note_text,
+    source: n.source,
+    agent_role: n.agent_role,
+    created_at: n.created_at,
+  }));
 }
 
 async function getOrdersWithItems(orders: OrderRow[]): Promise<OrderDetail[]> {

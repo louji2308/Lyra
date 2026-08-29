@@ -8,12 +8,28 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Badge, Card, CardHeader, Stat, PageHeader, EmptyState, SectionLabel, KeyValue } from "@/components/ui";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { updateShop, updateShopCredit, recordPayment, addBlacklist, removeBlacklist, confirmMemory, deleteMemory, resolveComplaint, closeComplaint, createReturn, updateReturnStatus } from "@/lib/actions";
+import { updateShop, updateShopCredit, recordPayment, addBlacklist, removeBlacklist, confirmMemory, deleteMemory, resolveComplaint, closeComplaint, createReturn, updateReturnStatus, addShopPhone, removeShopPhone, writeTodayNote, clearTodayNote } from "@/lib/actions";
 import type { Shop, ShopCredit, BlacklistWithProduct, ShopMemory, Complaint, CallLog, ReturnRecord, OrderDetail, OrderItem, ShopPaymentLedger } from "@/lib/types";
 import { formatINR, languageLabel, formatDate, formatDateTime, formatTime, daysSince, languageNative, memoryTypeLabel, complaintTypeLabel, sentimentLabel } from "@/lib/format";
 import { memoryTypeTone, sentimentTone, severityTone, returnStatusTone, severityLabel, returnStatusLabel } from "@/lib/tones";
 
 import type { ReturnWithShop } from "@/lib/types";
+
+interface ShopPhone {
+  phone_id: number;
+  phone_number: string;
+  label: string | null;
+  is_primary: boolean;
+}
+
+interface TodayNote {
+  note_id: number;
+  note_type: string;
+  note_text: string;
+  source: string;
+  agent_role: string | null;
+  created_at: string;
+}
 
 interface ShopDetailClientProps {
   shop: Shop;
@@ -24,6 +40,8 @@ interface ShopDetailClientProps {
   complaints: Complaint[];
   callLogs: CallLog[];
   returns: ReturnWithShop[];
+  phones: ShopPhone[];
+  todayNotes: TodayNote[];
   routeName: string | null;
 }
 
@@ -36,6 +54,8 @@ export function ShopDetailClient({
   complaints: initialComplaints,
   callLogs,
   returns: initialReturns,
+  phones: initialPhones,
+  todayNotes: initialTodayNotes,
   routeName,
 }: ShopDetailClientProps) {
   const [shop, setShop] = useState<Shop>(initialShop);
@@ -44,6 +64,10 @@ export function ShopDetailClient({
   const [memories, setMemories] = useState<ShopMemory[]>(initialMemories);
   const [complaints, setComplaints] = useState<Complaint[]>(initialComplaints);
   const [returns, setReturns] = useState<ReturnWithShop[]>(initialReturns);
+  const [phones, setPhones] = useState<ShopPhone[]>(initialPhones);
+  const [todayNotes, setTodayNotes] = useState<TodayNote[]>(initialTodayNotes);
+  const [newPhone, setNewPhone] = useState({ phone_number: "", label: "" });
+  const [newNote, setNewNote] = useState({ note_type: "general", note_text: "" });
   const [activeTab, setActiveTab] = useState<string>("profile");
   const [editingProfile, setEditingProfile] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Shop>>({});
@@ -219,6 +243,63 @@ export function ShopDetailClient({
     }
   };
 
+  const handleAddShopPhone = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoadingAction("add-phone");
+    const result = await addShopPhone(
+      shop.shop_id,
+      newPhone.phone_number,
+      newPhone.label || undefined
+    );
+    setLoadingAction(null);
+    if (result.success) {
+      setPhones([...phones, result.data as unknown as ShopPhone]);
+      setNewPhone({ phone_number: "", label: "" });
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const handleRemoveShopPhone = async (phoneId: number) => {
+    setLoadingAction("remove-phone");
+    const result = await removeShopPhone(phoneId);
+    setLoadingAction(null);
+    if (result.success) {
+      setPhones(phones.filter(p => p.phone_id !== phoneId));
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const handleWriteTodayNote = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoadingAction("write-note");
+    const result = await writeTodayNote({
+      shop_id: shop.shop_id,
+      note_type: newNote.note_type,
+      note_text: newNote.note_text,
+      source: "human",
+    });
+    setLoadingAction(null);
+    if (result.success) {
+      setTodayNotes([result.data as unknown as TodayNote, ...todayNotes]);
+      setNewNote({ note_type: "general", note_text: "" });
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const handleClearTodayNote = async (noteId: number) => {
+    setLoadingAction("clear-note");
+    const result = await clearTodayNote(noteId);
+    setLoadingAction(null);
+    if (result.success) {
+      setTodayNotes(todayNotes.filter(n => n.note_id !== noteId));
+    } else {
+      alert(result.error);
+    }
+  };
+
   const languageOptions = [
     { value: "tamil", label: "Tamil" },
     { value: "tanglish", label: "Tanglish" },
@@ -237,6 +318,8 @@ export function ShopDetailClient({
 
   const tabs = [
     { id: "profile", label: "Profile" },
+    { id: "phones", label: "Phone Numbers" },
+    { id: "today", label: "Today's Details" },
     { id: "credit", label: "Credit" },
     { id: "blacklist", label: "Blacklist" },
     { id: "memory", label: "Memory" },
@@ -408,6 +491,119 @@ export function ShopDetailClient({
               </dl>
             </Card>
           </div>
+        )}
+
+        {/* Phone Numbers Tab */}
+        {activeTab === "phones" && (
+          <Card>
+            <CardHeader title="Phone numbers" subtitle="Numbers the AI can use to identify this shop" />
+            <div className="px-4 py-4 border-t border-zinc-100">
+              <form onSubmit={handleAddShopPhone} className="flex flex-wrap items-end gap-3">
+                <div className="flex-1 min-w-[200px]">
+                  <FormField
+                    label="Phone number"
+                    id="new_phone_number"
+                    value={newPhone.phone_number}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNewPhone({ ...newPhone, phone_number: e.target.value })}
+                    type="tel"
+                    required
+                  />
+                </div>
+                <div className="flex-1 min-w-[140px]">
+                  <FormField
+                    label="Label (optional)"
+                    id="new_phone_label"
+                    value={newPhone.label}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNewPhone({ ...newPhone, label: e.target.value })}
+                    placeholder="e.g. shop landline"
+                  />
+                </div>
+                <Button type="submit" loading={loadingAction === "add-phone"}>Add Number</Button>
+              </form>
+            </div>
+            {phones.length === 0 ? (
+              <div className="p-4">
+                <EmptyState title="No numbers on record" body="Add a number so the AI can identify this shop by phone." />
+              </div>
+            ) : (
+              <ul className="divide-y divide-zinc-100 border-t border-zinc-100">
+                {phones.map((p) => (
+                  <li key={p.phone_id} className="px-4 py-3 flex items-center justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-sm font-medium text-zinc-900">{p.phone_number}</span>
+                      {p.is_primary && <Badge tone="emerald">Primary</Badge>}
+                      {p.label && <span className="text-sm text-zinc-500">{p.label}</span>}
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => handleRemoveShopPhone(p.phone_id)} disabled={loadingAction === "remove-phone"}>Remove</Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        )}
+
+        {/* Today's Details Tab */}
+        {activeTab === "today" && (
+          <Card>
+            <CardHeader title="Today's details" subtitle="Notes from today's calls and confirmed orders" />
+            <div className="px-4 py-4 border-t border-zinc-100">
+              <form onSubmit={handleWriteTodayNote} className="space-y-3">
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="w-44">
+                    <SelectField
+                      label="Note type"
+                      id="today_note_type"
+                      value={newNote.note_type}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setNewNote({ ...newNote, note_type: e.target.value })}
+                      options={[
+                        { value: "general", label: "General" },
+                        { value: "interaction", label: "Interaction" },
+                        { value: "preference", label: "Preference" },
+                        { value: "complaint", label: "Complaint" },
+                        { value: "payment_promise", label: "Payment Promise" },
+                      ]}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[240px]">
+                    <TextareaField
+                      label="Note"
+                      id="today_note_text"
+                      value={newNote.note_text}
+                      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewNote({ ...newNote, note_text: e.target.value })}
+                      rows={2}
+                      required
+                      placeholder="Add a note for today's follow-up"
+                    />
+                  </div>
+                  <Button type="submit" loading={loadingAction === "write-note"}>Add Note</Button>
+                </div>
+              </form>
+            </div>
+
+            {todayNotes.length === 0 ? (
+              <div className="p-4">
+                <EmptyState title="No notes today" body="Calls and notes recorded against this shop today will appear here." />
+              </div>
+            ) : (
+              <ul className="divide-y divide-zinc-100 border-t border-zinc-100">
+                {todayNotes.map((n) => (
+                  <li key={n.note_id} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge tone="violet">{n.note_type}</Badge>
+                          <span className="text-xs text-zinc-400">{formatTime(n.created_at)}</span>
+                          {n.agent_role && <span className="text-xs text-zinc-400">by {n.agent_role}</span>}
+                        </div>
+                        <p className="mt-1 text-sm text-zinc-800">{n.note_text}</p>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => handleClearTodayNote(n.note_id)} disabled={loadingAction === "clear-note"}>Clear</Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
         )}
 
         {/* Credit Tab */}
