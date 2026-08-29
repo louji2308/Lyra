@@ -1215,3 +1215,93 @@ export async function createShop(
     language_detected: languageDetected ?? null,
   };
 }
+
+export async function sendOrderConfirmationWhatsApp(shopId: string, orderId: string): Promise<{ success: boolean; message_preview?: string; error?: string }> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/whatsapp/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shop_id: shopId, order_id: orderId }),
+    });
+    const data = await res.json();
+    return { success: data.success, message_preview: data.message_preview, error: data.error };
+  } catch (err) {
+    console.error("[sendOrderConfirmationWhatsApp] error:", err);
+    return { success: false, error: String(err) };
+  }
+}
+
+export async function sendSchemesWhatsApp(shopId: string): Promise<{ success: boolean; message_preview?: string; error?: string }> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/whatsapp/schemes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shop_id: shopId }),
+    });
+    const data = await res.json();
+    return { success: data.success, message_preview: data.message_preview, error: data.error };
+  } catch (err) {
+    console.error("[sendSchemesWhatsApp] error:", err);
+    return { success: false, error: String(err) };
+  }
+}
+
+export async function sendPaymentLinkWhatsApp(shopId: string, orderId: string, amountDue: number, reason: "credit_exceeded" | "high_value_order"): Promise<{ success: boolean; message_preview?: string; error?: string; upi_link?: string }> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/whatsapp/payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shop_id: shopId, order_id: orderId, amount_due: amountDue, reason }),
+    });
+    const data = await res.json();
+    return { success: data.success, message_preview: data.message_preview, error: data.error, upi_link: data.upi_link };
+  } catch (err) {
+    console.error("[sendPaymentLinkWhatsApp] error:", err);
+    return { success: false, error: String(err) };
+  }
+}
+
+export async function sendDeliveryUpdateWhatsApp(deliveryId: number): Promise<{ success: boolean; message_preview?: string; error?: string }> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/whatsapp/delivery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ delivery_id: deliveryId }),
+    });
+    const data = await res.json();
+    return { success: data.success, message_preview: data.message_preview, error: data.error };
+  } catch (err) {
+    console.error("[sendDeliveryUpdateWhatsApp] error:", err);
+    return { success: false, error: String(err) };
+  }
+}
+
+export async function sendReturnPhotoRequestWhatsApp(returnId: number): Promise<{ success: boolean; message_preview?: string; error?: string }> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/whatsapp/return`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ return_id: returnId }),
+    });
+    const data = await res.json();
+    return { success: data.success, message_preview: data.message_preview, error: data.error };
+  } catch (err) {
+    console.error("[sendReturnPhotoRequestWhatsApp] error:", err);
+    return { success: false, error: String(err) };
+  }
+}
+
+export async function sendMonthlyStatementWhatsApp(shopId: string, period?: string): Promise<{ success: boolean; message_preview?: string; error?: string }> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/whatsapp/statement`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shop_id: shopId, period }),
+    });
+    const data = await res.json();
+    return { success: data.success, message_preview: data.message_preview, error: data.error };
+  } catch (err) {
+    console.error("[sendMonthlyStatementWhatsApp] error:", err);
+    return { success: false, error: String(err) };
+  }
+}

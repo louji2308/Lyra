@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, ChangeEvent, ReactElement } from "react";
+import { useState, useRef, FormEvent, ChangeEvent, ReactElement } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { FormField, SelectField, NumberInput, TextareaField } from "@/components/ui/FormFields";
@@ -52,6 +52,7 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
   const [paymentForm, setPaymentForm] = useState({ amount: "", method: "cash", reference: "", collected_by: "", notes: "" });
   const [deleteConfirm, setDeleteConfirm] = useState<{ shopId: string; isOpen: boolean }>({ shopId: "", isOpen: false });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const enrichedShops = getEnrichedShops(shops);
 
@@ -109,7 +110,15 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
     const result = await updateShop(shopId, editForm);
     setLoadingAction(null);
     if (result.success) {
-      setShops(shops.map(s => s.shop_id === shopId ? { ...s, ...result.data } : s));
+      const updated = result.data;
+      const newCreditLimit = updated.credit_limit ?? 0;
+      const outstanding = updated.outstanding_balance ?? 0;
+      const available_credit = newCreditLimit - outstanding;
+      const credit_exceeded = available_credit <= 0;
+      setShops(shops.map(s => s.shop_id === shopId
+        ? { ...s, ...updated, available_credit, credit_exceeded }
+        : s
+      ));
       setEditingShopId(null);
       setEditForm({});
     } else {
@@ -225,7 +234,7 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
                         {shop.shop_name}
                       </a>
                       <p className="mt-0.5 text-xs text-zinc-500">
-                        {shop.owner_name ?? "\u2014"} \u00b7 {shop.shop_id}
+                        {shop.owner_name ?? "—"} · {shop.shop_id}
                       </p>
                     </div>
                   )
@@ -328,13 +337,13 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
           <ConfirmDialog
             isOpen={isAddShopOpen}
             onClose={() => setIsAddShopOpen(false)}
-            onConfirm={() => {}}
+            onConfirm={() => formRef.current?.requestSubmit()}
             title="Add New Shop"
             confirmText="Create Shop"
             cancelText="Cancel"
             variant="primary"
           >
-            <form onSubmit={handleAddShop} className="space-y-4 max-h-[70vh] overflow-y-auto">
+            <form ref={formRef} onSubmit={handleAddShop} className="space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField label="Shop Name" id="shop_name" name="shop_name" required />
                 <FormField label="Owner Name" id="owner_name" name="owner_name" required />

@@ -33,7 +33,13 @@ type ActionResult<T> = { success: true; data: T } | { success: false; error: str
 function handleError(err: unknown, context: string): ActionResult<never> {
   console.error(`[actions] ${context}:`, err);
   if (err instanceof Error) return { success: false, error: err.message };
-  return { success: false, error: "Unknown error" };
+  if (err && typeof err === "object" && "message" in err) {
+    return { success: false, error: String(err.message) };
+  }
+  if (err && typeof err === "object" && "error" in err) {
+    return { success: false, error: String(err.error) };
+  }
+  return { success: false, error: JSON.stringify(err) };
 }
 
 export async function createShop(input: {

@@ -233,6 +233,24 @@ export const voiceApi = {
   sendWhatsApp: (body: { shop_id: string; order_id: string }) =>
     post<SendWhatsAppPayload>("/api/send-whatsapp", body),
 
+  sendOrderConfirmationWhatsApp: (body: { shop_id: string; order_id: string }) =>
+    post<{ success: boolean; message_preview?: string; error?: string }>("/api/whatsapp/confirm", body),
+
+  sendSchemesWhatsApp: (body: { shop_id: string }) =>
+    post<{ success: boolean; message_preview?: string; error?: string }>("/api/whatsapp/schemes", body),
+
+  sendPaymentLinkWhatsApp: (body: { shop_id: string; order_id: string; amount_due: number; reason: "credit_exceeded" | "high_value_order" }) =>
+    post<{ success: boolean; message_preview?: string; error?: string; upi_link?: string }>("/api/whatsapp/payment", body),
+
+  sendDeliveryUpdateWhatsApp: (body: { delivery_id: number }) =>
+    post<{ success: boolean; message_preview?: string; error?: string }>("/api/whatsapp/delivery", body),
+
+  sendReturnPhotoRequestWhatsApp: (body: { return_id: number }) =>
+    post<{ success: boolean; message_preview?: string; error?: string }>("/api/whatsapp/return", body),
+
+  sendMonthlyStatementWhatsApp: (body: { shop_id: string; period?: string }) =>
+    post<{ success: boolean; message_preview?: string; error?: string }>("/api/whatsapp/statement", body),
+
   createReturn: (body: {
     shop_id: string;
     product_id: string;
