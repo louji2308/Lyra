@@ -3,8 +3,16 @@
 -- Sample universe for the Shree Agencies demo (run AFTER the schema migration)
 --
 -- Contents:
---   1 route    | 5 shops   | HUL-only SKU products | inventory
+--   5 routes (beats) | 30 shops (6 per beat) | HUL-only SKU products | inventory
 --   3 schemes  | 5 past orders | call logs | memory | blacklist | complaint | return
+--
+-- Beats (each a different area name, with a distinct set of shops):
+--   R001 Tambaram Main Beat   R002 Chromepet Beat   R003 Pallavaram Beat
+--   R004 Guduvancheri Beat    R005 Tiruporur Beat
+--
+-- All 30 shop names and phone numbers are UNIQUE. The voice agents ALWAYS
+-- resolve a shop by phone -> shop_id (never by shop_name), so shops are never
+-- confused even across beats.
 --
 -- Demo-critical scenarios baked in:
 --   * Kannan Stores (S101): credit_limit 10,000, outstanding 7,500 -> available 2,500
@@ -18,14 +26,18 @@
 BEGIN;
 
 -- ============================================================================
--- ROUTES
+-- ROUTES (5 sales beats — different area names)
 -- ============================================================================
 
 INSERT INTO public.routes (route_id, route_name, salesperson, coverage_area, is_active) VALUES
-  ('R001', 'Tambaram Main Beat', 'Rajesh Kumar', 'Tambaram, Chennai', TRUE);
+  ('R001', 'Tambaram Main Beat',   'Rajesh Kumar', 'Tambaram, Chennai',     TRUE),
+  ('R002', 'Chromepet Beat',       'Kumaravel',    'Chromepet, Chennai',    TRUE),
+  ('R003', 'Pallavaram Beat',      'Santhosh',     'Pallavaram, Chennai',   TRUE),
+  ('R004', 'Guduvancheri Beat',    'Manikandan',   'Guduvancheri, Chennai', TRUE),
+  ('R005', 'Tiruporur Beat',       'Praveen',      'Tiruporur, Chennai',    TRUE);
 
 -- ============================================================================
--- SHOPS
+-- SHOPS (30 stores, 6 per beat, all names + phones distinct)
 -- ============================================================================
 
 INSERT INTO public.shops (
@@ -33,11 +45,45 @@ INSERT INTO public.shops (
   preferred_call_start, preferred_call_end, beat_route_id, visit_gap_days,
   credit_limit, outstanding_balance, voice_consent, whatsapp_consent, opt_out, last_order_date
 ) VALUES
-  ('S101', 'Kannan Stores',     'Kannan',  '919840011234', '919840011234', 'tanglish', '09:00', '11:00', 'R001', 7,  10000.00, 7500.00, TRUE,  TRUE,  FALSE, '2026-08-10'),
-  ('S102', 'Murugan Store',     'Murugan', '919840022345', '919840022345', 'tamil',    '10:00', '12:00', 'R001', 7,   5000.00,  500.00, TRUE,  TRUE,  FALSE, '2026-08-12'),
-  ('S103', 'Shanthi General Store', 'Shanthi', '919840033456', '919840033456', 'tamil', '16:00', '18:00', 'R001', 7,   8000.00, 2000.00, TRUE,  TRUE,  FALSE, '2026-08-13'),
-  ('S104', 'Lakshmi Traders',   'Lakshmi', '919840044567', '919840044567', 'hindi',    '11:00', '13:00', 'R001', 7,  12000.00, 3000.00, TRUE,  TRUE,  FALSE, '2026-08-14'),
-  ('S105', 'Anand Provision Store', 'Anand', '919840055678', '919840055678', 'english', '09:30', '12:30', 'R001', 7, 6000.00, 5500.00, TRUE,  TRUE,  FALSE, '2026-08-09');
+  -- ---- R001 Tambaram Main Beat ----
+  ('S101', 'Kannan Stores',          'Kannan',    '919840011234', '919840011234', 'tanglish', '09:00', '11:00', 'R001', 7, 10000.00, 7500.00, TRUE, TRUE, FALSE, '2026-08-10'),
+  ('S102', 'Murugan Store',          'Murugan',   '919840022345', '919840022345', 'tamil',    '10:00', '12:00', 'R001', 7,  5000.00,  500.00, TRUE, TRUE, FALSE, '2026-08-12'),
+  ('S103', 'Shanthi General Store',  'Shanthi',   '919840033456', '919840033456', 'tamil',    '16:00', '18:00', 'R001', 7,  8000.00, 2000.00, TRUE, TRUE, FALSE, '2026-08-13'),
+  ('S110', 'Rajesh Kirana Stores',   'Rajesh',    '919840091234', '919840091234', 'tanglish', '09:00', '12:00', 'R001', 7,  7000.00, 1500.00, TRUE, TRUE, FALSE, NULL),
+  ('S111', 'Meena General Stores',   'Meena',     '919840092345', '919840092345', 'tanglish', '09:30', '11:30', 'R001', 7,  6000.00, 1000.00, TRUE, TRUE, FALSE, NULL),
+  ('S112', 'Raja Provision Stores',  'Raja',      '919840093456', '919840093456', 'tamil',    '10:00', '12:00', 'R001', 7,  9000.00, 3000.00, TRUE, TRUE, FALSE, NULL),
+
+  -- ---- R002 Chromepet Beat ----
+  ('S104', 'Lakshmi Traders',        'Lakshmi',   '919840044567', '919840044567', 'hindi',    '11:00', '13:00', 'R002', 7, 12000.00, 3000.00, TRUE, TRUE, FALSE, '2026-08-14'),
+  ('S105', 'Anand Provision Store',  'Anand',     '919840055678', '919840055678', 'english',  '09:30', '12:30', 'R002', 7,  6000.00, 5500.00, TRUE, TRUE, FALSE, '2026-08-09'),
+  ('S120', 'Selvam Super Market',    'Selvam',    '919840101234', '919840101234', 'tanglish', '09:00', '11:00', 'R002', 7,  8000.00, 2000.00, TRUE, TRUE, FALSE, NULL),
+  ('S121', 'Srinivasa Stores',       'Srinivasan', '919840102345', '919840102345', 'tanglish', '10:00', '12:00', 'R002', 7,  7000.00, 1200.00, TRUE, TRUE, FALSE, NULL),
+  ('S122', 'Annapoorna Provision',   'Annapoorna','919840103456', '919840103456', 'tamil',    '16:00', '18:00', 'R002', 7,  5000.00,  800.00, TRUE, TRUE, FALSE, NULL),
+  ('S123', 'Ganesh Kirana',          'Ganesh',    '919840104567', '919840104567', 'tanglish', '09:30', '11:30', 'R002', 7,  9000.00, 2500.00, TRUE, TRUE, FALSE, NULL),
+
+  -- ---- R003 Pallavaram Beat ----
+  ('S907', 'QA Alpha Supermarket',   'QA Tester One', '919900000101', '919900000101', 'english', '09:00', '18:00', 'R003', 7,  8000.00, 1000.00, TRUE, TRUE, FALSE, NULL),
+  ('S920', 'Vel Murugan Stores',     'Vel',       '9876543210', '9876543210',      'tanglish', '09:00', '12:00', 'R003', 7,  6000.00, 1500.00, TRUE, TRUE, FALSE, NULL),
+  ('S130', 'Lakshmi Kirana',         'Lakshmi',   '919840111234', '919840111234',   'tamil',    '16:00', '18:00', 'R003', 7,  5000.00,  600.00, TRUE, TRUE, FALSE, NULL),
+  ('S131', 'Valluvar Stores',        'Valluvar',  '919840112345', '919840112345',   'tanglish', '09:00', '11:00', 'R003', 7,  7000.00, 1800.00, TRUE, TRUE, FALSE, NULL),
+  ('S132', 'Sundaram Traders',       'Sundaram',  '919840113456', '919840113456',   'tanglish', '10:00', '12:00', 'R003', 7,  9000.00, 2200.00, TRUE, TRUE, FALSE, NULL),
+  ('S133', 'Anbu Kirana',            'Anbu',      '919840114567', '919840114567',   'tamil',    '09:30', '11:30', 'R003', 7,  5000.00,  900.00, TRUE, TRUE, FALSE, NULL),
+
+  -- ---- R004 Guduvancheri Beat ----
+  ('S090', 'Sri Murugan Provision',  'Murugesan', '9876543211', '9876543211',      'tanglish', '09:00', '12:00', 'R004', 7,  6000.00, 1000.00, TRUE, TRUE, FALSE, NULL),
+  ('S140', 'Kannagi Stores',         'Kannagi',   '919840121234', '919840121234',  'tanglish', '09:30', '11:30', 'R004', 7,  7000.00, 1600.00, TRUE, TRUE, FALSE, NULL),
+  ('S141', 'Murugesan Kirana',       'Murugesan', '919840122345', '919840122345',  'tamil',    '10:00', '12:00', 'R004', 7,  8000.00, 2000.00, TRUE, TRUE, FALSE, NULL),
+  ('S142', 'Mani Provision Store',   'Mani',      '919840123456', '919840123456',  'tanglish', '16:00', '18:00', 'R004', 7,  6000.00, 1100.00, TRUE, TRUE, FALSE, NULL),
+  ('S143', 'Rani General Store',     'Rani',      '919840124567', '919840124567',  'tanglish', '09:00', '11:00', 'R004', 7,  5000.00,  700.00, TRUE, TRUE, FALSE, NULL),
+  ('S144', 'Sri Renga Stores',       'Renga',     '919840125678', '919840125678',  'tamil',    '10:00', '12:00', 'R004', 7,  9000.00, 2400.00, TRUE, TRUE, FALSE, NULL),
+
+  -- ---- R005 Tiruporur Beat ----
+  ('S439', 'Karthik Provision',      'Karthik',   '654326432',  '62542124',        'tanglish', '09:00', '12:00', 'R005', 7, 10000.00, 2000.00, TRUE, TRUE, FALSE, NULL),
+  ('S150', 'Kumar Traders',          'Kumar',     '919840131234', '919840131234',  'tanglish', '09:30', '11:30', 'R005', 7,  7000.00, 1300.00, TRUE, TRUE, FALSE, NULL),
+  ('S151', 'Sangeetha Provision',    'Sangeetha', '919840132345', '919840132345',  'tamil',    '10:00', '12:00', 'R005', 7,  8000.00, 2100.00, TRUE, TRUE, FALSE, NULL),
+  ('S152', 'Kumaran Kirana',         'Kumaran',   '919840133456', '919840133456',  'tanglish', '16:00', '18:00', 'R005', 7,  6000.00,  950.00, TRUE, TRUE, FALSE, NULL),
+  ('S153', 'Meenakshi Stores',       'Meenakshi', '919840134567', '919840134567',  'tamil',    '09:00', '11:00', 'R005', 7,  9000.00, 2800.00, TRUE, TRUE, FALSE, NULL),
+  ('S154', 'Venkatesh Supply Stores', 'Venkatesh', '919840135678', '919840135678', 'tanglish', '10:00', '12:00', 'R005', 7,  7000.00, 1200.00, TRUE, TRUE, FALSE, NULL);
 
 -- ============================================================================
 -- PRODUCTS (HUL-only SKU catalog with pack-size variants)
