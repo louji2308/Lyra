@@ -212,6 +212,10 @@ const REAL_ORDER_STATUSES: OrderStatus[] = [
   "out_for_delivery",
 ];
 
+// Shree Agencies' / Lyra's own collection UPI ID — the shop owner pays INTO
+// this when their order exceeds the credit limit. App-wide constant, not per-shop.
+export const LYRA_COLLECTION_UPI_ID = "9042113132@fam";
+
 async function resolveProductNames(
   ids: string[]
 ): Promise<Map<string, string>> {
@@ -512,6 +516,8 @@ export async function createOrder(
     order_status?: OrderStatus;
     transcript_summary?: string;
     language_detected?: AppLanguage | null;
+    pending_reason?: string | null;
+    credit_checked?: boolean;
   } = {}
 ): Promise<CreateOrderResult> {
   if (!shopId) throw new VoiceApiError(400, "shop_id_required");
@@ -590,6 +596,9 @@ export async function createOrder(
       credit_used: totalAmount,
       payment_status: opts.payment_status ?? "pending",
       order_status: opts.order_status ?? "awaiting_confirmation",
+      confirmed_order: false,
+      credit_checked: opts.credit_checked ?? false,
+      pending_reason: opts.pending_reason ?? null,
       created_by: "AI",
     })
     .select()
@@ -1140,10 +1149,22 @@ export async function createShop(
     owner_name: string;
     area: string;
     preferred_language: string;
+    beat_route_id?: string | null;
+    preferred_call_start?: string | null;
+    preferred_call_end?: string | null;
   },
   languageDetected?: AppLanguage | null
 ): Promise<CreateShopResult> {
-  const { phone_number, shop_name, owner_name, area, preferred_language } = input;
+  const {
+    phone_number,
+    shop_name,
+    owner_name,
+    area,
+    preferred_language,
+    beat_route_id,
+    preferred_call_start,
+    preferred_call_end,
+  } = input;
 
   const digits = normalizePhone(phone_number);
   if (!digits) throw new VoiceApiError(400, "phone_required");
@@ -1154,7 +1175,7 @@ export async function createShop(
   const validLanguages = ["tanglish", "tamil", "hindi", "english"];
   const lang = validLanguages.includes(preferred_language.toLowerCase()) ? preferred_language.toLowerCase() : "tanglish";
 
-  // Check if shop already exists with this phone
+  // Check if shop already exists with this phone (primary or added)
   const { data: existing } = await supabase
     .from("shops")
     .select("shop_id")
@@ -1162,28 +1183,31 @@ export async function createShop(
     .maybeSingle();
   if (existing) throw new VoiceApiError(409, "shop_already_exists");
 
-  // Get default route (R001)
-  const { data: route } = await supabase
-    .from("routes")
-    .select("route_id")
-    .eq("is_active", true)
-    .limit(1)
-    .maybeSingle();
+  if (beat_route_id) {
+    const { data: route } = await supabase
+      .from("routes")
+      .select("route_id")
+      .eq("route_id", beat_route_id)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!route) throw new VoiceApiError(400, "invalid_beat");
+  }
 
-  const routeId = route?.route_id ?? "R001";
+  const shopId = `S${Date.now().toString().slice(-3)}`;
 
   const { data, error } = await supabase
     .from("shops")
     .insert({
-      shop_id: `S${Date.now().toString().slice(-3)}`,
+      shop_id: shopId,
       shop_name: shop_name.trim(),
       owner_name: owner_name.trim(),
       phone_number: digits,
       whatsapp_number: digits,
       preferred_language: lang,
-      preferred_call_start: "09:00",
-      preferred_call_end: "18:00",
-      beat_route_id: routeId,
+      preferred_call_start: preferred_call_start?.slice(0, 5) || null,
+      preferred_call_end: preferred_call_end?.slice(0, 5) || null,
+      // beat/route is written ONLY when the owner has confirmed it (never auto-assigned)
+      beat_route_id: beat_route_id ?? null,
       visit_gap_days: 7,
       credit_limit: 5000,
       outstanding_balance: 0,
@@ -1205,6 +1229,14 @@ export async function createShop(
     available_credit: 5000,
   });
 
+  // Register the primary phone in shop_phones
+  await supabase.from("shop_phones").insert({
+    shop_id: data.shop_id,
+    phone_number: digits,
+    label: "primary",
+    is_primary: true,
+  });
+
   return {
     shop_id: data.shop_id,
     shop_name: data.shop_name,
@@ -1214,6 +1246,216 @@ export async function createShop(
     preferred_language: lang,
     language_detected: languageDetected ?? null,
   };
+}
+
+export async function identifyShopByAnyPhone(phone: string) {
+  const digits = normalizePhone(phone);
+  if (!digits) throw new VoiceApiError(400, "phone_required");
+  const tail = digits.length >= 10 ? digits.slice(-10) : digits;
+
+  // 1) Primary phone on shops
+  const { data: shops } = await supabase
+    .from("shops")
+    .select("shop_id, phone_number")
+    .ilike("phone_number", `%${tail}`);
+  const shopId = (shops ?? []).find((s: { phone_number: string }) => {
+    const stored = normalizePhone(s.phone_number);
+    return stored === digits || stored.slice(-10) === tail;
+  })?.shop_id;
+
+  // 2) Added phones on shop_phones
+  let resolvedShopId = shopId;
+  if (!resolvedShopId) {
+    const { data: sp } = await supabase
+      .from("shop_phones")
+      .select("shop_id, phone_number")
+      .ilike("phone_number", `%${tail}`);
+    resolvedShopId = (sp ?? []).find((r: { phone_number: string }) => {
+      const stored = normalizePhone(r.phone_number);
+      return stored === digits || stored.slice(-10) === tail;
+    })?.shop_id;
+  }
+
+  if (!resolvedShopId) throw new VoiceApiError(404, "shop_not_found", "new_shop");
+
+  const { data: shop, error } = await supabase
+    .from("shops")
+    .select("shop_id, shop_name, owner_name, phone_number, preferred_language")
+    .eq("shop_id", resolvedShopId)
+    .maybeSingle();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  const { data: phones, error: phonesError } = await supabase
+    .from("shop_phones")
+    .select("phone_number, label, is_primary")
+    .eq("shop_id", shop.shop_id);
+  if (phonesError) throw new VoiceApiError(500, "db_error", phonesError.message);
+
+  const { data: credit } = await supabase
+    .from("shop_credit")
+    .select("credit_limit, outstanding_balance, available_credit")
+    .eq("shop_id", shop.shop_id)
+    .maybeSingle();
+
+  return {
+    shop_id: shop.shop_id,
+    shop_name: shop.shop_name,
+    owner_name: shop.owner_name,
+    phone_number: shop.phone_number,
+    all_phones: (phones ?? []).map((p) => p.phone_number),
+    language: shop.preferred_language as AppLanguage,
+    credit_limit: Number(credit?.credit_limit ?? 0),
+    outstanding_balance: Number(credit?.outstanding_balance ?? 0),
+    available_credit: Number(credit?.available_credit ?? 0),
+  };
+}
+
+export async function addShopPhone(
+  shopId: string,
+  phoneNumber: string,
+  label = "alt"
+) {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  const digits = normalizePhone(phoneNumber);
+  if (!digits) throw new VoiceApiError(400, "phone_required");
+
+  const { data: shop, error } = await supabase
+    .from("shops")
+    .select("shop_id")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  const { data, error: insError } = await supabase
+    .from("shop_phones")
+    .insert({ shop_id: shopId, phone_number: digits, label })
+    .select()
+    .single();
+  if (insError) {
+    if (insError.code === "23505") throw new VoiceApiError(409, "phone_already_exists");
+    throw new VoiceApiError(500, "db_error", insError.message);
+  }
+
+  return { phone_id: data.phone_id, shop_id: data.shop_id, phone_number: data.phone_number, label: data.label };
+}
+
+export async function updateShop(
+  shopId: string,
+  patch: {
+    shop_name?: string;
+    owner_name?: string;
+    area?: string;
+    preferred_language?: string;
+    preferred_call_start?: string | null;
+    preferred_call_end?: string | null;
+    beat_route_id?: string | null;
+  }
+) {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+
+  const { data: shop, error } = await supabase
+    .from("shops")
+    .select("*")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  // Merge current + patch to return a "draft" for confirm-first
+  const draft = {
+    shop_name: patch.shop_name?.trim() || shop.shop_name,
+    owner_name: patch.owner_name?.trim() || shop.owner_name,
+    preferred_language: patch.preferred_language || shop.preferred_language,
+    preferred_call_start: patch.preferred_call_start != null ? patch.preferred_call_start.slice(0, 5) : shop.preferred_call_start,
+    preferred_call_end: patch.preferred_call_end != null ? patch.preferred_call_end.slice(0, 5) : shop.preferred_call_end,
+    beat_route_id: patch.beat_route_id != null ? patch.beat_route_id : shop.beat_route_id,
+  };
+  if (draft.beat_route_id) {
+    const { data: route } = await supabase
+      .from("routes")
+      .select("route_id")
+      .eq("route_id", draft.beat_route_id)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!route) throw new VoiceApiError(400, "invalid_beat");
+  }
+
+  return {
+    draft,
+    confirmed: false,
+    shop_id: shopId,
+    note: "Review draft and call again with confirmed=true to apply",
+  };
+}
+
+export async function applyShopUpdate(
+  shopId: string,
+  confirmed: boolean,
+  patch: {
+    shop_name?: string;
+    owner_name?: string;
+    preferred_language?: string;
+    preferred_call_start?: string | null;
+    preferred_call_end?: string | null;
+    beat_route_id?: string | null;
+  }
+) {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  if (!confirmed) throw new VoiceApiError(400, "confirm_required");
+
+  const update: Record<string, unknown> = {};
+  if (patch.shop_name != null) update.shop_name = patch.shop_name.trim();
+  if (patch.owner_name != null) update.owner_name = patch.owner_name.trim();
+  if (patch.preferred_language != null) update.preferred_language = patch.preferred_language;
+  if (patch.preferred_call_start != null) update.preferred_call_start = patch.preferred_call_start.slice(0, 5) || null;
+  if (patch.preferred_call_end != null) update.preferred_call_end = patch.preferred_call_end.slice(0, 5) || null;
+  if (patch.beat_route_id != null) {
+    if (patch.beat_route_id) {
+      const { data: route } = await supabase
+        .from("routes")
+        .select("route_id")
+        .eq("route_id", patch.beat_route_id)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!route) throw new VoiceApiError(400, "invalid_beat");
+    }
+    update.beat_route_id = patch.beat_route_id || null;
+  }
+
+  const { data, error } = await supabase
+    .from("shops")
+    .update(update)
+    .eq("shop_id", shopId)
+    .select()
+    .single();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  if (!data) throw new VoiceApiError(404, "shop_not_found");
+
+  return {
+    shop_id: data.shop_id,
+    shop_name: data.shop_name,
+    owner_name: data.owner_name,
+    beat_route_id: data.beat_route_id,
+    preferred_language: data.preferred_language,
+    confirmed: true,
+  };
+}
+
+export async function listBeats() {
+  const { data, error } = await supabase
+    .from("routes")
+    .select("route_id, route_name, coverage_area, salesperson")
+    .eq("is_active", true)
+    .order("route_id", { ascending: true });
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  return (data ?? []).map((r) => ({
+    route_id: r.route_id,
+    route_name: r.route_name,
+    area: r.coverage_area,
+    salesperson: r.salesperson,
+  }));
 }
 
 export async function sendOrderConfirmationWhatsApp(shopId: string, orderId: string): Promise<{ success: boolean; message_preview?: string; error?: string }> {
@@ -1304,4 +1546,524 @@ export async function sendMonthlyStatementWhatsApp(shopId: string, period?: stri
     console.error("[sendMonthlyStatementWhatsApp] error:", err);
     return { success: false, error: String(err) };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Multi-agent MVP (v3) — Phase B additions
+// ---------------------------------------------------------------------------
+
+export interface BrandPriceFilter {
+  brand?: string;
+  price?: number;
+}
+
+export async function findProductByBrandPrice(
+  filter: { brand?: string; price?: number; name?: string },
+  languageDetected?: AppLanguage | null
+): Promise<{ product?: ProductCatalogItem; candidates: ProductCatalogItem[]; language_detected: AppLanguage | null }> {
+  const brand = filter.brand?.trim();
+  const price = filter.price;
+  const name = filter.name?.trim();
+
+  let query = supabase
+    .from("products")
+    .select(
+      "product_id, product_name, brand, category, unit_type, price, tax_rate, is_active, inventory(available_qty)"
+    )
+    .eq("is_active", true);
+
+  if (brand) query = query.ilike("brand", `%${brand}%`);
+  if (name) query = query.ilike("product_name", `%${name}%`);
+
+  const { data, error } = await query.order("brand", { ascending: true }).order("product_name", { ascending: true }).limit(20);
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  const rows = ((data ?? []) as Array<Record<string, unknown>>).map((p) => {
+    const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
+    return {
+      product_id: p.product_id as string,
+      product_name: p.product_name as string,
+      brand: (p.brand as string) ?? "",
+      category: (p.category as string) ?? "",
+      unit_type: (p.unit_type as string) ?? "",
+      price: Number(p.price),
+      tax_rate: Number(p.tax_rate),
+      is_active: p.is_active as boolean,
+      available_qty: inv ? Number((inv as { available_qty: number }).available_qty) : 0,
+    };
+  });
+
+  let candidates = rows;
+  if (price != null && Number.isFinite(price)) {
+    const exact = rows.filter((p) => p.price === price);
+    candidates = exact.length ? exact : rows.filter((p) => Math.abs(p.price - price) <= 1);
+    if (!candidates.length) candidates = rows;
+  }
+
+  return {
+    product: candidates[0],
+    candidates,
+    language_detected: languageDetected ?? null,
+  };
+}
+
+export async function reserveStock(
+  productId: string,
+  qty: number,
+  remove = false
+): Promise<{ product_id: string; reserved_qty: number; available_qty: number; available: boolean; language_detected: AppLanguage | null }> {
+  if (!productId) throw new VoiceApiError(400, "product_id_required");
+  const amount = Number(qty);
+  if (!Number.isFinite(amount) || amount <= 0) throw new VoiceApiError(400, "invalid_quantity");
+
+  const { data: inv } = await supabase
+    .from("inventory")
+    .select("product_id, available_qty, reserved_qty")
+    .eq("product_id", productId)
+    .maybeSingle();
+  if (!inv) throw new VoiceApiError(404, "product_not_found");
+
+  const available = Number(inv.available_qty);
+  const reserved = Number(inv.reserved_qty);
+  const delta = remove ? -amount : amount;
+  if (!remove && delta > available) {
+    return {
+      product_id: productId,
+      reserved_qty: reserved,
+      available_qty: available,
+      available: false,
+      language_detected: null,
+    };
+  }
+
+  const newReserved = Math.max(0, reserved + delta);
+  const { error } = await supabase
+    .from("inventory")
+    .update({ reserved_qty: newReserved })
+    .eq("product_id", productId);
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  return {
+    product_id: productId,
+    reserved_qty: newReserved,
+    available_qty: available,
+    available: true,
+    language_detected: null,
+  };
+}
+
+export async function confirmOrder(
+  orderId: string,
+  opts: { performed_by?: string; send_whatsapp?: boolean } = {}
+): Promise<{
+  order_id: string;
+  shop_id: string;
+  confirmed_order: boolean;
+  order_status: OrderStatus;
+  stock_decremented: boolean;
+  whatsapp_sent: boolean;
+  error?: string;
+  language_detected: AppLanguage | null;
+}> {
+  if (!orderId) throw new VoiceApiError(400, "order_id_required");
+
+  const { data: order, error } = await supabase
+    .from("orders")
+    .select("order_id, shop_id, order_status, confirmed_order")
+    .eq("order_id", orderId)
+    .maybeSingle();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  if (!order) throw new VoiceApiError(404, "order_not_found");
+
+  if (order.confirmed_order) {
+    return {
+      order_id: order.order_id,
+      shop_id: order.shop_id,
+      confirmed_order: true,
+      order_status: order.order_status,
+      stock_decremented: false,
+      whatsapp_sent: false,
+      language_detected: null,
+    };
+  }
+
+  // Reserve→confirm: decrement inventory and record stock movements in one pass
+  const { data: items, error: itemsError } = await supabase
+    .from("order_items")
+    .select("product_id, quantity")
+    .eq("order_id", orderId);
+  if (itemsError) throw new VoiceApiError(500, "db_error", itemsError.message);
+
+  const movements = (items ?? []).map((it) => ({
+    product_id: it.product_id,
+    change_qty: -Number(it.quantity),
+    reason: "order_confirmation",
+    reference_id: orderId,
+    reference_type: "order",
+    performed_by: opts.performed_by ?? "portal",
+  }));
+
+  for (const m of movements) {
+    const { data: inv } = await supabase
+      .from("inventory")
+      .select("available_qty, reserved_qty")
+      .eq("product_id", m.product_id)
+      .maybeSingle();
+    if (inv) {
+      const newAvailable = Math.max(0, Number(inv.available_qty) - Math.abs(m.change_qty));
+      const newReserved = Math.max(0, Number(inv.reserved_qty) - Math.abs(m.change_qty));
+      await supabase
+        .from("inventory")
+        .update({ available_qty: newAvailable, reserved_qty: newReserved })
+        .eq("product_id", m.product_id);
+    }
+  }
+  if (movements.length) {
+    await supabase.from("stock_movements").insert(movements);
+  }
+
+  const { error: updError } = await supabase
+    .from("orders")
+    .update({
+      confirmed_order: true,
+      order_status: "confirmed",
+      credit_checked: true,
+      pending_reason: null,
+    })
+    .eq("order_id", orderId);
+  if (updError) throw new VoiceApiError(500, "db_error", updError.message);
+
+  let whatsapp_sent = false;
+  let waError: string | undefined;
+  if (opts.send_whatsapp !== false) {
+    const res = await sendOrderConfirmationWhatsApp(order.shop_id, orderId);
+    whatsapp_sent = !!res.success;
+    waError = res.error;
+  }
+
+  return {
+    order_id: orderId,
+    shop_id: order.shop_id,
+    confirmed_order: true,
+    order_status: "confirmed",
+    stock_decremented: true,
+    whatsapp_sent,
+    error: waError,
+    language_detected: null,
+  };
+}
+
+export async function getShopCreditHistory(
+  shopId: string,
+  languageDetected?: AppLanguage | null
+) {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("shop_id, shop_name")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  const { data: credit } = await supabase
+    .from("shop_credit")
+    .select("credit_limit, outstanding_balance, available_credit")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+
+  const { data: payments } = await supabase
+    .from("payments")
+    .select("payment_id, amount, method, reference, collected_at, notes")
+    .eq("shop_id", shopId)
+    .order("collected_at", { ascending: false })
+    .limit(50);
+
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("order_id, order_date, total_amount, order_status, confirmed_order")
+    .eq("shop_id", shopId)
+    .in("order_status", REAL_ORDER_STATUSES)
+    .order("order_date", { ascending: false })
+    .limit(50);
+
+  const { data: returns } = await supabase
+    .from("returns")
+    .select("return_id, product_id, quantity, reason, status, created_at")
+    .eq("shop_id", shopId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  return {
+    shop_id: shopId,
+    shop_name: shop.shop_name,
+    credit: {
+      credit_limit: Number(credit?.credit_limit ?? 0),
+      outstanding_balance: Number(credit?.outstanding_balance ?? 0),
+      available_credit: Number(credit?.available_credit ?? 0),
+    },
+    payments: (payments ?? []).map((p) => ({
+      payment_id: p.payment_id,
+      amount: Number(p.amount),
+      method: p.method,
+      reference: p.reference,
+      collected_at: p.collected_at,
+      notes: p.notes,
+    })),
+    orders: (orders ?? []).map((o) => ({
+      order_id: o.order_id,
+      order_date: o.order_date,
+      total_amount: Number(o.total_amount),
+      order_status: o.order_status,
+      confirmed_order: o.confirmed_order,
+    })),
+    returns: (returns ?? []).map((r) => ({
+      return_id: r.return_id,
+      product_id: r.product_id,
+      quantity: Number(r.quantity),
+      reason: r.reason,
+      status: r.status,
+      created_at: r.created_at,
+    })),
+    language_detected: languageDetected ?? null,
+  };
+}
+
+export async function getShopDeliveryHistory(
+  shopId: string,
+  languageDetected?: AppLanguage | null
+) {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("shop_id, shop_name")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  const { data: deliveries, error } = await supabase
+    .from("deliveries")
+    .select(
+      "delivery_id, order_id, delivery_date, delivery_slot, vehicle_no, delivery_person, status, notes, delivery_items(delivered_qty, returned_qty, order_item_id)"
+    )
+    .order("delivery_date", { ascending: false })
+    .limit(50);
+
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  const orderIds = [...new Set((deliveries ?? []).map((d) => d.order_id))];
+  const ordersById = new Map<string, { total_amount: number; shop_id: string }>();
+  if (orderIds.length) {
+    const { data: ords } = await supabase
+      .from("orders")
+      .select("order_id, total_amount, shop_id")
+      .in("order_id", orderIds);
+    (ords ?? []).forEach((o) => ordersById.set(o.order_id, o));
+  }
+
+  const itemIds = [
+    ...new Set(
+      (deliveries ?? []).flatMap((d) =>
+        ((d.delivery_items as Array<{ order_item_id: number }>) ?? []).map((i) => i.order_item_id)
+      )
+    ),
+  ];
+  const itemsById = new Map<number, { product_id: string; quantity: number; unit: string; price: number }>();
+  if (itemIds.length) {
+    const { data: oi } = await supabase
+      .from("order_items")
+      .select("order_item_id, product_id, quantity, unit, price")
+      .in("order_item_id", itemIds);
+    (oi ?? []).forEach((i) => itemsById.set(i.order_item_id, i));
+  }
+  const productIds = [...new Set([...itemsById.values()].map((i) => i.product_id))];
+  const productNames = await resolveProductNames(productIds);
+
+  const result = (deliveries ?? [])
+    .filter((d) => ordersById.get(d.order_id)?.shop_id === shopId)
+    .map((d) => {
+      const orderItems = ((d.delivery_items as Array<{ order_item_id: number; delivered_qty: number; returned_qty: number }>) ?? []).map((di) => {
+        const oi = itemsById.get(di.order_item_id);
+        return {
+          product_id: oi?.product_id,
+          product_name: oi ? productNames.get(oi.product_id) ?? oi.product_id : null,
+          quantity: Number(di.delivered_qty),
+          unit: oi?.unit,
+          price: oi ? Number(oi.price) : 0,
+          returned_qty: Number(di.returned_qty),
+        };
+      });
+      return {
+        delivery_id: d.delivery_id,
+        order_id: d.order_id,
+        delivery_date: d.delivery_date,
+        delivery_slot: d.delivery_slot,
+        vehicle_no: d.vehicle_no,
+        delivery_person: d.delivery_person,
+        status: d.status,
+        notes: d.notes,
+        total_amount: Number(ordersById.get(d.order_id)?.total_amount ?? 0),
+        items: orderItems,
+      };
+    });
+
+  return {
+    shop_id: shopId,
+    shop_name: shop.shop_name,
+    deliveries: result,
+    language_detected: languageDetected ?? null,
+  };
+}
+
+export async function writeTodayNote(
+  shopId: string,
+  noteText: string,
+  opts: {
+    note_type?: string;
+    source?: "AI" | "human";
+    agent_role?: string | null;
+  } = {}
+) {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  if (!noteText?.trim()) throw new VoiceApiError(400, "note_text_required");
+
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("shop_id")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  const { data, error } = await supabase
+    .from("today_notes")
+    .insert({
+      shop_id: shopId,
+      note_date: new Date().toISOString().slice(0, 10),
+      note_type: opts.note_type ?? "general",
+      note_text: noteText.trim(),
+      source: opts.source ?? "AI",
+      agent_role: opts.agent_role ?? null,
+    })
+    .select()
+    .single();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  return {
+    note_id: data.note_id,
+    shop_id: data.shop_id,
+    note_date: data.note_date,
+    note_type: data.note_type,
+    note_text: data.note_text,
+    source: data.source,
+    agent_role: data.agent_role,
+    created_at: data.created_at,
+  };
+}
+
+export async function getTodayDetails(shopId: string) {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("shop_id, shop_name, owner_name, phone_number")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("order_id, order_date, delivery_date, delivery_slot, total_amount, order_status, confirmed_order, payment_status")
+    .eq("shop_id", shopId)
+    .eq("order_date", today)
+    .order("created_at", { ascending: false });
+
+  const orderIds = (orders ?? []).map((o) => o.order_id);
+  const itemsById = new Map<string, Array<{ product_id: string; quantity: number; unit: string; price: number }>>();
+  if (orderIds.length) {
+    const { data: oi } = await supabase
+      .from("order_items")
+      .select("order_id, product_id, quantity, unit, price")
+      .in("order_id", orderIds);
+    (oi ?? []).forEach((r) => {
+      const list = itemsById.get(r.order_id) ?? [];
+      list.push({ product_id: r.product_id, quantity: r.quantity, unit: r.unit, price: Number(r.price) });
+      itemsById.set(r.order_id, list);
+    });
+  }
+  const productIds = [...new Set([...itemsById.values()].flatMap((list) => list.map((i) => i.product_id)))];
+  const names = await resolveProductNames(productIds);
+
+  const { data: notes } = await supabase
+    .from("today_notes")
+    .select("note_id, note_type, note_text, source, agent_role, created_at, note_date")
+    .eq("shop_id", shopId)
+    .eq("note_date", today)
+    .order("created_at", { ascending: false });
+
+  interface DeliveryRow {
+    delivery_id: number;
+    order_id: string;
+    delivery_date: string | null;
+    delivery_slot: string | null;
+    vehicle_no: string | null;
+    delivery_person: string | null;
+    status: string;
+    notes: string | null;
+  }
+  let deliveryRows: DeliveryRow[] = [];
+  if (orderIds.length) {
+    const { data } = await supabase
+      .from("deliveries")
+      .select("delivery_id, order_id, delivery_date, delivery_slot, vehicle_no, delivery_person, status, notes")
+      .in("order_id", orderIds);
+    deliveryRows = (data ?? []) as unknown as DeliveryRow[];
+  }
+  const deliveriesByOrder = new Map<string, DeliveryRow[]>();
+  deliveryRows.forEach((d) => {
+    if (!deliveriesByOrder.has(d.order_id)) deliveriesByOrder.set(d.order_id, []);
+    deliveriesByOrder.get(d.order_id)!.push(d);
+  });
+
+  return {
+    shop_id: shopId,
+    shop_name: shop.shop_name,
+    owner_name: shop.owner_name,
+    date: today,
+    orders: (orders ?? []).map((o) => ({
+      order_id: o.order_id,
+      delivery_date: o.delivery_date,
+      delivery_slot: o.delivery_slot,
+      total_amount: Number(o.total_amount),
+      order_status: o.order_status,
+      confirmed_order: o.confirmed_order,
+      payment_status: o.payment_status,
+      items: (itemsById.get(o.order_id) ?? []).map((i) => ({
+        product_id: i.product_id,
+        product_name: names.get(i.product_id) ?? i.product_id,
+        quantity: i.quantity,
+        unit: i.unit,
+        price: i.price,
+      })),
+      deliveries: (deliveriesByOrder.get(o.order_id) ?? []).map((d) => ({
+        delivery_id: d.delivery_id,
+        delivery_date: d.delivery_date,
+        delivery_slot: d.delivery_slot,
+        vehicle_no: d.vehicle_no,
+        delivery_person: d.delivery_person,
+        status: d.status,
+        notes: d.notes,
+      })),
+    })),
+    notes: (notes ?? []).map((n) => ({
+      note_id: n.note_id,
+      note_type: n.note_type,
+      note_text: n.note_text,
+      source: n.source,
+      agent_role: n.agent_role,
+      created_at: n.created_at,
+    })),
+  };
 }
