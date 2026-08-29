@@ -111,6 +111,9 @@ export interface Order {
   credit_used: number;
   payment_status: PaymentStatus;
   order_status: OrderStatus;
+  confirmed_order: boolean;
+  credit_checked: boolean;
+  pending_reason: string | null;
   created_by: string;
   created_at: string;
 }

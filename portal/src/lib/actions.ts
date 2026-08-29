@@ -383,11 +383,42 @@ export async function confirmOrder(
       }
     }
 
-    // Update status to confirmed
+    // Reserve→confirm: decrement inventory and record stock movements so the
+    // order is not sold twice. Only runs on the human-triggered final confirm.
+    for (const item of order.order_items) {
+      const { data: inv } = await supabaseAdmin
+        .from("inventory")
+        .select("available_qty, reserved_qty")
+        .eq("product_id", item.product_id)
+        .single();
+
+      if (inv) {
+        const newAvailable = Math.max(Number(inv.available_qty) - Number(item.quantity), 0);
+        const newReserved = Math.max(Number(inv.reserved_qty) - Number(item.quantity), 0);
+        await supabaseAdmin
+          .from("inventory")
+          .update({ available_qty: newAvailable, reserved_qty: newReserved })
+          .eq("product_id", item.product_id);
+
+        await supabaseAdmin.from("stock_movements").insert({
+          product_id: item.product_id,
+          change_qty: -Number(item.quantity),
+          reason: "order_confirmation",
+          reference_id: orderId,
+          reference_type: "order",
+          performed_by: changedBy,
+        });
+      }
+    }
+
+    // Update status to confirmed + mark as a real (non-pending) order
     const { data, error } = await supabaseAdmin
       .from("orders")
       .update({
         order_status: "confirmed",
+        confirmed_order: true,
+        credit_checked: true,
+        pending_reason: null,
         created_by: changedBy,
       })
       .eq("order_id", orderId)
@@ -395,7 +426,20 @@ export async function confirmOrder(
       .single();
 
     if (error) throw error;
+
+    // Send order-confirmation WhatsApp to the shop owner
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/whatsapp/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shop_id: order.shop_id, order_id: orderId }),
+      });
+    } catch {
+      // non-fatal — confirmation already persisted
+    }
+
     revalidateOrder(orderId);
+    revalidateShop(order.shop_id);
     return { success: true, data };
   } catch (err) {
     return handleError(err, "confirmOrder");

@@ -32,6 +32,7 @@ const statusOptions = [
 
 export function OrdersClient({ orders: initialOrders, shops, products }: OrdersClientProps) {
   const [orders, setOrders] = useState<OrderDetail[]>(initialOrders);
+  const [viewMode, setViewMode] = useState<"all" | "pending" | "today">("all");
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
@@ -43,7 +44,17 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
   });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-  const filteredOrders = orders.filter((o) => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const pendingOrders = orders.filter((o) => o.confirmed_order === false);
+  const todayOrders = orders.filter((o) => o.confirmed_order === true && o.order_date === today);
+
+  const visibleOrders =
+    viewMode === "pending" ? pendingOrders :
+    viewMode === "today" ? todayOrders :
+    orders;
+
+  const filteredOrders = visibleOrders.filter((o) => {
     const matchesStatus = !statusFilter || o.order_status === statusFilter;
     const matchesSearch = !searchQuery ||
       o.order_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -222,15 +233,45 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
         }
       />
 
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setViewMode("all")}
+          className={cn(
+            "px-3 py-1.5 rounded-md text-sm font-medium border",
+            viewMode === "all" ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50"
+          )}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setViewMode("pending")}
+          className={cn(
+            "px-3 py-1.5 rounded-md text-sm font-medium border",
+            viewMode === "pending" ? "bg-amber-500 text-white border-amber-500" : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50"
+          )}
+        >
+          Pending ({pendingOrders.length})
+        </button>
+        <button
+          onClick={() => setViewMode("today")}
+          className={cn(
+            "px-3 py-1.5 rounded-md text-sm font-medium border",
+            viewMode === "today" ? "bg-sky-600 text-white border-sky-600" : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50"
+          )}
+        >
+          Today's Orders ({todayOrders.length})
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Total orders" value={orders.length} />
         <Stat label="Order value" value={formatINR(totalValue)} />
         <Stat
-          label="Active"
-          value={active.length}
-          valueTone={active.length > 0 ? "text-amber-600" : "text-zinc-900"}
+          label="Pending"
+          value={pendingOrders.length}
+          valueTone={pendingOrders.length > 0 ? "text-amber-600" : "text-zinc-900"}
         />
-        <Stat label="Delivered" value={history.length} />
+        <Stat label="Confirmed today" value={todayOrders.length} valueTone="text-sky-600" />
       </div>
 
       <Card>
@@ -308,6 +349,15 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
               { key: "order_status", header: "Status", className: "w-40",
                 render: (order) => <StatusBadge status={order.order_status} />
               },
+              { key: "pending_reason", header: "Reason", className: "w-40",
+                render: (order) => order.confirmed_order === false && order.pending_reason ? (
+                  <Badge tone={order.pending_reason === "over_credit" ? "amber" : "sky"}>
+                    {order.pending_reason === "over_credit" ? "Over credit limit" : order.pending_reason}
+                  </Badge>
+                ) : (
+                  <span className="text-zinc-400">—</span>
+                )
+              },
               { key: "payment_status", header: "Payment", className: "w-32",
                 render: (order) => <StatusBadge status={order.payment_status} />
               },
@@ -322,19 +372,13 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
             keyExtractor={(order) => order.order_id}
             rowActions={(order) => (
               <div className="flex items-center gap-1">
-                {order.order_status === "draft" && (
+                {order.confirmed_order === false && order.order_status !== "cancelled" && (
                   <>
                     <Button variant="ghost" size="sm" onClick={() => handleConfirmOrder(order.order_id)} disabled={loadingAction === `confirm-${order.order_id}`}>Confirm</Button>
                     <Button variant="ghost" size="sm" onClick={() => handleCancelOrder(order.order_id)} disabled={loadingAction === `cancel-${order.order_id}`}>Cancel</Button>
                   </>
                 )}
-                {order.order_status === "awaiting_confirmation" && (
-                  <>
-                    <Button variant="ghost" size="sm" onClick={() => handleConfirmOrder(order.order_id)} disabled={loadingAction === `confirm-${order.order_id}`}>Confirm</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleCancelOrder(order.order_id)} disabled={loadingAction === `cancel-${order.order_id}`}>Cancel</Button>
-                  </>
-                )}
-                {order.order_status === "confirmed" && (
+                {order.confirmed_order === true && order.order_status === "confirmed" && (
                   <>
                     <Button variant="ghost" size="sm" onClick={() => openScheduleDelivery(order.order_id)} disabled={loadingAction === `schedule-${order.order_id}`}>Schedule</Button>
                     <Button variant="ghost" size="sm" onClick={() => handleCancelOrder(order.order_id)} disabled={loadingAction === `cancel-${order.order_id}`}>Cancel</Button>
