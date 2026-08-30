@@ -688,19 +688,40 @@ export async function saveComplaint(
   const type = normalizeComplaintType(complaintType);
   if (!type) throw new VoiceApiError(400, "complaint_type_required");
 
-  const { data, error } = await supabase
-    .from("complaints")
-    .insert({
-      shop_id: shopId,
-      complaint_type: type,
-      description: description?.trim() || null,
-      severity: normalizeSeverity(opts.severity),
-      status: "open",
-      callback_requested: opts.callback_requested ?? false,
-    })
-    .select()
-    .single();
-  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  const baseRow = {
+    shop_id: shopId,
+    complaint_type: type,
+    description: description?.trim() || null,
+    severity: normalizeSeverity(opts.severity),
+    status: "open",
+    callback_requested: opts.callback_requested ?? false,
+  };
+
+  const insert = async (row: Record<string, unknown>) => {
+    const { data, error } = await supabase
+      .from("complaints")
+      .insert(row)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  };
+
+  const data: { complaint_id: number; shop_id: string; complaint_type: string; description: string | null; severity: string; status: string } = await insert(baseRow).catch(async (err) => {
+    // Same stale-sequence fallback as returns: if the pkey sequence collides,
+    // insert with the next explicit id so the call never hard-fails.
+    if (String(err?.message || "").includes("complaints_pkey")) {
+      const { data: maxRow } = await supabase
+        .from("complaints")
+        .select("complaint_id")
+        .order("complaint_id", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const next = Number(maxRow?.complaint_id ?? 0) + 1;
+      return insert({ ...baseRow, complaint_id: next });
+    }
+    throw err;
+  });
   return {
     complaint_id: data.complaint_id,
     shop_id: data.shop_id,
@@ -1462,6 +1483,24 @@ export async function applyShopUpdate(
       if (!route) throw new VoiceApiError(400, "invalid_beat");
     }
     update.beat_route_id = patch.beat_route_id || null;
+  }
+
+  if (Object.keys(update).length === 0) {
+    const { data: existing } = await supabase
+      .from("shops")
+      .select("shop_id, shop_name, owner_name, beat_route_id, preferred_language")
+      .eq("shop_id", shopId)
+      .maybeSingle();
+    if (existing) {
+      return {
+        shop_id: existing.shop_id,
+        shop_name: existing.shop_name,
+        owner_name: existing.owner_name,
+        beat_route_id: existing.beat_route_id,
+        preferred_language: existing.preferred_language,
+        confirmed: true,
+      };
+    }
   }
 
   const { data, error } = await supabase
