@@ -661,22 +661,40 @@ export async function saveMemory(
   return data;
 }
 
+function normalizeComplaintType(raw: string): ComplaintType {
+  const v = (raw || "").toLowerCase().replace(/[^a-z]/g, "");
+  if (v.includes("damage") || v.includes("broken") || v.includes("tear") || v.includes("crush")) return "damaged_goods";
+  if (v.includes("wrong") || v.includes("different") || v.includes("notwhat")) return "wrong_order";
+  if (v.includes("late") || v.includes("delay") || v.includes("notreceived") || v.includes("notarrived")) return "late_delivery";
+  if (v.includes("price") || v.includes("cost") || v.includes("expensive") || v.includes("charge")) return "price_issue";
+  return "other";
+}
+
+function normalizeSeverity(raw: string | undefined): Severity {
+  const v = (raw || "").toLowerCase().replace(/[^a-z]/g, "");
+  if (v.includes("crit") || v.includes("sever")) return "critical";
+  if (v.includes("urgent") || v.includes("high") || v.includes("angry")) return "high";
+  if (v.includes("low") || v.includes("minor")) return "low";
+  return "medium";
+}
+
 export async function saveComplaint(
   shopId: string,
-  complaintType: ComplaintType,
+  complaintType: string,
   description: string | null,
   opts: { severity?: Severity; callback_requested?: boolean } = {}
 ) {
   if (!shopId) throw new VoiceApiError(400, "shop_id_required");
-  if (!complaintType) throw new VoiceApiError(400, "complaint_type_required");
+  const type = normalizeComplaintType(complaintType);
+  if (!type) throw new VoiceApiError(400, "complaint_type_required");
 
   const { data, error } = await supabase
     .from("complaints")
     .insert({
       shop_id: shopId,
-      complaint_type: complaintType,
+      complaint_type: type,
       description: description?.trim() || null,
-      severity: opts.severity ?? "medium",
+      severity: normalizeSeverity(opts.severity),
       status: "open",
       callback_requested: opts.callback_requested ?? false,
     })
@@ -875,20 +893,42 @@ export async function createReturn(
 
   const creditNote = product ? Number(product.price) * quantity : 0;
 
-  const { data, error } = await supabase
-    .from("returns")
-    .insert({
-      shop_id: shopId,
-      order_id: orderId ?? null,
-      product_id: productId,
-      quantity,
-      reason: reason?.trim() || null,
-      credit_note_amount: creditNote,
-      status: "requested" as ReturnStatus,
-    })
-    .select()
-    .single();
-  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  const baseRow = {
+    shop_id: shopId,
+    order_id: orderId ?? null,
+    product_id: productId,
+    quantity,
+    reason: reason?.trim() || null,
+    credit_note_amount: creditNote,
+    status: "requested" as ReturnStatus,
+  };
+
+  const insert = async (row: Record<string, unknown>) => {
+    const { data, error } = await supabase
+      .from("returns")
+      .insert(row)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  };
+
+  const data: { return_id: number; status: string } = await insert(baseRow).catch(async (err) => {
+    // Returns table pkey is BIGSERIAL; if a stale/misaligned DB sequence causes
+    // a pkey collision (e.g. rows inserted earlier with explicit ids), fall back
+    // to the next explicit id so the call never hard-fails mid-handoff.
+    if (String(err?.message || "").includes("returns_pkey")) {
+      const { data: maxRow } = await supabase
+        .from("returns")
+        .select("return_id")
+        .order("return_id", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const next = Number(maxRow?.return_id ?? 0) + 1;
+      return insert({ ...baseRow, return_id: next });
+    }
+    throw err;
+  });
 
   return {
     return_id: data.return_id,
