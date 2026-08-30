@@ -124,3 +124,7 @@ supabase/.env
 .husky/_
 *.orig
 *.rej
+
+# --- Playwright automation workspace (holds browser session cookies) ---
+.playwright/
+playwright-report/
