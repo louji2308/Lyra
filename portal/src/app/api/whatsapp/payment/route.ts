@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { buildWhatsAppWaLink } from "@/lib/voice/whatsapp";
 import { LYRA_COLLECTION_UPI_ID } from "@/lib/voice/backend";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +70,7 @@ export async function POST(request: Request) {
       order_id,
       message_preview: message.slice(0, 400),
       whatsapp_number: shop.whatsapp_number,
+      wa_link: buildWhatsAppWaLink(shop.whatsapp_number, message),
       upi_id: LYRA_COLLECTION_UPI_ID,
     });
   } catch (err: unknown) {

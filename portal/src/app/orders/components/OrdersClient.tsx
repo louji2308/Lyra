@@ -161,6 +161,29 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
     }
   };
 
+  const handleSendWhatsApp = async (order: OrderDetail) => {
+    setLoadingAction(`wa-${order.order_id}`);
+    try {
+      const res = await fetch("/api/whatsapp/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: order.order_id,
+          kind: order.confirmed_order === true ? "order" : "payment",
+        }),
+      });
+      const data = await res.json();
+      if (data.wa_link) {
+        window.open(data.wa_link, "_blank");
+      } else {
+        alert(data.error || `No WhatsApp available for ${order.shop_name ?? "this shop"}. Please add a number/consent on the shop.`);
+      }
+    } catch (err) {
+      alert("Could not prepare WhatsApp: " + String(err));
+    }
+    setLoadingAction(null);
+  };
+
   const openScheduleDelivery = (orderId: string) => {
     const date = prompt("Enter delivery date (YYYY-MM-DD):");
     const slot = prompt("Enter delivery slot (e.g., Morning/Afternoon):");
@@ -374,12 +397,14 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
               <div className="flex items-center gap-1">
                 {order.confirmed_order === false && order.order_status !== "cancelled" && (
                   <>
+                    <Button variant="ghost" size="sm" onClick={() => handleSendWhatsApp(order)} disabled={loadingAction === `wa-${order.order_id}`}>WhatsApp</Button>
                     <Button variant="ghost" size="sm" onClick={() => handleConfirmOrder(order.order_id)} disabled={loadingAction === `confirm-${order.order_id}`}>Confirm</Button>
                     <Button variant="ghost" size="sm" onClick={() => handleCancelOrder(order.order_id)} disabled={loadingAction === `cancel-${order.order_id}`}>Cancel</Button>
                   </>
                 )}
                 {order.confirmed_order === true && order.order_status === "confirmed" && (
                   <>
+                    <Button variant="ghost" size="sm" onClick={() => handleSendWhatsApp(order)} disabled={loadingAction === `wa-${order.order_id}`}>WhatsApp</Button>
                     <Button variant="ghost" size="sm" onClick={() => openScheduleDelivery(order.order_id)} disabled={loadingAction === `schedule-${order.order_id}`}>Schedule</Button>
                     <Button variant="ghost" size="sm" onClick={() => handleCancelOrder(order.order_id)} disabled={loadingAction === `cancel-${order.order_id}`}>Cancel</Button>
                   </>

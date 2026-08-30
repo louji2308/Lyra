@@ -15,6 +15,17 @@ export interface WhatsAppPayload {
   data: Record<string, unknown>;
 }
 
+// Build a wa.me deep link (tap-to-send) for a WhatsApp number + pre-filled text.
+// Free, no provider, works with any WhatsApp number — used until a paid sender
+// (Twilio / Meta Cloud API) is wired in. Numbers are assumed Indian (+91).
+export function buildWhatsAppWaLink(to: string, message: string): string {
+  let digits = (to || "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("0")) digits = "91" + digits.slice(1);
+  if (!digits.startsWith("91")) digits = "91" + digits;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}
+
 export interface OrderConfirmationData {
   shop_name: string;
   order_id: string;

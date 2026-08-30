@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { formatOrderConfirmation, type OrderConfirmationData } from "@/lib/voice/whatsapp";
+import { buildWhatsAppWaLink, formatOrderConfirmation, type OrderConfirmationData } from "@/lib/voice/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +74,7 @@ export async function POST(request: Request) {
       order_id,
       message_preview: message.slice(0, 300),
       whatsapp_number: shop.whatsapp_number,
+      wa_link: buildWhatsAppWaLink(shop.whatsapp_number, message),
     });
   } catch (err: unknown) {
     console.error("[whatsapp/confirm] error:", err);

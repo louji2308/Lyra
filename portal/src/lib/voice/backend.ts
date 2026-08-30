@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { buildWhatsAppWaLink } from "@/lib/voice/whatsapp";
 import type {
   AppLanguage,
   ComplaintType,
@@ -789,6 +790,7 @@ export interface SendWhatsAppResult {
   order_id: string;
   whatsapp_sent: boolean;
   message_preview: string;
+  wa_link?: string | null;
   language_detected: AppLanguage | null;
 }
 
@@ -879,6 +881,7 @@ export async function sendWhatsAppSummary(
     order_id: orderId,
     whatsapp_sent: true,
     message_preview: msg.slice(0, 200),
+    wa_link: buildWhatsAppWaLink(shop.whatsapp_number, msg),
     language_detected: null,
   };
 }
@@ -1537,7 +1540,7 @@ export async function listBeats() {
   }));
 }
 
-export async function sendOrderConfirmationWhatsApp(shopId: string, orderId: string): Promise<{ success: boolean; message_preview?: string; error?: string }> {
+export async function sendOrderConfirmationWhatsApp(shopId: string, orderId: string): Promise<{ success: boolean; message_preview?: string; wa_link?: string | null; error?: string }> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/whatsapp/confirm`, {
       method: "POST",
@@ -1545,7 +1548,7 @@ export async function sendOrderConfirmationWhatsApp(shopId: string, orderId: str
       body: JSON.stringify({ shop_id: shopId, order_id: orderId }),
     });
     const data = await res.json();
-    return { success: data.success, message_preview: data.message_preview, error: data.error };
+    return { success: data.success, message_preview: data.message_preview, wa_link: data.wa_link ?? null, error: data.error };
   } catch (err) {
     console.error("[sendOrderConfirmationWhatsApp] error:", err);
     return { success: false, error: String(err) };
@@ -1741,6 +1744,7 @@ export async function confirmOrder(
   order_status: OrderStatus;
   stock_decremented: boolean;
   whatsapp_sent: boolean;
+  wa_link?: string | null;
   error?: string;
   language_detected: AppLanguage | null;
 }> {
@@ -1814,10 +1818,12 @@ export async function confirmOrder(
 
   let whatsapp_sent = false;
   let waError: string | undefined;
+  let waLink: string | null = null;
   if (opts.send_whatsapp !== false) {
     const res = await sendOrderConfirmationWhatsApp(order.shop_id, orderId);
     whatsapp_sent = !!res.success;
     waError = res.error;
+    waLink = res.wa_link ?? null;
   }
 
   return {
@@ -1827,6 +1833,7 @@ export async function confirmOrder(
     order_status: "confirmed",
     stock_decremented: true,
     whatsapp_sent,
+    wa_link: waLink,
     error: waError,
     language_detected: null,
   };
