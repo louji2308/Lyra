@@ -13,6 +13,7 @@ const shortDate = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
   month: "short",
   year: "numeric",
+  timeZone: "Asia/Kolkata",
 });
 
 export function formatDate(
@@ -27,6 +28,7 @@ const shortDateTime = new Intl.DateTimeFormat("en-IN", {
   month: "short",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: "Asia/Kolkata",
 });
 
 export function formatDateTime(
