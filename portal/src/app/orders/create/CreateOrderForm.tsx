@@ -7,7 +7,7 @@ import { PageHeader, Card, CardHeader, Badge } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
 import { FormField, SelectField, NumberInput, TextareaField } from "@/components/ui/FormFields";
 import { cn } from "@/lib/utils";
-import { useState, FormEvent, ChangeEvent } from "react";
+import { useState, FormEvent, ChangeEvent, useEffect } from "react";
 
 export default function CreateOrderFormWrapper() {
   const [shops, setShops] = useState<any[]>([]);
@@ -39,9 +39,10 @@ export default function CreateOrderFormWrapper() {
   };
 
   // Fetch on mount
-  if (typeof window !== "undefined" && shops.length === 0 && !loading) {
+  useEffect(() => {
     fetchData();
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return <div className="animate-pulse space-y-4"><div className="h-8 bg-zinc-200 rounded w-1/4" /><div className="h-64 bg-zinc-200 rounded" /></div>;

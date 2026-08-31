@@ -333,7 +333,7 @@ export function ShopDetailClient({
     <div className="space-y-6">
       <PageHeader
         title={shop.shop_name}
-        subtitle={`${shop.owner_name ?? "\u2014"} \u00b7 {shop.shop_id} \u00b7 {shop.phone_number}`}
+        subtitle={`${shop.owner_name ?? "\u2014"} \u00b7 ${shop.shop_id} \u00b7 ${shop.phone_number}`}
         right={
           <div className="flex flex-wrap gap-1.5">
             <Badge tone="violet">
