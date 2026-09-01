@@ -37,6 +37,15 @@ export function CatalogContent({ products: initialProducts }: CatalogContentProp
     is_active: true,
   });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const q = searchQuery.trim().toLowerCase();
+  const filteredProducts = q
+    ? products.filter((p) =>
+        [p.product_id, p.product_name, p.brand, p.category]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q))
+      )
+    : products;
 
   const handleAddProduct = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -171,8 +180,8 @@ setProductForm({ product_id: "", product_name: "", brand: "", category: "", unit
             <label className="block text-sm font-medium text-zinc-700 mb-1">Search</label>
             <FormField
               placeholder="Search by name, brand, category..."
-              value=""
-              onChange={() => {}}
+              value={searchQuery}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
@@ -206,7 +215,7 @@ setProductForm({ product_id: "", product_name: "", brand: "", category: "", unit
             },
             { key: "is_active", header: "Status", className: "w-20", render: (p) => <Badge tone={p.is_active ? "emerald" : "zinc"}>{p.is_active ? "Active" : "Inactive"}</Badge> },
           ]}
-          data={products}
+          data={filteredProducts}
           keyExtractor={(p) => p.product_id}
           rowActions={(p) => (
             <div className="flex items-center gap-1">
