@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent, ChangeEvent } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { FormField, SelectField, NumberInput, TextareaField } from "@/components/ui/FormFields";
@@ -363,7 +364,14 @@ export function OrderDetailClient({ order: initialOrder, shops, products }: Orde
           <CardHeader title="Order Details" />
           <dl className="grid grid-cols-2 gap-x-4 gap-y-4 px-4 py-4">
             <KeyValue label="Order ID" value={order.order_id} />
-            <KeyValue label="Shop" value={order.shop_name ?? "—"} />
+            <KeyValue
+              label="Shop"
+              value={order.shop_id ? (
+                <Link href={`/shops/${order.shop_id}`} className="text-emerald-600 hover:underline">
+                  {order.shop_name ?? order.shop_id}
+                </Link>
+              ) : order.shop_name ?? "—"}
+            />
             <KeyValue label="Order Date" value={formatDate(order.order_date)} />
             <KeyValue label="Delivery Date" value={formatDate(order.delivery_date)} />
             <KeyValue label="Delivery Slot" value={order.delivery_slot ?? "—"} />
