@@ -13,8 +13,18 @@ export const dynamic = "force-dynamic";
 // the confirmation summary; kind="payment" sends the UPI payment request.
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { order_id, kind = "order" } = body;
+    let raw: unknown;
+    try {
+      raw = await request.json();
+    } catch {
+      return Response.json({ error: "invalid_json" }, { status: 400 });
+    }
+    if (typeof raw !== "object" || raw === null) {
+      return Response.json({ error: "invalid_json" }, { status: 400 });
+    }
+    const body = raw as Record<string, unknown>;
+    const order_id = typeof body.order_id === "string" ? body.order_id : undefined;
+    const kind = typeof body.kind === "string" ? body.kind : "order";
     if (!order_id) {
       return Response.json({ error: "order_id_required" }, { status: 400 });
     }
