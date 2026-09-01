@@ -265,9 +265,11 @@ export async function createOrder(input: {
     }
 
     // Create order
+    const orderId = await nextOrderId(supabaseAdmin);
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
       .insert({
+        order_id: orderId,
         shop_id: input.shop_id,
         call_id: input.call_id ?? null,
         total_amount: totalAmount,
@@ -1154,4 +1156,17 @@ export async function clearTodayNote(noteId: number): Promise<ActionResult<void>
   } catch (err) {
     return handleError(err, "clearTodayNote");
   }
+}
+
+async function nextOrderId(client: typeof supabaseAdmin): Promise<string> {
+  const { data, error } = await client.from("orders").select("order_id");
+  if (error) throw error;
+  const max = Math.max(
+    0,
+    ...(data ?? []).map((r) => {
+      const match = String((r as { order_id: string }).order_id).match(/(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+  );
+  return `ORD${String(max + 1).padStart(4, "0")}`;
 }
