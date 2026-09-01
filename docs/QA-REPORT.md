@@ -30,7 +30,7 @@
 | 8 | Low | `/api/whatsapp/preview` | Malformed JSON → **500** instead of 400 | try/catch `request.json()`, `invalid_json` 400 | `4a34707` | Local: all 7 cases correct |
 | 9 | Medium | `/catalog/inventory` | Nav link was a dead route (designed 404) | Built inventory page (stock table low-first, search, admin adjust) | `0e1a237` | Local: 33 SKUs, Low Stock 1, 0 errors |
 | 10 | Low | Order detail | No link back to the shop | Shop name is now a `<Link>` to `/shops/{id}` | `492b645` | Local: link renders + navigates |
-| 11 | Medium | Shop detail route (exposed by #10) | Client-nav to shop rendered blank ~5-8s — **10 serial Supabase queries** in `getShopDetail` | `Promise.all` parallelized all 10 queries | `b77abcc` | Local: warm client-nav ~430ms, content identical |
+| 11 | Medium | Shop detail route (exposed by #10) | Client-nav to shop rendered blank ~5-8s — **10 serial Supabase queries** in `getShopDetail` | `Promise.all` parallelized all 10 queries | `b77abcc` | Local warm ~430ms; **prod 2.0-3.3s (was >5s), verified live** |
 
 ## Addendum — Soft-404 resolution
 
