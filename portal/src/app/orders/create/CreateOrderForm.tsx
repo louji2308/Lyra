@@ -92,6 +92,13 @@ function CreateOrderForm({ shops, products, schemes }: { shops: any[]; products:
   const updateItem = (index: number, field: string, value: any) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
+    if (field === "product_id") {
+      const product = products.find((p: any) => p.product_id === value);
+      if (product) {
+        newItems[index].price = product.price;
+        newItems[index].unit = product.unit_type;
+      }
+    }
     setItems(newItems);
   };
 
@@ -101,90 +108,62 @@ function CreateOrderForm({ shops, products, schemes }: { shops: any[]; products:
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
       <PageHeader
         title="Create Manual Order"
         subtitle="Create a new order for a shop"
         right={<a href="/orders" className="text-sm text-emerald-600 hover:underline">← Back to Orders</a>}
       />
-
-      {error && <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-rose-700">{error}</div>}
-
-      <Card>
-        <CardHeader title="Shop & Details" />
-        <div className="p-4 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField
-              label="Shop"
-              value={shopId}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => setShopId(e.target.value)}
-              required
-              options={shops.map(s => ({ value: s.shop_id, label: `${s.shop_name} (${s.owner_name}) - ${formatINR(s.available_credit)} available` }))}
-              placeholder="Select shop"
-            />
-            <FormField label="Created By" value="MANUAL" disabled />
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <CardHeader
-          title="Order Items"
-          right={
-            <Button type="button" variant="ghost" size="sm" onClick={addItem}>
-              + Add Item
-            </Button>
-          }
+      <input type="hidden" name="shop_id" value={shopId} />
+      <div className="grid gap-3 max-w-2xl">
+        <SelectField
+          label="Shop"
+          value={shopId}
+          onChange={(e: ChangeEvent<HTMLSelectElement>) => setShopId(e.target.value)}
+          required
+          options={shops.map(s => ({ value: s.shop_id, label: `${s.shop_name} (${s.owner_name}) - ${formatINR(s.available_credit)} available` }))}
+          placeholder="Select shop"
         />
-        <div className="p-4 space-y-4">
-          {items.map((item, index) => (
-            <div key={index} className="grid grid-cols-12 gap-3 items-end p-4 bg-zinc-50 rounded-lg">
-              <div className="col-span-12 sm:col-span-4">
-                <SelectField
-                  label="Product"
-                  value={item.product_id}
-                  onChange={(e: ChangeEvent<HTMLSelectElement>) => updateItem(index, "product_id", e.target.value)}
-                  required
-                  options={products.map(p => ({ value: p.product_id, label: `${p.product_name} (${p.unit_type}) - ${formatINR(p.price)}` }))}
-                  placeholder="Select product"
-                />
-              </div>
-              <div className="col-span-12 sm:col-span-2">
-                <NumberInput
-                  label="Quantity"
-                  value={item.quantity}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => updateItem(index, "quantity", parseInt(e.target.value) || 0)}
-                  required
-                  min={1}
-                  step={1}
-                />
-              </div>
-              <div className="col-span-12 sm:col-span-2">
-                <FormField
-                  label="Unit"
-                  value={item.unit}
-                  disabled
-                />
-              </div>
-              <div className="col-span-12 sm:col-span-2">
-                <NumberInput
-                  label="Price"
-                  value={item.price}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => updateItem(index, "price", parseFloat(e.target.value) || 0)}
-                  required
-                  min={0}
-                  step={1}
-                />
-              </div>
-              <div className="col-span-12 sm:col-span-2">
-                <Button type="button" variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700 w-full" onClick={() => removeItem(index)}>
-                  Remove
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+      </div>
+
+      {items.map((item, index) => (
+        <Card key={index}>
+          <CardHeader
+            title={`Item ${index + 1}`}
+            right={items.length > 1 ? (
+              <Button type="button" variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700" onClick={() => removeItem(index)}>
+                Remove
+              </Button>
+            ) : undefined}
+          />
+          <div className="p-4 grid gap-3 sm:grid-cols-4">
+            <SelectField
+              label="Product"
+              value={item.product_id}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => updateItem(index, "product_id", e.target.value)}
+              required
+              options={products.map(p => ({ value: p.product_id, label: `${p.product_name} (${p.unit_type}) - ${formatINR(p.price)}` }))}
+              placeholder="Select product"
+            />
+            <NumberInput
+              label="Quantity"
+              value={item.quantity}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => updateItem(index, "quantity", parseInt(e.target.value) || 0)}
+              required
+              min={1}
+              step={1}
+            />
+            <FormField label="Unit" value={item.unit} disabled />
+            <FormField label="Line Total" value={formatINR(item.price * item.quantity)} />
+          </div>
+        </Card>
+      ))}
+
+      <div className="flex justify-end">
+        <Button type="button" variant="ghost" size="sm" onClick={addItem}>
+          + Add Item
+        </Button>
+      </div>
 
       <Card>
         <CardHeader title="Notes" />
@@ -193,12 +172,14 @@ function CreateOrderForm({ shops, products, schemes }: { shops: any[]; products:
         </div>
       </Card>
 
+      {error && <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-rose-700">{error}</div>}
+
       <div className="flex justify-end gap-3">
         <a href="/orders" className="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900">Cancel</a>
         <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={submitting}>
           {submitting ? "Creating..." : "Create Order"}
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
