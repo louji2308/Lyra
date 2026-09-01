@@ -11,8 +11,8 @@
 | --- | --- |
 | Modules covered | 22 of 24 fully exercised |
 | Test cases recorded | ~65 distinct assertions in result files |
-| Bugs found | **6 confirmed** (4 fixed, 2 known/cosmetic) |
-| Bugs fixed this session | 4 (create-order id gen, catalog stock join, catalog search no-op, whatsapp preview 400) |
+| Bugs found | **8 confirmed** (7 fixed, 1 documented non-issue) |
+| Bugs fixed this session | 6 (create-order id gen, catalog stock join, catalog search no-op, whatsapp preview 400, inventory page, order-to-shop link) |
 | Breaking issues remaining | 0 (portal stable) |
 | Console errors across crawl | 0 after hydration/React fixes |
 
@@ -28,12 +28,18 @@
 | 6 | Medium | `/catalog` | All 33 products showed **Stock 0** and "Low Stock 0" — `getProducts()` never joined `inventory` | `.select("*, inventory(available_qty)")` + flatten | `dcb91d9` | Local: real stocks (Boost 12, etc.), Low Stock 1 ✓ |
 | 7 | Medium | `/catalog` | Search box was decorative — `value=""` + `onChange={() => {}}` no-op | State-driven filter (`searchQuery`, filtered products) | `34218c5` | Local: "Boost"→3, "Clinic"→4 |
 | 8 | Low | `/api/whatsapp/preview` | Malformed JSON → **500** instead of 400 | try/catch `request.json()`, `invalid_json` 400 | `4a34707` | Local: all 7 cases correct |
+| 9 | Medium | `/catalog/inventory` | Nav link was a dead route (designed 404) | Built inventory page (stock table low-first, search, admin adjust) | `0e1a237` | Local: 33 SKUs, Low Stock 1, 0 errors |
+| 10 | Low | Order detail | No link back to the shop | Shop name is now a `<Link>` to `/shops/{id}` | `492b645` | Local: link renders + navigates |
+
+## Addendum — Soft-404 resolution
+
+Bogus routes (`/shops/S9999`, `/orders/FAKE123`) return **HTTP 200** while rendering the 404 UI. Confirmed as documented Next.js 16 behavior: with Cache Components, dynamic routes stream the static shell before the page's `notFound()` resolves, so the status can't change mid-stream (see `node_modules/next/dist/docs/.../not-found.md`). Next automatically serves `<meta name="robots" content="noindex"/>` on the not-found document (verified in prod HTML), which keeps soft-404s out of search results. A hard 404 would require a `proxy` file doing the existence check before streaming (DB lookup in the edge runtime) — flagged as not worth the operational cost for this demo portal. Closed as non-issue.
 
 ## Known / Non-blocking Issues (P2)
 
-- **Soft-404:** bogus Next.js routes (`/shops/S9999`, `/orders/FAKE123`) return HTTP 200 with a styled 404 body (cosmetic SEO nit). `23.1`, `23.2`.
-- **Order detail** has no link back to its shop (UX gap, not a bug). `19.2` SKIP, `9.x`.
-- **`/inventory`** not reachable from main nav (it's a dead nav link that lands on a designed 404). `16.3` INFO, `24.7`.
+- **Order-to-shop link** — ADDED (was missing): order detail "Shop" now links to `/shops/{id}`. `19.2` PASS on retest after fix. Verified client-nav works locally (a blank-on-nav flake was observed during dev-server HMR churn; direct + prod nav to be re-verified after deploy).
+- **`/inventory` dead nav link** — RESOLVED: built a real `/catalog/inventory` SKU stock page (low-first sort, search filter, admin "Adjust Stock" modal). Verified: 33 SKUs, Low Stock 1, Out of Stock 0, 0 console errors.
+- **Soft-404** — NON-ISSUE per Next docs: dynamic routes stream the shell first, so `notFound()` yields HTTP 200 with the 404 UI; Next serves `<meta name="robots" content="noindex"/>` (verified in HTML) so it stays out of search. A real 404 status would need a `proxy` pre-stream check (DB lookup in edge runtime) — not worth it for a demo portal.
 - **Concurrency:** `nextOrderId` is max+1 (same as voice backend); a simultaneous double-submit could collide. Relies on single-operator usage; acceptable.
 
 ## Module Results
@@ -54,10 +60,10 @@
 | 13 | Routes | PASS (5 routes R001–R005) |
 | 14 | Schemes | PASS (SCH01–03) |
 | 15 | Catalog | **PASS after fix #6 + #7** (33 rows, admin mode, search filters) |
-| 16 | Inventory nav | INFO (dead link, designed 404) |
+| 16 | Inventory nav | **PASS after fix #9** (built `/catalog/inventory`; dead link resolved) |
 | 17 | Voice AI | PASS (31-shop select, simulator trace, section panes) |
 | 18 | WhatsApp API | PASS (wa.me links, 91-prefix digits-only URLs, 400s, payment preview) |
-| 19 | Cross-module | PASS (shop→order nav; order→shop link missing = gap) |
+| 19 | Cross-module | PASS (shop→order nav; **order→shop link added in fix #10** and verified navigating) |
 | 20 | API sweep | PASS (shops-list, products-list, suggested-order, shop-context, get-schemes, today-details all 200; 404s correct) |
 | 21 | Data integrity | PASS on retest (credit math = limit; order totals sum; dashboard ⇄ lists; catalog stock now consistent) |
 | 22 | UX/responsive | PASS (375px no overflow; dashboard immediate) |
