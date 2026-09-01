@@ -356,7 +356,7 @@ export function ShopDetailClient({
         <Stat
           label="Credit available"
           value={formatINR(available)}
-          valueTone={creditExceeded ? "text-rose-600" : "text-zinc-900"}
+          valueTone={creditExceeded ? "text-rose-600" : "text-charcoal"}
           hint={`Limit ${formatINR(shop.credit_limit)}`}
         />
         <Stat
@@ -376,11 +376,11 @@ export function ShopDetailClient({
         <Stat
           label="Blacklisted items"
           value={blacklist.length}
-          valueTone={blacklist.length > 0 ? "text-orange-600" : "text-zinc-900"}
+          valueTone={blacklist.length > 0 ? "text-orange-600" : "text-charcoal"}
         />
       </div>
 
-      <div className="border-b border-zinc-200">
+      <div className="border-b border-border-subtle">
         <nav className="flex gap-1 overflow-x-auto px-4" role="tablist">
           {tabs.map((tab) => (
             <button
@@ -391,8 +391,8 @@ export function ShopDetailClient({
               className={cn(
                 "whitespace-nowrap px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors",
                 activeTab === tab.id
-                  ? "border-emerald-600 text-emerald-600"
-                  : "border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300"
+                  ? "border-charcoal text-charcoal"
+                  : "border-transparent text-charcoal-light/60 hover:text-charcoal hover:border-border-subtle"
               )}
             >
               {tab.label}
@@ -441,16 +441,16 @@ export function ShopDetailClient({
                   <FormField label="GST Number" id="gst_number" value={editForm.gst_number} onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, gst_number: e.target.value })} />
                   <div className="space-y-2 pt-2">
                     <label className="flex items-center gap-2">
-                      <input type="checkbox" checked={editForm.voice_consent ?? false} onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, voice_consent: e.target.checked })} className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500" />
-                      <span className="text-sm text-zinc-700">Voice Consent</span>
+                      <input type="checkbox" checked={editForm.voice_consent ?? false} onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, voice_consent: e.target.checked })} className="h-4 w-4 rounded border-border-subtle text-accent-peach focus:ring-accent-peach/30" />
+                      <span className="text-sm text-charcoal">Voice Consent</span>
                     </label>
                     <label className="flex items-center gap-2">
-                      <input type="checkbox" checked={editForm.whatsapp_consent ?? false} onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, whatsapp_consent: e.target.checked })} className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500" />
-                      <span className="text-sm text-zinc-700">WhatsApp Consent</span>
+                      <input type="checkbox" checked={editForm.whatsapp_consent ?? false} onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, whatsapp_consent: e.target.checked })} className="h-4 w-4 rounded border-border-subtle text-accent-peach focus:ring-accent-peach/30" />
+                      <span className="text-sm text-charcoal">WhatsApp Consent</span>
                     </label>
                     <label className="flex items-center gap-2">
-                      <input type="checkbox" checked={editForm.opt_out ?? false} onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, opt_out: e.target.checked })} className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500" />
-                      <span className="text-sm text-zinc-700">Opt Out</span>
+                      <input type="checkbox" checked={editForm.opt_out ?? false} onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, opt_out: e.target.checked })} className="h-4 w-4 rounded border-border-subtle text-accent-peach focus:ring-accent-peach/30" />
+                      <span className="text-sm text-charcoal">Opt Out</span>
                     </label>
                   </div>
                 </div>
@@ -458,15 +458,15 @@ export function ShopDetailClient({
                 <div className="px-4 py-4">
                   <div className="flex items-end justify-between">
                     <div>
-                      <p className="text-3xl font-bold tracking-tight text-zinc-900">{formatINR(available)}</p>
-                      <p className="mt-1 text-sm text-zinc-500">available of {formatINR(shop.credit_limit)}</p>
+                      <p className="text-3xl font-bold tracking-tight text-charcoal">{formatINR(available)}</p>
+                      <p className="mt-1 text-sm text-charcoal-light/60">available of {formatINR(shop.credit_limit)}</p>
                     </div>
                     <div className="text-right text-sm">
-                      <p className="font-medium text-zinc-900">{formatINR(shop.outstanding_balance)}</p>
-                      <p className="text-zinc-500">outstanding</p>
+                      <p className="font-medium text-charcoal">{formatINR(shop.outstanding_balance)}</p>
+                      <p className="text-charcoal-light/60">outstanding</p>
                     </div>
                   </div>
-                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-100">
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-charcoal/5">
                     <div className={cn("h-full rounded-full", creditExceeded ? "bg-rose-500" : creditPct < 0.25 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${creditPct * 100}%` }} />
                   </div>
                   {creditExceeded && (
@@ -497,7 +497,7 @@ export function ShopDetailClient({
         {activeTab === "phones" && (
           <Card>
             <CardHeader title="Phone numbers" subtitle="Numbers the AI can use to identify this shop" />
-            <div className="px-4 py-4 border-t border-zinc-100">
+            <div className="px-4 py-4 border-t border-border-subtle">
               <form onSubmit={handleAddShopPhone} className="flex flex-wrap items-end gap-3">
                 <div className="flex-1 min-w-[200px]">
                   <FormField
@@ -526,13 +526,13 @@ export function ShopDetailClient({
                 <EmptyState title="No numbers on record" body="Add a number so the AI can identify this shop by phone." />
               </div>
             ) : (
-              <ul className="divide-y divide-zinc-100 border-t border-zinc-100">
+              <ul className="divide-y divide-zinc-100 border-t border-border-subtle">
                 {phones.map((p) => (
                   <li key={p.phone_id} className="px-4 py-3 flex items-center justify-between">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-sm font-medium text-zinc-900">{p.phone_number}</span>
+                      <span className="font-mono text-sm font-medium text-charcoal">{p.phone_number}</span>
                       {p.is_primary && <Badge tone="emerald">Primary</Badge>}
-                      {p.label && <span className="text-sm text-zinc-500">{p.label}</span>}
+                      {p.label && <span className="text-sm text-charcoal-light/60">{p.label}</span>}
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => handleRemoveShopPhone(p.phone_id)} disabled={loadingAction === "remove-phone"}>Remove</Button>
                   </li>
@@ -546,7 +546,7 @@ export function ShopDetailClient({
         {activeTab === "today" && (
           <Card>
             <CardHeader title="Today's details" subtitle="Notes from today's calls and confirmed orders" />
-            <div className="px-4 py-4 border-t border-zinc-100">
+            <div className="px-4 py-4 border-t border-border-subtle">
               <form onSubmit={handleWriteTodayNote} className="space-y-3">
                 <div className="flex flex-wrap items-end gap-3">
                   <div className="w-44">
@@ -585,17 +585,17 @@ export function ShopDetailClient({
                 <EmptyState title="No notes today" body="Calls and notes recorded against this shop today will appear here." />
               </div>
             ) : (
-              <ul className="divide-y divide-zinc-100 border-t border-zinc-100">
+              <ul className="divide-y divide-zinc-100 border-t border-border-subtle">
                 {todayNotes.map((n) => (
                   <li key={n.note_id} className="px-4 py-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge tone="violet">{n.note_type}</Badge>
-                          <span className="text-xs text-zinc-400">{formatTime(n.created_at)}</span>
-                          {n.agent_role && <span className="text-xs text-zinc-400">by {n.agent_role}</span>}
+                          <span className="text-xs text-charcoal-light/40">{formatTime(n.created_at)}</span>
+                          {n.agent_role && <span className="text-xs text-charcoal-light/40">by {n.agent_role}</span>}
                         </div>
-                        <p className="mt-1 text-sm text-zinc-800">{n.note_text}</p>
+                        <p className="mt-1 text-sm text-charcoal">{n.note_text}</p>
                       </div>
                       <Button variant="ghost" size="sm" onClick={() => handleClearTodayNote(n.note_id)} disabled={loadingAction === "clear-note"}>Clear</Button>
                     </div>
@@ -613,19 +613,19 @@ export function ShopDetailClient({
             <div className="px-4 py-4">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-zinc-900">{formatINR(available)}</p>
-                  <p className="text-sm text-zinc-500">Available of {formatINR(shop.credit_limit)} | Limit: {formatINR(shop.credit_limit)}</p>
+                  <p className="text-2xl font-bold text-charcoal">{formatINR(available)}</p>
+                  <p className="text-sm text-charcoal-light/60">Available of {formatINR(shop.credit_limit)} | Limit: {formatINR(shop.credit_limit)}</p>
                 </div>
                 <div className="text-right text-sm">
-                  <p className="font-medium text-zinc-900">{formatINR(shop.outstanding_balance)}</p>
-                  <p className="text-zinc-500">Outstanding</p>
+                  <p className="font-medium text-charcoal">{formatINR(shop.outstanding_balance)}</p>
+                  <p className="text-charcoal-light/60">Outstanding</p>
                 </div>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
+              <div className="h-2 overflow-hidden rounded-full bg-charcoal/5">
                 <div className={cn("h-full rounded-full", creditExceeded ? "bg-rose-500" : creditPct < 0.25 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${creditPct * 100}%` }} />
               </div>
             </div>
-            <div className="border-t border-zinc-100">
+            <div className="border-t border-border-subtle">
               <DataTable<ShopPaymentLedger>
                 columns={[
                   { key: "collected_at", header: "Date", render: (row) => formatDate(row.collected_at) },
@@ -643,10 +643,10 @@ export function ShopDetailClient({
             </div>
 
             {paymentModal.isOpen ? (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setPaymentModal({ isOpen: false, form: {} })}>
-                <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-                  <h3 className="text-lg font-semibold text-gray-900">Record Payment for {shop.shop_name}</h3>
-                  <p className="mt-1 text-sm text-zinc-500">Outstanding: {formatINR(shop.outstanding_balance)} | Available Credit: {formatINR(available)}</p>
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/20 backdrop-blur-sm" onClick={() => setPaymentModal({ isOpen: false, form: {} })}>
+                <div className="w-full max-w-md glass-strong rounded-2xl p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+                  <h3 className="text-lg font-semibold text-charcoal">Record Payment for {shop.shop_name}</h3>
+                  <p className="mt-1 text-sm text-charcoal-light/60">Outstanding: {formatINR(shop.outstanding_balance)} | Available Credit: {formatINR(available)}</p>
                   <form onSubmit={handlePaymentSubmit} className="mt-4 space-y-4">
                     <NumberInput label="Amount" id="payment_amount" value={paymentModal.form.amount} onChange={(e: ChangeEvent<HTMLInputElement>) => setPaymentModal({ ...paymentModal, form: { ...paymentModal.form, amount: e.target.value } })} required min={1} step={1} />
                     <SelectField label="Method" id="payment_method" value={paymentModal.form.method} onChange={(e: ChangeEvent<HTMLSelectElement>) => setPaymentModal({ ...paymentModal, form: { ...paymentModal.form, method: e.target.value as any } })} options={methodOptions} />
@@ -681,8 +681,8 @@ export function ShopDetailClient({
                 {blacklist.map((b) => (
                   <li key={b.blacklist_id} className="px-4 py-3 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-zinc-900">{b.product_name}</p>
-                      {b.reason && <p className="mt-0.5 text-sm text-zinc-500">\u201c{b.reason}\u201d</p>}
+                      <p className="text-sm font-medium text-charcoal">{b.product_name}</p>
+                      {b.reason && <p className="mt-0.5 text-sm text-charcoal-light/60">\u201c{b.reason}\u201d</p>}
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => handleRemoveBlacklist(b.product_id)}>Remove</Button>
                   </li>
@@ -713,7 +713,7 @@ export function ShopDetailClient({
                 {memories.map((m) => (
                   <li key={m.memory_id} className="px-4 py-3">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm text-zinc-800">{m.memory_text}</p>
+                      <p className="text-sm text-charcoal">{m.memory_text}</p>
                       <div className="flex items-center gap-2">
                         {m.confirmed_by_user ? (
                           <Badge tone="emerald">Confirmed</Badge>
@@ -726,10 +726,10 @@ export function ShopDetailClient({
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <Badge tone={memoryTypeTone[m.memory_type]}>{memoryTypeLabel[m.memory_type]}</Badge>
                       <div className="flex items-center gap-1.5">
-                        <div className="h-1.5 w-16 overflow-hidden rounded-full bg-zinc-100">
+                        <div className="h-1.5 w-16 overflow-hidden rounded-full bg-charcoal/5">
                           <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.round(m.confidence_score * 100)}%` }} />
                         </div>
-                        <span className="text-xs text-zinc-400">{Math.round(m.confidence_score * 100)}%</span>
+                        <span className="text-xs text-charcoal-light/40">{Math.round(m.confidence_score * 100)}%</span>
                       </div>
                     </div>
                   </li>
@@ -778,7 +778,7 @@ export function ShopDetailClient({
                   <li key={c.complaint_id} className="px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-medium text-zinc-900">{complaintTypeLabel[c.complaint_type]}</span>
+                        <span className="text-sm font-medium text-charcoal">{complaintTypeLabel[c.complaint_type]}</span>
                         <StatusBadge status={c.severity} />
                         <StatusBadge status={c.status} />
                         {c.callback_requested && <Badge tone="rose">Callback</Badge>}
@@ -788,7 +788,7 @@ export function ShopDetailClient({
                         {c.status === "resolved" && <Button variant="ghost" size="sm" onClick={() => handleCloseComplaint(c.complaint_id)}>Close</Button>}
                       </div>
                     </div>
-                    {c.description && <p className="mt-1.5 text-sm text-zinc-500">{c.description}</p>}
+                    {c.description && <p className="mt-1.5 text-sm text-charcoal-light/60">{c.description}</p>}
                   </li>
                 ))}
               </ul>
@@ -810,15 +810,15 @@ export function ShopDetailClient({
                   <li key={r.return_id} className="px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm font-medium text-zinc-900">{r.product_name ?? r.product_id ?? "Item"} \u00d7 {r.quantity}</p>
-                        <p className="text-xs text-zinc-500">Order: {r.order_id ?? "\u2014"}</p>
+                        <p className="text-sm font-medium text-charcoal">{r.product_name ?? r.product_id ?? "Item"} \u00d7 {r.quantity}</p>
+                        <p className="text-xs text-charcoal-light/60">Order: {r.order_id ?? "\u2014"}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={r.status} />
                         <select
                           value={r.status}
                           onChange={(e) => handleUpdateReturnStatus(r.return_id, e.target.value)}
-                          className="text-xs border border-zinc-300 rounded px-2 py-1"
+                          className="text-xs border border-border-subtle rounded px-2 py-1"
                           disabled={loadingAction?.startsWith("return-")}
                         >
                           <option value="requested">Requested</option>
@@ -830,7 +830,7 @@ export function ShopDetailClient({
                         </select>
                       </div>
                     </div>
-                    {r.reason && <p className="mt-1 text-sm text-zinc-500">{complaintTypeLabel[r.reason] ?? r.reason}</p>}
+                    {r.reason && <p className="mt-1 text-sm text-charcoal-light/60">{complaintTypeLabel[r.reason] ?? r.reason}</p>}
                   </li>
                 ))}
               </ul>
@@ -851,7 +851,7 @@ export function ShopDetailClient({
                 {callLogs.map((call) => (
                   <li key={call.call_id} className="px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-zinc-900">{formatDateTime(call.start_time)}</p>
+                      <p className="text-xs font-medium text-charcoal">{formatDateTime(call.start_time)}</p>
                       <div className="flex flex-wrap gap-1">
                         <Badge tone="violet">{languageLabel[call.language_detected ?? "english"]}</Badge>
                         <Badge tone={sentimentTone[call.sentiment]}>{sentimentLabel[call.sentiment]}</Badge>
@@ -859,7 +859,7 @@ export function ShopDetailClient({
                         {call.escalated_to_human && <Badge tone="rose">Escalated</Badge>}
                       </div>
                     </div>
-                    {call.transcript_summary && <p className="mt-1.5 text-sm text-zinc-500">{call.transcript_summary}</p>}
+                    {call.transcript_summary && <p className="mt-1.5 text-sm text-charcoal-light/60">{call.transcript_summary}</p>}
                   </li>
                 ))}
               </ul>
@@ -887,10 +887,10 @@ export function ShopDetailClient({
 
       {/* Payment Modal */}
       {paymentModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setPaymentModal({ isOpen: false, form: {} })}>
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-gray-900">Record Payment for {shop.shop_name}</h3>
-            <p className="mt-1 text-sm text-zinc-500">Outstanding: {formatINR(shop.outstanding_balance)} | Available Credit: {formatINR(available)}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/20 backdrop-blur-sm" onClick={() => setPaymentModal({ isOpen: false, form: {} })}>
+          <div className="w-full max-w-md glass-strong rounded-2xl p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-charcoal">Record Payment for {shop.shop_name}</h3>
+            <p className="mt-1 text-sm text-charcoal-light/60">Outstanding: {formatINR(shop.outstanding_balance)} | Available Credit: {formatINR(available)}</p>
             <form onSubmit={handlePaymentSubmit} className="mt-4 space-y-4">
               <NumberInput label="Amount" id="payment_amount" value={paymentModal.form.amount} onChange={(e: ChangeEvent<HTMLInputElement>) => setPaymentModal({ ...paymentModal, form: { ...paymentModal.form, amount: e.target.value } })} required min={1} step={1} />
               <SelectField label="Method" id="payment_method" value={paymentModal.form.method} onChange={(e: ChangeEvent<HTMLSelectElement>) => setPaymentModal({ ...paymentModal, form: { ...paymentModal.form, method: e.target.value as any } })} options={methodOptions} />

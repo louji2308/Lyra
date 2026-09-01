@@ -32,22 +32,22 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-charcoal-light/40">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <div className={cn("overflow-x-auto rounded-lg border border-gray-200", className)}>
+    <div className={cn("overflow-x-auto rounded-2xl border border-border-subtle glass", className)}>
       <table className="w-full text-sm">
-        <thead className="bg-gray-50">
-          <tr>
+        <thead>
+          <tr className="border-b border-border-subtle">
             {columns.map((col) => (
               <th
                 key={col.key}
                 className={cn(
-                  "px-4 py-3 text-left font-semibold text-gray-900 border-b border-gray-200",
+                  "px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-charcoal-light/50",
                   col.className
                 )}
               >
@@ -55,29 +55,29 @@ export function DataTable<T>({
               </th>
             ))}
             {rowActions && (
-              <th className="px-4 py-3 text-left font-semibold text-gray-900 border-b border-gray-200 w-32">
+              <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-charcoal-light/50 w-32">
                 Actions
               </th>
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-border-subtle">
           {data.map((row, rowIndex) => (
             <tr
               key={keyExtractor(row)}
               className={cn(
                 "transition-colors",
-                striped && rowIndex % 2 === 1 && "bg-gray-50",
-                hoverable && "hover:bg-gray-50"
+                striped && rowIndex % 2 === 1 && "bg-charcoal/[0.02]",
+                hoverable && "hover:bg-charcoal/[0.03]"
               )}
             >
               {columns.map((col) => (
-                <td key={col.key} className={cn("px-4 py-3 text-gray-700", col.className)}>
+                <td key={col.key} className={cn("px-5 py-3.5 text-sm text-charcoal", col.className)}>
                   {col.render ? col.render(row, rowIndex) : String((row as Record<string, unknown>)[col.key] ?? "")}
                 </td>
               ))}
               {rowActions && (
-                <td className="px-4 py-3">
+                <td className="px-5 py-3.5">
                   <div className="flex items-center gap-2">{rowActions(row)}</div>
                 </td>
               )}

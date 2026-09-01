@@ -34,37 +34,37 @@ type StatusVariant =
   | "angry";
 
 const variantStyles: Record<StatusVariant, string> = {
-  draft: "bg-gray-100 text-gray-700",
-  awaiting_confirmation: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  payment_pending: "bg-orange-100 text-orange-800",
-  out_for_delivery: "bg-purple-100 text-purple-800",
-  delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-  exception: "bg-red-100 text-red-800",
-  pending: "bg-yellow-100 text-yellow-800",
-  partial: "bg-orange-100 text-orange-800",
-  paid: "bg-green-100 text-green-800",
-  overdue: "bg-red-100 text-red-800",
-  open: "bg-red-100 text-red-800",
-  resolved: "bg-blue-100 text-blue-800",
-  closed: "bg-gray-100 text-gray-700",
-  requested: "bg-yellow-100 text-yellow-800",
-  photo_received: "bg-blue-100 text-blue-800",
-  approved: "bg-green-100 text-green-800",
-  collected: "bg-purple-100 text-purple-800",
-  credit_issued: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  active: "bg-green-100 text-green-800",
-  inactive: "bg-gray-100 text-gray-700",
-  low: "bg-green-100 text-green-800",
-  medium: "bg-yellow-100 text-yellow-800",
-  high: "bg-orange-100 text-orange-800",
-  critical: "bg-red-100 text-red-800",
-  positive: "bg-green-100 text-green-800",
-  neutral: "bg-gray-100 text-gray-700",
-  negative: "bg-orange-100 text-orange-800",
-  angry: "bg-red-100 text-red-800",
+  draft: "bg-charcoal/5 text-charcoal-light",
+  awaiting_confirmation: "bg-accent-amber/20 text-amber-800",
+  confirmed: "bg-accent-sky/20 text-sky-800",
+  payment_pending: "bg-accent-peach/20 text-orange-800",
+  out_for_delivery: "bg-accent-lavender/20 text-violet-800",
+  delivered: "bg-accent-mint/20 text-emerald-800",
+  cancelled: "bg-accent-rose/20 text-rose-800",
+  exception: "bg-accent-rose/20 text-rose-800",
+  pending: "bg-accent-amber/20 text-amber-800",
+  partial: "bg-accent-peach/20 text-orange-800",
+  paid: "bg-accent-mint/20 text-emerald-800",
+  overdue: "bg-accent-rose/20 text-rose-800",
+  open: "bg-accent-rose/20 text-rose-800",
+  resolved: "bg-accent-sky/20 text-sky-800",
+  closed: "bg-charcoal/5 text-charcoal-light",
+  requested: "bg-accent-amber/20 text-amber-800",
+  photo_received: "bg-accent-sky/20 text-sky-800",
+  approved: "bg-accent-mint/20 text-emerald-800",
+  collected: "bg-accent-lavender/20 text-violet-800",
+  credit_issued: "bg-accent-mint/20 text-emerald-800",
+  rejected: "bg-accent-rose/20 text-rose-800",
+  active: "bg-accent-mint/20 text-emerald-800",
+  inactive: "bg-charcoal/5 text-charcoal-light",
+  low: "bg-accent-mint/20 text-emerald-800",
+  medium: "bg-accent-amber/20 text-amber-800",
+  high: "bg-accent-peach/20 text-orange-800",
+  critical: "bg-accent-rose/20 text-rose-800",
+  positive: "bg-accent-mint/20 text-emerald-800",
+  neutral: "bg-charcoal/5 text-charcoal-light",
+  negative: "bg-accent-peach/20 text-orange-800",
+  angry: "bg-accent-rose/20 text-rose-800",
 };
 
 const variantLabels: Record<StatusVariant, string> = {
@@ -110,10 +110,10 @@ interface StatusBadgeProps {
 export function StatusBadge({ status, className, showIcon = false }: StatusBadgeProps) {
   const variant = status as StatusVariant;
   const label = variantLabels[variant] ?? status;
-  const style = variantStyles[variant] ?? "bg-gray-100 text-gray-700";
+  const style = variantStyles[variant] ?? "bg-charcoal/5 text-charcoal-light";
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium", style, className)}>
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium", style, className)}>
       {showIcon && (
         <span className="relative flex h-1.5 w-1.5">
           <span className="animate-ping absolute inset-0 rounded-full bg-current opacity-75" />

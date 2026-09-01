@@ -45,16 +45,16 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <div className="fixed inset-0 bg-charcoal/20 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md glass-strong rounded-2xl p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-charcoal tracking-tight">{title}</h3>
         {description && (
-          <p className="mt-2 text-sm text-gray-600">{description}</p>
+          <p className="mt-2 text-sm text-subtle">{description}</p>
         )}
         {children && (
           <div className="mt-4">{children}</div>
         )}
-        <div className="mt-4 flex justify-end gap-3">
+        <div className="mt-5 flex justify-end gap-3">
           <Button
             variant="ghost"
             onClick={onClose}

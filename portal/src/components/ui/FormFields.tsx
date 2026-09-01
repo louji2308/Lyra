@@ -13,7 +13,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
   ({ className, label, error, hint, id, ...props }, ref) => (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-900">
+        <label htmlFor={id} className="block text-sm font-medium text-charcoal">
           {label}
         </label>
       )}
@@ -21,11 +21,11 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
         ref={ref}
         id={id}
         className={cn(
-          "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+          "flex h-10 w-full rounded-xl border border-border-subtle bg-white/60 px-3.5 py-2 text-sm text-charcoal placeholder:text-charcoal-light/40",
+          "focus:outline-none focus:ring-2 focus:ring-accent-peach/30 focus:border-accent-peach/50",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "transition-colors",
-          error && "border-red-500 focus:ring-red-500",
+          error && "border-accent-rose/50 focus:ring-accent-rose/30",
           className
         )}
         aria-invalid={error ? "true" : "false"}
@@ -33,12 +33,12 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
         {...props}
       />
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-600" role="alert">
+        <p id={`${id}-error`} className="text-sm text-rose-600" role="alert">
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-sm text-gray-500">
+        <p id={`${id}-hint`} className="text-xs text-charcoal-light/50">
           {hint}
         </p>
       )}
@@ -59,7 +59,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
   ({ className, label, error, hint, id, options, placeholder, ...props }, ref) => (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-900">
+        <label htmlFor={id} className="block text-sm font-medium text-charcoal">
           {label}
         </label>
       )}
@@ -67,11 +67,11 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
         ref={ref}
         id={id}
         className={cn(
-          "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+          "flex h-10 w-full rounded-xl border border-border-subtle bg-white/60 px-3.5 py-2 text-sm text-charcoal",
+          "focus:outline-none focus:ring-2 focus:ring-accent-peach/30 focus:border-accent-peach/50",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "transition-colors",
-          error && "border-red-500 focus:ring-red-500",
+          error && "border-accent-rose/50 focus:ring-accent-rose/30",
           className
         )}
         aria-invalid={error ? "true" : "false"}
@@ -86,12 +86,12 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
         ))}
       </select>
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-600" role="alert">
+        <p id={`${id}-error`} className="text-sm text-rose-600" role="alert">
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-sm text-gray-500">
+        <p id={`${id}-hint`} className="text-xs text-charcoal-light/50">
           {hint}
         </p>
       )}
@@ -110,7 +110,7 @@ export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>
   ({ className, label, error, hint, id, ...props }, ref) => (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-900">
+        <label htmlFor={id} className="block text-sm font-medium text-charcoal">
           {label}
         </label>
       )}
@@ -118,11 +118,11 @@ export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>
         ref={ref}
         id={id}
         className={cn(
-          "flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+          "flex w-full rounded-xl border border-border-subtle bg-white/60 px-3.5 py-2.5 text-sm text-charcoal placeholder:text-charcoal-light/40",
+          "focus:outline-none focus:ring-2 focus:ring-accent-peach/30 focus:border-accent-peach/50",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "transition-colors",
-          error && "border-red-500 focus:ring-red-500",
+          error && "border-accent-rose/50 focus:ring-accent-rose/30",
           className
         )}
         aria-invalid={error ? "true" : "false"}
@@ -130,12 +130,12 @@ export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>
         {...props}
       />
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-600" role="alert">
+        <p id={`${id}-error`} className="text-sm text-rose-600" role="alert">
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-sm text-gray-500">
+        <p id={`${id}-hint`} className="text-xs text-charcoal-light/50">
           {hint}
         </p>
       )}
@@ -157,7 +157,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
   ({ className, label, error, hint, id, min, max, step, ...props }, ref) => (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-900">
+        <label htmlFor={id} className="block text-sm font-medium text-charcoal">
           {label}
         </label>
       )}
@@ -169,11 +169,11 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         max={max}
         step={step}
         className={cn(
-          "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+          "flex h-10 w-full rounded-xl border border-border-subtle bg-white/60 px-3.5 py-2 text-sm text-charcoal placeholder:text-charcoal-light/40",
+          "focus:outline-none focus:ring-2 focus:ring-accent-peach/30 focus:border-accent-peach/50",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "transition-colors",
-          error && "border-red-500 focus:ring-red-500",
+          error && "border-accent-rose/50 focus:ring-accent-rose/30",
           className
         )}
         aria-invalid={error ? "true" : "false"}
@@ -181,12 +181,12 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         {...props}
       />
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-600" role="alert">
+        <p id={`${id}-error`} className="text-sm text-rose-600" role="alert">
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-sm text-gray-500">
+        <p id={`${id}-hint`} className="text-xs text-charcoal-light/50">
           {hint}
         </p>
       )}

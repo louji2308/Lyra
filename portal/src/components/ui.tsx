@@ -10,7 +10,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-xl border border-zinc-200 bg-white shadow-sm ${className}`}
+      className={`glass rounded-2xl shadow-sm ${className}`}
     >
       {children}
     </div>
@@ -27,10 +27,10 @@ export function CardHeader({
   right?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-2 border-b border-zinc-100 px-4 py-3">
+    <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-5 py-4">
       <div>
-        <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
-        {subtitle && <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>}
+        <h3 className="text-sm font-semibold text-charcoal tracking-tight">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-xs text-charcoal-light/60">{subtitle}</p>}
       </div>
       {right}
     </div>
@@ -39,14 +39,14 @@ export function CardHeader({
 
 const badgeStyles: Record<string, string> = {
   emerald:
-    "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-  sky: "bg-sky-50 text-sky-700 ring-sky-600/20",
-  amber: "bg-amber-50 text-amber-700 ring-amber-600/20",
-  orange: "bg-orange-50 text-orange-700 ring-orange-600/20",
-  rose: "bg-rose-50 text-rose-700 ring-rose-600/20",
-  zinc: "bg-zinc-100 text-zinc-600 ring-zinc-500/20",
-  violet: "bg-violet-50 text-violet-700 ring-violet-600/20",
-  indigo: "bg-indigo-50 text-indigo-700 ring-indigo-600/20",
+    "bg-accent-mint/20 text-emerald-800 ring-accent-mint/30",
+  sky: "bg-accent-sky/20 text-sky-800 ring-accent-sky/30",
+  amber: "bg-accent-amber/20 text-amber-800 ring-accent-amber/30",
+  orange: "bg-orange-100 text-orange-800 ring-orange-200",
+  rose: "bg-accent-rose/20 text-rose-800 ring-accent-rose/30",
+  zinc: "bg-charcoal/5 text-charcoal-light ring-charcoal/10",
+  violet: "bg-accent-lavender/20 text-violet-800 ring-accent-lavender/30",
+  indigo: "bg-indigo-100 text-indigo-800 ring-indigo-200",
 };
 
 export function Badge({
@@ -58,7 +58,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${badgeStyles[tone]}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${badgeStyles[tone]}`}
     >
       {children}
     </span>
@@ -69,7 +69,7 @@ export function Stat({
   label,
   value,
   hint,
-  valueTone = "text-zinc-900",
+  valueTone = "text-charcoal",
 }: {
   label: string;
   value: ReactNode;
@@ -77,14 +77,14 @@ export function Stat({
   valueTone?: string;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+    <div className="glass rounded-2xl p-5">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-charcoal-light/50">
         {label}
       </p>
-      <p className={`mt-1.5 text-2xl font-semibold tracking-tight ${valueTone}`}>
+      <p className={`mt-2 text-2xl font-bold tracking-tight ${valueTone}`}>
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-zinc-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-charcoal-light/50">{hint}</p>}
     </div>
   );
 }
@@ -99,12 +99,12 @@ export function PageHeader({
   right?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+        <h1 className="heading-section">
           {title}
         </h1>
-        {subtitle && <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>}
+        {subtitle && <p className="mt-1.5 text-sm text-subtle">{subtitle}</p>}
       </div>
       {right}
     </div>
@@ -121,24 +121,24 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-400">
-        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border-medium bg-white/40 px-6 py-14 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-charcoal/5 text-charcoal-light/40">
+        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 8v13H3V8" />
           <path d="M1 3h22v5H1z" />
           <path d="M10 12h4" />
         </svg>
       </div>
-      <h3 className="mt-3 text-sm font-semibold text-zinc-900">{title}</h3>
-      {body && <p className="mt-1 max-w-sm text-sm text-zinc-500">{body}</p>}
-      {action && <div className="mt-4">{action}</div>}
+      <h3 className="mt-4 text-sm font-semibold text-charcoal">{title}</h3>
+      {body && <p className="mt-1.5 max-w-sm text-sm text-subtle">{body}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }
 
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded-lg bg-zinc-200/70 ${className}`} />
+    <div className={`animate-pulse rounded-xl bg-charcoal/5 ${className}`} />
   );
 }
 
@@ -148,7 +148,7 @@ export function SectionLabel({
   children: ReactNode;
 }) {
   return (
-    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+    <p className="text-[11px] font-semibold uppercase tracking-wider text-charcoal-light/40">
       {children}
     </p>
   );
@@ -163,10 +163,10 @@ export function KeyValue({
 }) {
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+      <dt className="text-[11px] font-medium uppercase tracking-wider text-charcoal-light/40">
         {label}
       </dt>
-      <dd className="mt-0.5 text-sm font-medium text-zinc-900">{value}</dd>
+      <dd className="mt-1 text-sm font-medium text-charcoal">{value}</dd>
     </div>
   );
 }
@@ -175,7 +175,7 @@ export function BackLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:text-emerald-800"
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-charcoal-light hover:text-charcoal transition-colors"
     >
       <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="m15 18-6-6 6-6" />

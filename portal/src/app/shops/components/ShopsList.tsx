@@ -233,7 +233,7 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
                       <a href={"/shops/" + shop.shop_id} className="font-semibold text-emerald-700 hover:text-emerald-800 hover:underline">
                         {shop.shop_name}
                       </a>
-                      <p className="mt-0.5 text-xs text-zinc-500">
+                      <p className="mt-0.5 text-xs text-charcoal-light/60">
                         {shop.owner_name ?? "—"} · {shop.shop_id}
                       </p>
                     </div>
@@ -249,17 +249,17 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
                     return (
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-zinc-900">{formatINR(enriched.available_credit)}</span>
+                          <span className="font-medium text-charcoal">{formatINR(enriched.available_credit)}</span>
                           {enriched.credit_exceeded && <Badge tone="rose">Over limit</Badge>}
                         </div>
                         <div className="mt-1.5 flex items-center gap-2">
-                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-zinc-100">
+                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-charcoal/5">
                             <div
                               className={cn("h-full rounded-full", barColor)}
                               style={{ width: (enriched.creditPct * 100) + "%" }}
                             />
                           </div>
-                          <span className="text-xs text-zinc-400">{formatINR(shop.outstanding_balance)} owed</span>
+                          <span className="text-xs text-charcoal-light/40">{formatINR(shop.outstanding_balance)} owed</span>
                         </div>
                       </div>
                     );
@@ -270,7 +270,7 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
                     const enriched = enrichedShops.find(s => s.shop_id === shop.shop_id)!;
                     return (
                       <div>
-                        <span className="text-zinc-600">{formatDate(shop.last_order_date)}</span>
+                        <span className="text-charcoal-light/70">{formatDate(shop.last_order_date)}</span>
                         {enriched.visitOverdue && (
                           <p className="mt-0.5 text-xs font-medium text-amber-600">
                             {daysSince(shop.last_order_date)} days ago
@@ -281,12 +281,12 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
                   }
                 },
                 { key: "order_count", header: "Orders", className: "w-20",
-                  render: (shop) => <span className="text-zinc-600">{shop.order_count}</span>
+                  render: (shop) => <span className="text-charcoal-light/70">{shop.order_count}</span>
                 },
                 { key: "blacklist_count", header: "Blacklist", className: "w-32",
                   render: (shop) => shop.blacklist_count > 0 ? (
                     <Badge tone="orange">{shop.blacklist_count} item{shop.blacklist_count > 1 ? "s" : ""}</Badge>
-                  ) : <span className="text-zinc-400">\u2014</span>
+                  ) : <span className="text-charcoal-light/40">\u2014</span>
                 },
                 { key: "flags", header: "Flags", className: "w-40",
                   render: (shop) => {
@@ -295,7 +295,7 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
                       <div className="flex flex-wrap gap-1">
                         {enriched.visitOverdue && <Badge tone="amber">Visit due</Badge>}
                         {shop.opt_out && <Badge tone="zinc">Opted out</Badge>}
-                        {!enriched.visitOverdue && !shop.opt_out && <span className="text-zinc-400">\u2014</span>}
+                        {!enriched.visitOverdue && !shop.opt_out && <span className="text-charcoal-light/40">\u2014</span>}
                       </div>
                     );
                   }
@@ -374,9 +374,9 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
           </ConfirmDialog>
 
           {editingShopId && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={handleEditCancel}>
-              <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-                <h3 className="text-lg font-semibold text-gray-900">Edit Shop</h3>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/20 backdrop-blur-sm" onClick={handleEditCancel}>
+              <div className="w-full max-w-md glass-strong rounded-2xl p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+                <h3 className="text-lg font-semibold text-charcoal">Edit Shop</h3>
                 <div className="mt-4 space-y-4">
                   <NumberInput
                     label="Credit Limit"
@@ -414,27 +414,27 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
                         type="checkbox"
                         checked={editForm.voice_consent ?? false}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, voice_consent: e.target.checked })}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-border-subtle text-accent-peach focus:ring-accent-peach/30"
                       />
-                      <span className="text-sm text-gray-700">Voice Consent</span>
+                      <span className="text-sm text-charcoal">Voice Consent</span>
                     </label>
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={editForm.whatsapp_consent ?? false}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, whatsapp_consent: e.target.checked })}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-border-subtle text-accent-peach focus:ring-accent-peach/30"
                       />
-                      <span className="text-sm text-gray-700">WhatsApp Consent</span>
+                      <span className="text-sm text-charcoal">WhatsApp Consent</span>
                     </label>
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={editForm.opt_out ?? false}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, opt_out: e.target.checked })}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-border-subtle text-accent-peach focus:ring-accent-peach/30"
                       />
-                      <span className="text-sm text-gray-700">Opt Out</span>
+                      <span className="text-sm text-charcoal">Opt Out</span>
                     </label>
                   </div>
                   <div className="flex justify-end gap-2 mt-4">
@@ -451,10 +451,10 @@ export function ShopsList({ shops: initialShops, routes: initialRoutes }: ShopsL
           )}
 
           {paymentModal.isOpen && paymentModal.shop && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setPaymentModal({ shop: null, isOpen: false })}>
-              <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-                <h3 className="text-lg font-semibold text-gray-900">Record Payment for {paymentModal.shop.shop_name}</h3>
-                <p className="mt-1 text-sm text-zinc-500">Outstanding: {formatINR(paymentModal.shop.outstanding_balance)} | Available Credit: {formatINR(paymentModal.shop.available_credit)}</p>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/20 backdrop-blur-sm" onClick={() => setPaymentModal({ shop: null, isOpen: false })}>
+              <div className="w-full max-w-md glass-strong rounded-2xl p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+                <h3 className="text-lg font-semibold text-charcoal">Record Payment for {paymentModal.shop.shop_name}</h3>
+                <p className="mt-1 text-sm text-charcoal-light/60">Outstanding: {formatINR(paymentModal.shop.outstanding_balance)} | Available Credit: {formatINR(paymentModal.shop.available_credit)}</p>
                 <form onSubmit={handlePaymentSubmit} className="mt-4 space-y-4">
                   <NumberInput label="Amount" id="payment_amount" value={paymentForm.amount} onChange={(e: ChangeEvent<HTMLInputElement>) => setPaymentForm({ ...paymentForm, amount: e.target.value })} required min={1} step={1} />
                   <SelectField
