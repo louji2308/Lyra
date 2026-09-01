@@ -138,78 +138,96 @@ export async function getShopDetail(
   phones: { phone_id: number; phone_number: string; label: string | null; is_primary: boolean }[];
   todayNotes: { note_id: number; note_type: string; note_text: string; source: string; agent_role: string | null; created_at: string }[];
 } | null> {
-  const { data: shop, error: shopError } = await supabase
-    .from("shops")
-    .select("*")
-    .eq("shop_id", shopId)
-    .maybeSingle();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [
+    shopRes,
+    phonesRes,
+    todayNotesRes,
+    creditRes,
+    blacklistRes,
+    ordersRes,
+    memoriesRes,
+    complaintsRes,
+    callLogsRes,
+    returnsRes,
+    productsRes,
+  ] = await Promise.all([
+    supabase
+      .from("shops")
+      .select("*")
+      .eq("shop_id", shopId)
+      .maybeSingle(),
+    supabase
+      .from("shop_phones")
+      .select("phone_id, phone_number, label, is_primary")
+      .eq("shop_id", shopId)
+      .order("is_primary", { ascending: false }),
+    supabase
+      .from("today_notes")
+      .select("note_id, note_type, note_text, source, agent_role, created_at")
+      .eq("shop_id", shopId)
+      .eq("note_date", today)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("shop_credit")
+      .select("*")
+      .eq("shop_id", shopId)
+      .maybeSingle(),
+    supabase
+      .from("blacklist")
+      .select("*, products(product_id, product_name)")
+      .eq("shop_id", shopId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("orders")
+      .select("*, order_items(*)")
+      .eq("shop_id", shopId)
+      .order("order_date", { ascending: false }),
+    supabase
+      .from("shop_memory")
+      .select("*")
+      .eq("shop_id", shopId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("complaints")
+      .select("*")
+      .eq("shop_id", shopId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("call_logs")
+      .select("*")
+      .eq("shop_id", shopId)
+      .order("start_time", { ascending: false }),
+    supabase
+      .from("returns")
+      .select("*, products(product_id, product_name)")
+      .eq("shop_id", shopId)
+      .order("created_at", { ascending: false }),
+    getProducts(),
+  ]);
+
+  const { data: shop, error: shopError } = shopRes;
+  const { data: phones } = phonesRes;
+  const { data: todayNotes } = todayNotesRes;
+  const { data: credit, error: creditError } = creditRes;
+  const { data: blacklist, error: blacklistError } = blacklistRes;
+  const { data: orders, error: ordersError } = ordersRes;
+  const { data: memories, error: memoriesError } = memoriesRes;
+  const { data: complaints, error: complaintsError } = complaintsRes;
+  const { data: callLogs, error: callLogsError } = callLogsRes;
+  const { data: returns, error: returnsError } = returnsRes;
+  const products = productsRes;
+
   if (shopError) throw shopError;
   if (!shop) return null;
-
-  const { data: phones } = await supabase
-    .from("shop_phones")
-    .select("phone_id, phone_number, label, is_primary")
-    .eq("shop_id", shopId)
-    .order("is_primary", { ascending: false });
-
-  const today = new Date().toISOString().slice(0, 10);
-  const { data: todayNotes } = await supabase
-    .from("today_notes")
-    .select("note_id, note_type, note_text, source, agent_role, created_at")
-    .eq("shop_id", shopId)
-    .eq("note_date", today)
-    .order("created_at", { ascending: false });
-
-  const { data: credit, error: creditError } = await supabase
-    .from("shop_credit")
-    .select("*")
-    .eq("shop_id", shopId)
-    .maybeSingle();
   if (creditError) throw creditError;
-
-  const { data: blacklist, error: blacklistError } = await supabase
-    .from("blacklist")
-    .select("*, products(product_id, product_name)")
-    .eq("shop_id", shopId)
-    .order("created_at", { ascending: false });
   if (blacklistError) throw blacklistError;
-
-  const { data: orders, error: ordersError } = await supabase
-    .from("orders")
-    .select("*, order_items(*)")
-    .eq("shop_id", shopId)
-    .order("order_date", { ascending: false });
   if (ordersError) throw ordersError;
-
-  const { data: memories, error: memoriesError } = await supabase
-    .from("shop_memory")
-    .select("*")
-    .eq("shop_id", shopId)
-    .order("created_at", { ascending: false });
   if (memoriesError) throw memoriesError;
-
-  const { data: complaints, error: complaintsError } = await supabase
-    .from("complaints")
-    .select("*")
-    .eq("shop_id", shopId)
-    .order("created_at", { ascending: false });
   if (complaintsError) throw complaintsError;
-
-  const { data: callLogs, error: callLogsError } = await supabase
-    .from("call_logs")
-    .select("*")
-    .eq("shop_id", shopId)
-    .order("start_time", { ascending: false });
   if (callLogsError) throw callLogsError;
-
-  const { data: returns, error: returnsError } = await supabase
-    .from("returns")
-    .select("*, products(product_id, product_name)")
-    .eq("shop_id", shopId)
-    .order("created_at", { ascending: false });
   if (returnsError) throw returnsError;
-
-  const products = await getProducts();
   const productName = new Map(
     products.map((p) => [p.product_id, p.product_name])
   );
