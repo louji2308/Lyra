@@ -11,8 +11,8 @@
 | --- | --- |
 | Modules covered | 22 of 24 fully exercised |
 | Test cases recorded | ~65 distinct assertions in result files |
-| Bugs found | **8 confirmed** (7 fixed, 1 documented non-issue) |
-| Bugs fixed this session | 6 (create-order id gen, catalog stock join, catalog search no-op, whatsapp preview 400, inventory page, order-to-shop link) |
+| Bugs found | **9 confirmed** (8 fixed, 1 documented non-issue) |
+| Bugs fixed this session | 7 (create-order id gen, catalog stock join, catalog search no-op, whatsapp preview 400, inventory page, order-to-shop link, shop-detail query parallelization) |
 | Breaking issues remaining | 0 (portal stable) |
 | Console errors across crawl | 0 after hydration/React fixes |
 
@@ -30,6 +30,7 @@
 | 8 | Low | `/api/whatsapp/preview` | Malformed JSON → **500** instead of 400 | try/catch `request.json()`, `invalid_json` 400 | `4a34707` | Local: all 7 cases correct |
 | 9 | Medium | `/catalog/inventory` | Nav link was a dead route (designed 404) | Built inventory page (stock table low-first, search, admin adjust) | `0e1a237` | Local: 33 SKUs, Low Stock 1, 0 errors |
 | 10 | Low | Order detail | No link back to the shop | Shop name is now a `<Link>` to `/shops/{id}` | `492b645` | Local: link renders + navigates |
+| 11 | Medium | Shop detail route (exposed by #10) | Client-nav to shop rendered blank ~5-8s — **10 serial Supabase queries** in `getShopDetail` | `Promise.all` parallelized all 10 queries | `b77abcc` | Local: warm client-nav ~430ms, content identical |
 
 ## Addendum — Soft-404 resolution
 
