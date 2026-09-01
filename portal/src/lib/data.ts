@@ -53,10 +53,14 @@ export async function getRoutes() {
 export async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, inventory(available_qty)")
     .order("product_name");
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((row) => {
+    const inv = (row as { inventory?: { available_qty: number } | { available_qty: number }[] | null }).inventory;
+    const rec = Array.isArray(inv) ? inv[0] : inv;
+    return { ...row, available_qty: rec ? Number(rec.available_qty) : 0 } as Product;
+  });
 }
 
 export async function getShops(): Promise<ShopWithExtras[]> {
