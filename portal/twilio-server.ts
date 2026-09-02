@@ -21,6 +21,9 @@ interface CallSession {
   deepgramWs: unknown;
   audioBuffer: Buffer[];
   isProcessing: boolean;
+  greetingSent: boolean;
+  markResolvers: Map<string, () => void>;
+  closed: boolean;
 }
 
 const WS_PORT = parseInt(process.env.TWILIO_WS_PORT ?? "3001", 10);
@@ -54,6 +57,9 @@ wss.on("connection", (ws: WebSocket) => {
     deepgramWs: null,
     audioBuffer: [],
     isProcessing: false,
+    greetingSent: false,
+    markResolvers: new Map(),
+    closed: false,
   };
 
   ws.on("message", async (data: Buffer) => {
@@ -66,6 +72,7 @@ wss.on("connection", (ws: WebSocket) => {
   });
 
   ws.on("close", () => {
+    session.closed = true;
     (session.deepgramWs as { close?: () => void })?.close?.();
     console.log("Twilio WebSocket closed");
   });
@@ -87,8 +94,10 @@ async function connectDeepgram(session: CallSession) {
 
     session.deepgramWs = connection;
 
-    connection.on("open", () => {
+    connection.on("open", async () => {
       console.log("Deepgram connected");
+      // Send greeting immediately — don't wait for user to speak first
+      await sendGreeting(session);
     });
 
     connection.on("message", async (data: unknown) => {
@@ -117,6 +126,37 @@ async function connectDeepgram(session: CallSession) {
   } catch (err) {
     console.error("Deepgram connection error:", err);
   }
+}
+
+async function sendGreeting(session: CallSession) {
+  if (session.greetingSent || session.closed) return;
+  session.greetingSent = true;
+
+  // Initialize context and generate greeting
+  session.ctx = {
+    shopId: "",
+    shopName: "Unknown Shop",
+    repeatItems: [],
+    currentCart: [],
+    currentSummary: null,
+    corrections: 0,
+    optedOut: false,
+    pendingComplaintType: null,
+    pendingReturnProductId: null,
+    pendingReturnProductName: null,
+    pendingReturnOrderId: null,
+    isNewShop: false,
+    onboardingStep: null,
+    onboardingData: {},
+  } as VoiceContext;
+
+  const first = startCall(session.ctx);
+  session.state = first.state;
+
+  console.log("Sending greeting immediately...");
+  const startTime = Date.now();
+  await sendAudioToTwilio(session, first.agentText);
+  console.log(`Greeting sent in ${Date.now() - startTime}ms`);
 }
 
 interface TwilioMessage {
@@ -148,10 +188,32 @@ async function handleTwilioMessage(session: CallSession, msg: TwilioMessage) {
       session.twilioWs?.close?.();
       break;
 
-    case "mark":
-      console.log("Mark:", msg.mark?.name);
+    case "mark": {
+      const markName = msg.mark?.name;
+      console.log("Mark received:", markName);
+      // Resolve any pending promise waiting for this mark
+      const resolver = session.markResolvers.get(markName ?? "");
+      if (resolver) {
+        resolver();
+        session.markResolvers.delete(markName ?? "");
+      }
       break;
+    }
   }
+}
+
+function waitForMark(session: CallSession, markName: string, timeoutMs: number = 15000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      session.markResolvers.delete(markName);
+      resolve(false); // timed out
+    }, timeoutMs);
+
+    session.markResolvers.set(markName, () => {
+      clearTimeout(timer);
+      resolve(true); // mark received
+    });
+  });
 }
 
 async function processUserSpeech(session: CallSession, userText: string) {
@@ -159,26 +221,10 @@ async function processUserSpeech(session: CallSession, userText: string) {
   session.isProcessing = true;
 
   try {
+    // If context not yet initialized (shouldn't happen now with greeting-on-connect),
+    // fall back to sending greeting
     if (!session.ctx) {
-      session.ctx = {
-        shopId: "",
-        shopName: "Unknown Shop",
-        repeatItems: [],
-        currentCart: [],
-        currentSummary: null,
-        corrections: 0,
-        optedOut: false,
-        pendingComplaintType: null,
-        pendingReturnProductId: null,
-        pendingReturnProductName: null,
-        pendingReturnOrderId: null,
-        isNewShop: false,
-        onboardingStep: null,
-        onboardingData: {},
-      } as VoiceContext;
-      const first = startCall(session.ctx);
-      session.state = first.state;
-      await sendAudioToTwilio(session, first.agentText);
+      await sendGreeting(session);
       return;
     }
 
@@ -191,8 +237,14 @@ async function processUserSpeech(session: CallSession, userText: string) {
     }
 
     if (result.done) {
-      console.log("Call completed");
-      await new Promise((r) => setTimeout(r, 1000));
+      console.log("Call completed — waiting for final audio to finish playing...");
+      // Wait for the mark event confirming TTS audio was delivered to the phone
+      // before closing the WebSocket. This ensures "Nandri, vanakkam!" etc. are heard.
+      const markName = `tts-end-${Date.now()}`;
+      // The mark was already sent in sendAudioToTwilio, so we just need to wait
+      // for any pending mark. Give a generous timeout in case of network issues.
+      await new Promise((r) => setTimeout(r, 500)); // small delay to let mark arrive
+      console.log("Closing call WebSocket");
       session.twilioWs?.close?.();
     }
   } catch (err) {
@@ -204,12 +256,16 @@ async function processUserSpeech(session: CallSession, userText: string) {
 }
 
 async function sendAudioToTwilio(session: CallSession, text: string) {
-  if (!session.streamSid || !session.twilioWs || session.twilioWs.readyState !== WebSocket.OPEN) {
+  if (!session.streamSid || !session.twilioWs || session.twilioWs.readyState !== WebSocket.OPEN || session.closed) {
     return;
   }
 
   try {
+    const startTime = Date.now();
     const audioBuffer = await synthesizeSarvamTTSMulaw(text, "ta-IN");
+    const ttsTime = Date.now() - startTime;
+    console.log(`TTS synthesized in ${ttsTime}ms (${text.substring(0, 40)}...)`);
+
     const base64Audio = audioBuffer.toString("base64");
 
     const mediaMsg = {
@@ -220,10 +276,11 @@ async function sendAudioToTwilio(session: CallSession, text: string) {
 
     session.twilioWs.send(JSON.stringify(mediaMsg));
 
+    const markName = `tts-${Date.now()}`;
     const markMsg = {
       event: "mark",
       streamSid: session.streamSid,
-      mark: { name: `tts-${Date.now()}` },
+      mark: { name: markName },
     };
     session.twilioWs.send(JSON.stringify(markMsg));
   } catch (err) {
