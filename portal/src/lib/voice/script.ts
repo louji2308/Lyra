@@ -117,4 +117,23 @@ export const SCRIPT = {
 
   onboardingDone:
     "Sari! Shop register aachu. Ippo stock order edhava venuma? Vanakkam!",
+
+  // ========== CALLBACK / SCHEDULED CALLS ==========
+  callbackAsk: "Eppo call pannalama? Time sollunga.",
+
+  callbackConfirm: (time: string) =>
+    `${time} ku call pannuren. Permanent-a indha time venuma, inaiku mattum?`,
+
+  callbackConfirmTemp: (time: string) =>
+    `Sari, ${time} ku inaiku call pannuren. Vanakkam!`,
+
+  callbackConfirmPermanent: (time: string) =>
+    `Sari, permanently ${time} ku call pannuven. Vanakkam!`,
+
+  callbackTimeInvalid:
+    "Time puriyala. 5 o'clock, 6 o'clock madhiri sollunga.",
+
+  // ========== AUTO-CALL GREETING (beat day, shop called by scheduler) ==========
+  autoCallGreeting: (shopName: string) =>
+    `Vanakkam! ${shopName} order ready aa?`,
 };

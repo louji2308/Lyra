@@ -6,6 +6,7 @@ import { SCRIPT } from "./src/lib/voice/script";
 import type { VoiceContext, VoiceState } from "./src/lib/voice/types";
 import { synthesizeSarvamTTSMulaw } from "./src/lib/voice/sarvam";
 import { identifyShopByAnyPhone, getSuggestedOrder } from "./src/lib/voice/backend";
+import { supabaseAdmin } from "./src/lib/supabaseAdmin";
 
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
 if (!deepgramApiKey) {
@@ -142,6 +143,17 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
       console.log(`Identifying shop by caller: ${callerPhone}`);
       const shop = await identifyShopByAnyPhone(callerPhone);
       const suggested = await getSuggestedOrder(shop.shop_id);
+
+      // Check if this is an auto-call (beat call initiated by scheduler)
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: beatCall } = await supabaseAdmin
+        .from("beat_calls")
+        .select("id")
+        .eq("shop_id", shop.shop_id)
+        .eq("call_date", today)
+        .eq("status", "calling")
+        .maybeSingle();
+
       session.ctx = {
         shopId: shop.shop_id,
         shopName: shop.shop_name,
@@ -155,11 +167,12 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
         pendingReturnProductName: null,
         pendingReturnOrderId: null,
         isNewShop: false,
+        isAutoCall: !!beatCall,
         onboardingStep: null,
         onboardingData: {},
       };
       shopFound = true;
-      console.log(`Shop identified: ${shop.shop_name} (${shop.shop_id})`);
+      console.log(`Shop identified: ${shop.shop_name} (${shop.shop_id}) auto=${!!beatCall}`);
     } catch (err) {
       console.log(`Shop not found for ${callerPhone}, using default context`);
     }
@@ -179,6 +192,7 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
       pendingReturnProductName: null,
       pendingReturnOrderId: null,
       isNewShop: false,
+      isAutoCall: false,
       onboardingStep: null,
       onboardingData: {},
     } as VoiceContext;
@@ -276,6 +290,40 @@ async function processUserSpeech(session: CallSession, userText: string) {
 
     if (result.done) {
       console.log("Call completed — waiting for final audio to finish playing...");
+
+      // Save callback time if requested
+      if (result.ctx.pendingCallbackTime && result.ctx.shopId) {
+        const timeStr = result.ctx.pendingCallbackTime;
+        // Parse "5 PM" → "17:00:00"
+        const match = timeStr.match(/(\d{1,2})\s*(AM|PM)/i);
+        if (match) {
+          let hour = parseInt(match[1], 10);
+          const ampm = match[2].toUpperCase();
+          if (ampm === "PM" && hour < 12) hour += 12;
+          if (ampm === "AM" && hour === 12) hour = 0;
+          const dbTime = `${String(hour).padStart(2, "0")}:00:00`;
+
+          // Check if "permanent" was said (from callback_confirm state)
+          // The engine sets pendingCallbackTime but doesn't distinguish temp vs permanent
+          // We check if the text before end contains "permanent"
+          const isPermanent = /permanent|always|every/i.test(userText);
+
+          if (isPermanent) {
+            await supabaseAdmin
+              .from("shops")
+              .update({ preferred_call_start: dbTime, preferred_call_end: `${String(Math.min(hour + 2, 23)).padStart(2, "0")}:00:00` })
+              .eq("shop_id", result.ctx.shopId);
+            console.log(`Saved permanent call time ${dbTime} for ${result.ctx.shopId}`);
+          } else {
+            await supabaseAdmin
+              .from("shops")
+              .update({ temp_call_time: dbTime })
+              .eq("shop_id", result.ctx.shopId);
+            console.log(`Saved temp call time ${dbTime} for ${result.ctx.shopId}`);
+          }
+        }
+      }
+
       // Wait for the mark event confirming TTS audio was delivered to the phone
       // before closing the WebSocket. This ensures "Nandri, vanakkam!" etc. are heard.
       const markName = `tts-end-${Date.now()}`;

@@ -12,6 +12,8 @@ export type VoiceState =
   | "return_product"
   | "return_qty"
   | "return_reason"
+  | "callback_time"
+  | "callback_confirm"
   | "onboarding_name"
   | "onboarding_area"
   | "onboarding_owner"
@@ -50,6 +52,7 @@ export interface VoiceContext {
   pendingReturnProductName: string | null;
   pendingReturnOrderId: string | null;
   isNewShop: boolean;
+  isAutoCall: boolean;
   onboardingStep: "name" | "area" | "owner" | "language" | "complete" | null;
   onboardingData: {
     shopName?: string;
@@ -60,6 +63,7 @@ export interface VoiceContext {
   newShopPhone?: string;
   pendingAdd?: { query: string; quantity: number };
   pendingRemove?: { query: string; quantity?: number };
+  pendingCallbackTime?: string;
   catalogResults?: Array<{ product_id: string; product_name: string; brand: string; category: string; price: number; unit_type: string; available_qty?: number }>;
 }
 

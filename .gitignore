@@ -128,3 +128,4 @@ supabase/.env
 # --- Playwright automation workspace (holds browser session cookies) ---
 .playwright/
 playwright-report/
+.vercel

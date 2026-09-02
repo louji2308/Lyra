@@ -353,6 +353,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
         pendingReturnProductName: null,
         pendingReturnOrderId: null,
         isNewShop: false,
+        isAutoCall: false,
         onboardingStep: null,
         onboardingData: {},
       };
@@ -380,6 +381,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
           pendingReturnProductName: null,
           pendingReturnOrderId: null,
           isNewShop: true,
+          isAutoCall: false,
           onboardingStep: "name",
           onboardingData: {},
           newShopPhone: shop.phone_number,

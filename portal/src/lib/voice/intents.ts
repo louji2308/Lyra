@@ -1,4 +1,4 @@
-export type Intent = "yes" | "no" | "stop" | "change" | "complaint" | "return" | "catalog_query" | "info" | "other";
+export type Intent = "yes" | "no" | "stop" | "change" | "complaint" | "return" | "catalog_query" | "info" | "callback" | "other";
 
 const BOUNDARY = "[\\s.,!?;:'\"()\\-—–]";
 
@@ -44,6 +44,17 @@ const CATALOG_QUERY_TOKENS = [
   "soap", "shampoo", "detergent", "tea", "toothpaste", "handwash",
 ];
 
+const CALLBACK_TOKENS = [
+  "call me later", "call back", "callback", "call pannu", "call pannunga",
+  "later call", "pinadi call", "time illa", "busy", "ippo mudiyadhu",
+  "evening call", "morning call", "afternoon call",
+  "5 o clock", "6 o clock", "7 o clock", "4 o clock",
+  "5 mani", "6 mani", "7 mani", "4 mani",
+  "manikku call", "neram illa", "ރλα的时间",
+  "change time", "permanent-a", "every time", "always call",
+  "நேரம் இல்லை", "பிறகு அழை", "மாற்று நேரம்",
+];
+
 const INFO_QUERY_TOKENS = [
   "stock", "credit", "balance", "delivery", "price", "rate",
   "scheme", "offer", "discount", "promotion",
@@ -69,6 +80,7 @@ const CHANGE_RE = buildTokenRegex(CHANGE_TOKENS);
 const YES_RE = buildTokenRegex(YES_TOKENS);
 const NO_RE = buildTokenRegex(NO_TOKENS);
 const CATALOG_QUERY_RE = buildTokenRegex(CATALOG_QUERY_TOKENS);
+const CALLBACK_RE = buildTokenRegex(CALLBACK_TOKENS);
 const INFO_RE = buildTokenRegex(INFO_QUERY_TOKENS);
 
 export function detectIntent(raw: string): Intent {
@@ -82,6 +94,7 @@ export function detectIntent(raw: string): Intent {
   if (STOP_RE.test(text)) return "stop";
   if (COMPLAINT_RE.test(text)) return "complaint";
   if (RETURN_RE.test(text)) return "return";
+  if (CALLBACK_RE.test(text)) return "callback";
   if (CHANGE_RE.test(text)) return "change";
   if (INFO_RE.test(text)) return "info";
   if (CATALOG_QUERY_RE.test(text)) return "catalog_query";

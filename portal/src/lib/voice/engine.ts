@@ -76,6 +76,18 @@ export function startCall(ctx: VoiceContext): VoiceStep {
       ctx,
     };
   }
+  // Auto-call (beat day scheduled call) — skip "good time" check, go straight to order
+  if (ctx.isAutoCall) {
+    const summary = summarize(ctx.repeatItems);
+    return {
+      state: summary ? "repeat_order" : "changes",
+      agentText: summary
+        ? SCRIPT.autoCallGreeting(ctx.shopName) + " " + SCRIPT.repeatOrder(summary)
+        : SCRIPT.autoCallGreeting(ctx.shopName) + " " + SCRIPT.whatDoYouNeed,
+      done: false,
+      ctx: { ...ctx, currentSummary: summary, currentCart: [] },
+    };
+  }
   return {
     state: "greeting",
     agentText: SCRIPT.greet(ctx.shopName),
@@ -101,6 +113,10 @@ export function step(
   // Informational queries (stock, credit, delivery, etc.) — don't push orders
   if (intent === "info") {
     return { state: "changes", agentText: SCRIPT.infoResponse, done: false, ctx };
+  }
+  // Callback request — ask for time
+  if (intent === "callback" && state !== "callback_time" && state !== "callback_confirm") {
+    return { state: "callback_time", agentText: SCRIPT.callbackAsk, done: false, ctx };
   }
 
   const inSubFlow =
@@ -199,6 +215,62 @@ export function step(
         };
       }
       return { state: "onboarding_language", agentText: SCRIPT.onboardingAskLanguage(""), done: false, ctx };
+    }
+
+    // ========== CALLBACK / SCHEDULED CALLS ==========
+    case "callback_time": {
+      // Parse time from user input: "5 o clock", "6 mani", "evening", etc.
+      const timeMatch = userText.match(/(\d{1,2})\s*(?:o\s*clock|mani|manikku|:\d{2})/i);
+      const periodMatch = userText.match(/(morning|afternoon|evening|night)/i);
+      let timeStr = "";
+      if (timeMatch) {
+        let hour = parseInt(timeMatch[1], 10);
+        if (hour >= 1 && hour <= 12) {
+          // Assume afternoon/evening for 1-7, morning for 8-12
+          if (periodMatch) {
+            const p = periodMatch[1].toLowerCase();
+            if (p === "evening" || p === "afternoon" || p === "night") {
+              if (hour < 12) hour += 12;
+            }
+          } else if (hour >= 1 && hour <= 7) {
+            hour += 12; // assume PM
+          }
+          const h = hour > 12 ? hour - 12 : hour;
+          const ampm = hour >= 12 ? "PM" : "AM";
+          timeStr = `${h} ${ampm}`;
+        }
+      } else if (periodMatch) {
+        const p = periodMatch[1].toLowerCase();
+        if (p === "morning") timeStr = "9 AM";
+        else if (p === "afternoon") timeStr = "2 PM";
+        else if (p === "evening") timeStr = "6 PM";
+        else if (p === "night") timeStr = "8 PM";
+      }
+
+      if (!timeStr) {
+        return { state: "callback_time", agentText: SCRIPT.callbackTimeInvalid, done: false, ctx };
+      }
+
+      return {
+        state: "callback_confirm",
+        agentText: SCRIPT.callbackConfirm(timeStr),
+        done: false,
+        ctx: { ...ctx, pendingCallbackTime: timeStr },
+      };
+    }
+
+    case "callback_confirm": {
+      const time = ctx.pendingCallbackTime;
+      if (!time) {
+        return { state: "changes", agentText: SCRIPT.whatDoYouNeed, done: false, ctx };
+      }
+      // "permanent" or "always" → save to preferred_call_start
+      const isPermanent = /permanent|always|every\s*time|ellam\s*time|every\s*day/i.test(userText);
+      if (isPermanent) {
+        return endWith(state, SCRIPT.callbackConfirmPermanent(time), ctx, { pendingCallbackTime: time });
+      }
+      // Default: temp for today only
+      return endWith(state, SCRIPT.callbackConfirmTemp(time), ctx, { pendingCallbackTime: time });
     }
 
     // ========== MAIN ORDER FLOW ==========
@@ -452,6 +524,8 @@ export const STATE_LABELS: Record<VoiceState, string> = {
   return_product: "Return product",
   return_qty: "Return quantity",
   return_reason: "Return reason",
+  callback_time: "Callback time",
+  callback_confirm: "Callback confirm",
   onboarding_name: "Onboarding: name",
   onboarding_area: "Onboarding: area",
   onboarding_owner: "Onboarding: owner",
