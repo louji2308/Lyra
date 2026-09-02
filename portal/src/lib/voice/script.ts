@@ -27,6 +27,9 @@ export const SCRIPT = {
 
   confirm: "Order confirm pannuren. WhatsApp la summary anuppuren.",
 
+  // ========== INFO QUERIES (stock, credit, delivery, etc.) ==========
+  infoResponse: "Sari, idhoda details WhatsApp la anuppuren. Vera enna venum?",
+
   // ========== CATALOG QUERIES ==========
   catalogThinking: "Sari, catalog la paarkuren...",
 

@@ -98,6 +98,10 @@ export function step(
   if (intent === "catalog_query") {
     return { state: "catalog_query", agentText: SCRIPT.catalogThinking, done: false, ctx };
   }
+  // Informational queries (stock, credit, delivery, etc.) — don't push orders
+  if (intent === "info") {
+    return { state: "changes", agentText: SCRIPT.infoResponse, done: false, ctx };
+  }
 
   const inSubFlow =
     state === "complaint" ||
@@ -224,28 +228,30 @@ export function step(
     }
 
     case "repeat_order": {
+      // Convert repeat items to cart items (shared by both paths)
+      const repeatAsCart: CartItem[] = ctx.repeatItems.map((item) => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        quantity: item.quantity,
+        unit: item.unit,
+        price: item.price ?? 0,
+        line_total: (item.price ?? 0) * item.quantity,
+      }));
+
       if (intent === "yes") {
-        // Add repeat items to cart
-        const newCart: CartItem[] = ctx.repeatItems.map((item) => ({
-          product_id: item.product_id,
-          product_name: item.product_name,
-          quantity: item.quantity,
-          unit: item.unit,
-          price: item.price ?? 0,
-          line_total: (item.price ?? 0) * item.quantity,
-        }));
         return {
           state: "read_back",
-          agentText: SCRIPT.readBack(summarizeCart(newCart) ?? ""),
+          agentText: SCRIPT.readBack(summarizeCart(repeatAsCart) ?? ""),
           done: false,
-          ctx: { ...ctx, currentCart: newCart, currentSummary: summarizeCart(newCart) },
+          ctx: { ...ctx, currentCart: repeatAsCart, currentSummary: summarizeCart(repeatAsCart) },
         };
       }
+      // User wants to edit — keep repeat items in cart so they can add/remove
       return {
         state: "changes",
         agentText: SCRIPT.changes,
         done: false,
-        ctx: { ...ctx, currentCart: [] },
+        ctx: { ...ctx, currentCart: repeatAsCart, currentSummary: summarizeCart(repeatAsCart) },
       };
     }
 
@@ -424,8 +430,11 @@ export function step(
     }
 
     case "end":
-    default:
       return { state: "end", agentText: "", done: true, ctx };
+
+    default:
+      // Unrecognized input — stay in current state, ask again
+      return { state, agentText: SCRIPT.changes, done: false, ctx };
   }
 }
 
