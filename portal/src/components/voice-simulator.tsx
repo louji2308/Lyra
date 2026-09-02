@@ -199,6 +199,45 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
     [pushTrace, callLanguage]
   );
 
+  const persistNewShop = useCallback(
+    async (ctxFinal: VoiceContext) => {
+      const data = ctxFinal.onboardingData;
+      if (!data.shopName || !data.ownerName || !data.area || !data.language || !ctxFinal.newShopPhone) {
+        pushTrace("create_shop", "Missing onboarding data — cannot persist", "error");
+        return;
+      }
+      try {
+        pushTrace("create_shop", `Creating shop: ${data.shopName} (${ctxFinal.newShopPhone})`);
+        const result = await voiceApi.createShop({
+          phone_number: ctxFinal.newShopPhone,
+          shop_name: data.shopName,
+          owner_name: data.ownerName,
+          area: data.area,
+          preferred_language: data.language,
+        });
+        pushTrace("create_shop", `Shop created: ${result.shop_id} — ${result.shop_name}`);
+
+        // Send WhatsApp welcome message
+        try {
+          pushTrace("send_whatsapp_welcome", `Sending welcome to ${ctxFinal.newShopPhone}`);
+          const msg = encodeURIComponent(
+            `Vanakkam ${data.ownerName}! 🎉\n\nWelcome to Shree Agencies.\n\nYour shop "${data.shopName}" has been registered. You can now place orders via our AI voice assistant.\n\nNeed help? Just reply to this message.\n\n— Shree Agencies`
+          );
+          const waLink = `https://wa.me/${ctxFinal.newShopPhone.replace(/\D/g, "")}?text=${msg}`;
+          pushTrace("send_whatsapp_welcome", `WhatsApp welcome link ready`);
+          // Open WhatsApp link in new tab for manual send (no WhatsApp Business API configured)
+          window.open(waLink, "_blank");
+        } catch (waErr) {
+          pushTrace("send_whatsapp_welcome", waErr instanceof Error ? waErr.message : String(waErr), "error");
+        }
+      } catch (err) {
+        pushTrace("create_shop", err instanceof Error ? err.message : String(err), "error");
+        setApiError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [pushTrace]
+  );
+
   const hydrateState = useCallback((nextState: VoiceState, nextCtx: VoiceContext) => {
     stateRef.current = nextState;
     ctxRef.current = nextCtx;
@@ -256,6 +295,9 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
           void recordOptOut(result.ctx);
         } else if (prevState === "confirm" || prevState === "upsell_repeat") {
           void placeOrder(result.ctx);
+        } else if (prevState === "onboarding_complete" && result.ctx.isNewShop) {
+          // Onboarding complete — persist shop to Supabase and send WhatsApp welcome
+          void persistNewShop(result.ctx);
         }
       }
     },
@@ -321,6 +363,35 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
       setPhase("active");
       speak(first.agentText);
     } catch (err) {
+      // New shop — start onboarding flow
+      const reason = (err as Error & { reason?: string }).reason;
+      if (reason === "new_shop" || reason === "shop_not_found") {
+        pushTrace("identify_shop_by_phone", `New number — starting onboarding for ${shop.phone_number}`);
+        const ctx0: VoiceContext = {
+          shopId: "",
+          shopName: "",
+          repeatItems: [],
+          currentCart: [],
+          currentSummary: null,
+          corrections: 0,
+          optedOut: false,
+          pendingComplaintType: null,
+          pendingReturnProductId: null,
+          pendingReturnProductName: null,
+          pendingReturnOrderId: null,
+          isNewShop: true,
+          onboardingStep: "name",
+          onboardingData: {},
+          newShopPhone: shop.phone_number,
+        };
+        const first = startCall(ctx0);
+        hydrateState(first.state, first.ctx);
+        setMessages([{ role: "agent", text: first.agentText }]);
+        phaseRef.current = "active";
+        setPhase("active");
+        speak(first.agentText);
+        return;
+      }
       const message = err instanceof Error ? err.message : String(err);
       pushTrace("identify_shop_by_phone", message, "error");
       setApiError(message);

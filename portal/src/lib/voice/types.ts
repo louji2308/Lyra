@@ -57,6 +57,7 @@ export interface VoiceContext {
     ownerName?: string;
     language?: string;
   };
+  newShopPhone?: string;
   pendingAdd?: { query: string; quantity: number };
   pendingRemove?: { query: string; quantity?: number };
   catalogResults?: Array<{ product_id: string; product_name: string; brand: string; category: string; price: number; unit_type: string; available_qty?: number }>;

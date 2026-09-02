@@ -185,8 +185,20 @@ function post<T>(url: string, body: unknown): Promise<T> {
 }
 
 export const voiceApi = {
-  identifyShopByPhone: (phone: string) =>
-    req<ShopContextPayload>(`/api/shop-context?phone=${encodeURIComponent(phone)}`),
+  identifyShopByPhone: async (phone: string) => {
+    const res = await fetch("/api/shop-context", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone_number: phone }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.found === false) {
+      const err = new Error(data.reason ?? "shop_not_found") as Error & { reason?: string };
+      err.reason = data.reason ?? "shop_not_found";
+      throw err;
+    }
+    return data.shop as ShopContextPayload;
+  },
 
   getShopContext: (shopId: string) =>
     req<ShopContextPayload>(`/api/shop-context?shop_id=${encodeURIComponent(shopId)}`),

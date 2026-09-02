@@ -194,7 +194,7 @@ export function step(
         return {
           state: "onboarding_done",
           agentText: SCRIPT.onboardingDone,
-          done: false,
+          done: true,
           ctx: { ...ctx, onboardingStep: "complete" },
         };
       }

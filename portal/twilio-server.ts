@@ -5,6 +5,7 @@ import { step, startCall } from "./src/lib/voice/engine";
 import { SCRIPT } from "./src/lib/voice/script";
 import type { VoiceContext, VoiceState } from "./src/lib/voice/types";
 import { synthesizeSarvamTTSMulaw } from "./src/lib/voice/sarvam";
+import { identifyShopByAnyPhone, getSuggestedOrder } from "./src/lib/voice/backend";
 
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
 if (!deepgramApiKey) {
@@ -17,6 +18,7 @@ interface CallSession {
   state: VoiceState;
   ctx: VoiceContext | null;
   streamSid: string | null;
+  callerPhone: string | null;
   twilioWs: WebSocket;
   deepgramWs: unknown;
   audioBuffer: Buffer[];
@@ -53,6 +55,7 @@ wss.on("connection", (ws: WebSocket) => {
     state: "greeting",
     ctx: null,
     streamSid: null,
+    callerPhone: null,
     twilioWs: ws,
     deepgramWs: null,
     audioBuffer: [],
@@ -96,8 +99,8 @@ async function connectDeepgram(session: CallSession) {
 
     connection.on("open", async () => {
       console.log("Deepgram connected");
-      // Send greeting immediately — don't wait for user to speak first
-      await sendGreeting(session);
+      // Send greeting immediately — identify shop by caller ID if available
+      await sendGreeting(session, session.callerPhone ?? undefined);
     });
 
     connection.on("message", async (data: unknown) => {
@@ -128,29 +131,60 @@ async function connectDeepgram(session: CallSession) {
   }
 }
 
-async function sendGreeting(session: CallSession) {
+async function sendGreeting(session: CallSession, callerPhone?: string) {
   if (session.greetingSent || session.closed) return;
   session.greetingSent = true;
 
-  // Initialize context and generate greeting
-  session.ctx = {
-    shopId: "",
-    shopName: "Unknown Shop",
-    repeatItems: [],
-    currentCart: [],
-    currentSummary: null,
-    corrections: 0,
-    optedOut: false,
-    pendingComplaintType: null,
-    pendingReturnProductId: null,
-    pendingReturnProductName: null,
-    pendingReturnOrderId: null,
-    isNewShop: false,
-    onboardingStep: null,
-    onboardingData: {},
-  } as VoiceContext;
+  // Try to identify shop by caller ID
+  let shopFound = false;
+  if (callerPhone) {
+    try {
+      console.log(`Identifying shop by caller: ${callerPhone}`);
+      const shop = await identifyShopByAnyPhone(callerPhone);
+      const suggested = await getSuggestedOrder(shop.shop_id);
+      session.ctx = {
+        shopId: shop.shop_id,
+        shopName: shop.shop_name,
+        repeatItems: suggested.repeat_order,
+        currentCart: [],
+        currentSummary: null,
+        corrections: 0,
+        optedOut: false,
+        pendingComplaintType: null,
+        pendingReturnProductId: null,
+        pendingReturnProductName: null,
+        pendingReturnOrderId: null,
+        isNewShop: false,
+        onboardingStep: null,
+        onboardingData: {},
+      };
+      shopFound = true;
+      console.log(`Shop identified: ${shop.shop_name} (${shop.shop_id})`);
+    } catch (err) {
+      console.log(`Shop not found for ${callerPhone}, using default context`);
+    }
+  }
 
-  const first = startCall(session.ctx);
+  if (!shopFound) {
+    session.ctx = {
+      shopId: "",
+      shopName: "Unknown Shop",
+      repeatItems: [],
+      currentCart: [],
+      currentSummary: null,
+      corrections: 0,
+      optedOut: false,
+      pendingComplaintType: null,
+      pendingReturnProductId: null,
+      pendingReturnProductName: null,
+      pendingReturnOrderId: null,
+      isNewShop: false,
+      onboardingStep: null,
+      onboardingData: {},
+    } as VoiceContext;
+  }
+
+  const first = startCall(session.ctx!);
   session.state = first.state;
 
   console.log("Sending greeting immediately...");
@@ -171,7 +205,11 @@ async function handleTwilioMessage(session: CallSession, msg: TwilioMessage) {
   switch (msg.event) {
     case "start":
       session.streamSid = msg.start?.streamSid ?? null;
-      console.log("Stream started:", session.streamSid);
+      // Extract caller phone from Exotel/Twilio start event
+      const startData = msg.start as Record<string, unknown> | undefined;
+      const customParams = startData?.CustomParameters as Record<string, string> | undefined;
+      session.callerPhone = customParams?.From ?? customParams?.from ?? (startData?.From as string) ?? null;
+      console.log("Stream started:", session.streamSid, "caller:", session.callerPhone);
       break;
 
     case "media":
