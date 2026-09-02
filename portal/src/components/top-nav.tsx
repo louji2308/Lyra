@@ -28,6 +28,7 @@ export const navGroups = [
     key: "operations",
     label: "Operations",
     items: [
+      { href: "/admin/beat-schedule", label: "Beat Schedule" },
       { href: "/deliveries", label: "Deliveries" },
       { href: "/admin/routes", label: "Routes" },
       { href: "/payments", label: "Payments" },

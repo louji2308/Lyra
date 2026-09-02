@@ -242,12 +242,23 @@ export async function createOrder(input: {
     // Check credit
     const { data: shop } = await supabaseAdmin
       .from("shops")
-      .select("credit_limit, outstanding_balance")
+      .select("credit_limit, outstanding_balance, beat_route_id")
       .eq("shop_id", input.shop_id)
       .single();
 
     if (shop && shop.outstanding_balance + totalAmount > shop.credit_limit) {
       return { success: false, error: "Credit limit exceeded" };
+    }
+
+    // Fetch route delivery_days
+    let deliveryDays = 3;
+    if (shop?.beat_route_id) {
+      const { data: route } = await supabaseAdmin
+        .from("routes")
+        .select("delivery_days")
+        .eq("route_id", shop.beat_route_id)
+        .maybeSingle();
+      if (route?.delivery_days) deliveryDays = route.delivery_days;
     }
 
     // Check blacklist
@@ -266,12 +277,20 @@ export async function createOrder(input: {
 
     // Create order
     const orderId = await nextOrderId(supabaseAdmin);
+    const today = new Date().toISOString().slice(0, 10);
+    const deliveryDate = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
       .insert({
         order_id: orderId,
         shop_id: input.shop_id,
         call_id: input.call_id ?? null,
+        order_date: today,
+        delivery_date: deliveryDate,
+        delivery_slot: "2 PM - 5 PM",
         total_amount: totalAmount,
         credit_used: totalAmount,
         order_status: "draft",
@@ -1169,4 +1188,83 @@ async function nextOrderId(client: typeof supabaseAdmin): Promise<string> {
     })
   );
   return `ORD${String(max + 1).padStart(4, "0")}`;
+}
+
+// ──────────────────────────────────────────────
+// Credit Management
+// ──────────────────────────────────────────────
+
+export async function adjustShopCredit(input: {
+  shop_id: string;
+  amount: number;
+  reason: string;
+  type: "credit" | "debit";
+}): Promise<ActionResult<{ shop_id: string; new_balance: number; new_limit: number }>> {
+  try {
+    const { data: shop, error: shopError } = await supabaseAdmin
+      .from("shops")
+      .select("shop_id, credit_limit, outstanding_balance")
+      .eq("shop_id", input.shop_id)
+      .single();
+    if (shopError || !shop) return { success: false, error: "Shop not found" };
+
+    let newBalance = Number(shop.outstanding_balance);
+    if (input.type === "credit") {
+      // Payment received - reduce outstanding
+      newBalance -= Math.abs(input.amount);
+    } else {
+      // Extra credit given - increase outstanding
+      newBalance += Math.abs(input.amount);
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("shops")
+      .update({ outstanding_balance: newBalance })
+      .eq("shop_id", input.shop_id);
+    if (updateError) throw updateError;
+
+    // Record as payment entry for audit trail
+    const { error: paymentError } = await supabaseAdmin.from("payments").insert({
+      shop_id: input.shop_id,
+      amount: input.type === "credit" ? Math.abs(input.amount) : -Math.abs(input.amount),
+      payment_method: "manual",
+      reference_no: `CREDIT-${input.type.toUpperCase()}-${Date.now()}`,
+      notes: input.reason,
+      recorded_by: "HUMAN",
+    });
+    if (paymentError) console.error("Failed to record payment:", paymentError.message);
+
+    revalidateShop(input.shop_id);
+    return {
+      success: true,
+      data: {
+        shop_id: input.shop_id,
+        new_balance: newBalance,
+        new_limit: Number(shop.credit_limit),
+      },
+    };
+  } catch (err) {
+    return handleError(err, "adjustShopCredit");
+  }
+}
+
+export async function updateShopCreditLimit(input: {
+  shop_id: string;
+  credit_limit: number;
+}): Promise<ActionResult<{ shop_id: string; new_limit: number }>> {
+  try {
+    const { error } = await supabaseAdmin
+      .from("shops")
+      .update({ credit_limit: input.credit_limit })
+      .eq("shop_id", input.shop_id);
+    if (error) throw error;
+
+    revalidateShop(input.shop_id);
+    return {
+      success: true,
+      data: { shop_id: input.shop_id, new_limit: input.credit_limit },
+    };
+  } catch (err) {
+    return handleError(err, "updateShopCreditLimit");
+  }
 }

@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge, Card, CardHeader, PageHeader, Stat } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { formatINR } from "@/lib/format";
 import type { ShopWithExtras } from "@/lib/types";
@@ -11,6 +13,10 @@ interface ShopCreditClientProps {
 }
 
 export function ShopCreditClient({ shops }: ShopCreditClientProps) {
+  const [adjusting, setAdjusting] = useState<string | null>(null);
+  const [form, setForm] = useState({ amount: "", reason: "", type: "credit" as "credit" | "debit" });
+  const [limitForm, setLimitForm] = useState<Record<string, string>>({});
+
   const enriched = shops.map(s => {
     const available = s.credit_limit - s.outstanding_balance;
     const pct = s.credit_limit > 0 ? available / s.credit_limit : 1;
@@ -21,6 +27,43 @@ export function ShopCreditClient({ shops }: ShopCreditClientProps) {
   const totalLimit = enriched.reduce((sum, s) => sum + s.credit_limit, 0);
   const overLimit = enriched.filter(s => s.credit_exceeded).length;
   const lowCredit = enriched.filter(s => s.available_credit > 0 && s.available_credit <= 5000).length;
+
+  async function handleAdjust(shopId: string) {
+    if (!form.amount || !form.reason) return;
+    const res = await fetch("/api/credit/adjust", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        shop_id: shopId,
+        amount: Number(form.amount),
+        reason: form.reason,
+        type: form.type,
+      }),
+    });
+    if (res.ok) {
+      setAdjusting(null);
+      setForm({ amount: "", reason: "", type: "credit" });
+      window.location.reload();
+    }
+  }
+
+  async function handleLimitUpdate(shopId: string) {
+    const val = limitForm[shopId];
+    if (!val) return;
+    const res = await fetch("/api/credit/adjust", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update_limit",
+        shop_id: shopId,
+        credit_limit: Number(val),
+      }),
+    });
+    if (res.ok) {
+      setLimitForm((prev) => ({ ...prev, [shopId]: "" }));
+      window.location.reload();
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -51,8 +94,26 @@ export function ShopCreditClient({ shops }: ShopCreditClientProps) {
                 </div>
               )
             },
-            { key: "credit_limit", header: "Limit", className: "w-32",
-              render: (s) => <span className="font-medium">{formatINR(s.credit_limit)}</span>
+            { key: "credit_limit", header: "Limit", className: "w-40",
+              render: (s) => (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">{formatINR(s.credit_limit)}</span>
+                  {limitForm[s.shop_id] !== undefined ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        className="w-20 rounded border px-1 py-0.5 text-xs"
+                        value={limitForm[s.shop_id]}
+                        onChange={(e) => setLimitForm((p) => ({ ...p, [s.shop_id]: e.target.value }))}
+                      />
+                      <button onClick={() => handleLimitUpdate(s.shop_id)} className="text-xs text-emerald-600 hover:underline">✓</button>
+                      <button onClick={() => setLimitForm((p) => { const n = { ...p }; delete n[s.shop_id]; return n; })} className="text-xs text-zinc-400 hover:underline">✕</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setLimitForm((p) => ({ ...p, [s.shop_id]: String(s.credit_limit) }))} className="text-xs text-zinc-400 hover:text-emerald-600">✎</button>
+                  )}
+                </div>
+              )
             },
             { key: "outstanding_balance", header: "Outstanding", className: "w-36",
               render: (s) => <span className="font-medium text-rose-600">{formatINR(s.outstanding_balance)}</span>
@@ -70,12 +131,44 @@ export function ShopCreditClient({ shops }: ShopCreditClientProps) {
                 </div>
               )
             },
-            { key: "flags", header: "Status", className: "w-40",
+            { key: "action", header: "Action", className: "w-48",
               render: (s) => (
-                <div className="flex flex-wrap gap-1">
-                  {s.credit_exceeded && <Badge tone="rose">Over Limit</Badge>}
-                  {s.available_credit > 0 && s.available_credit <= 5000 && <Badge tone="amber">Low Credit</Badge>}
-                  {!s.credit_exceeded && s.available_credit > 5000 && <Badge tone="emerald">Healthy</Badge>}
+                <div>
+                  {adjusting === s.shop_id ? (
+                    <div className="space-y-2 rounded-lg border bg-white p-2 shadow-sm">
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setForm((p) => ({ ...p, type: "credit" }))}
+                          className={cn("rounded px-2 py-0.5 text-xs", form.type === "credit" ? "bg-emerald-100 text-emerald-700" : "bg-zinc-100 text-zinc-500")}
+                        >Payment Received</button>
+                        <button
+                          onClick={() => setForm((p) => ({ ...p, type: "debit" }))}
+                          className={cn("rounded px-2 py-0.5 text-xs", form.type === "debit" ? "bg-rose-100 text-rose-700" : "bg-zinc-100 text-zinc-500")}
+                        >Extra Credit</button>
+                      </div>
+                      <input
+                        type="number"
+                        placeholder="Amount"
+                        className="w-full rounded border px-2 py-1 text-xs"
+                        value={form.amount}
+                        onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+                      />
+                      <input
+                        placeholder="Reason"
+                        className="w-full rounded border px-2 py-1 text-xs"
+                        value={form.reason}
+                        onChange={(e) => setForm((p) => ({ ...p, reason: e.target.value }))}
+                      />
+                      <div className="flex gap-1">
+                        <Button size="sm" onClick={() => handleAdjust(s.shop_id)}>Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setAdjusting(null); setForm({ amount: "", reason: "", type: "credit" }); }}>Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button size="sm" variant="ghost" onClick={() => setAdjusting(s.shop_id)}>
+                      Adjust Credit
+                    </Button>
+                  )}
                 </div>
               )
             },

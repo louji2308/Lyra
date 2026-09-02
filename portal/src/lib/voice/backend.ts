@@ -528,11 +528,22 @@ export async function createOrder(
 
   const { data: shop, error: shopError } = await supabase
     .from("shops")
-    .select("shop_id, shop_name, preferred_language")
+    .select("shop_id, shop_name, preferred_language, beat_route_id")
     .eq("shop_id", shopId)
     .maybeSingle();
   if (shopError) throw new VoiceApiError(500, "db_error", shopError.message);
   if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  // Fetch route's delivery_days for scheduling
+  let deliveryDays = 3;
+  if (shop.beat_route_id) {
+    const { data: route } = await supabase
+      .from("routes")
+      .select("delivery_days")
+      .eq("route_id", shop.beat_route_id)
+      .maybeSingle();
+    if (route?.delivery_days) deliveryDays = route.delivery_days;
+  }
 
   const ids = [...new Set(items.map((i) => i.product_id))];
   const { data: products, error: productsError } = await supabase
@@ -567,7 +578,7 @@ export async function createOrder(
   const orderId = await nextNumericId("ORD", "orders");
   const callId = await nextNumericId("CALL", "call_logs");
   const today = new Date().toISOString().slice(0, 10);
-  const deliveryDate = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  const deliveryDate = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
 
@@ -2152,4 +2163,230 @@ export async function getTodayDetails(shopId: string) {
       created_at: n.created_at,
     })),
   };
+}
+
+// ──────────────────────────────────────────────
+// Beat Scheduler
+// ──────────────────────────────────────────────
+
+export interface BeatScheduleEntry {
+  route_id: string;
+  route_name: string;
+  beat_day: number;
+  delivery_days: number;
+  salesperson: string | null;
+  shop_count: number;
+  shops: { shop_id: string; shop_name: string; phone_number: string; opt_out: boolean }[];
+}
+
+export async function getBeatSchedule(): Promise<BeatScheduleEntry[]> {
+  const { data: routes, error } = await supabase
+    .from("routes")
+    .select("route_id, route_name, beat_day, delivery_days, salesperson, is_active")
+    .eq("is_active", true)
+    .order("beat_day");
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  const { data: shops } = await supabase
+    .from("shops")
+    .select("shop_id, shop_name, phone_number, beat_route_id, opt_out")
+    .eq("opt_out", false);
+
+  const shopsByRoute = new Map<string, typeof shops>();
+  (shops ?? []).forEach((s) => {
+    if (!s.beat_route_id) return;
+    if (!shopsByRoute.has(s.beat_route_id)) shopsByRoute.set(s.beat_route_id, []);
+    shopsByRoute.get(s.beat_route_id)!.push(s);
+  });
+
+  return (routes ?? []).map((r) => ({
+    route_id: r.route_id,
+    route_name: r.route_name,
+    beat_day: r.beat_day,
+    delivery_days: r.delivery_days,
+    salesperson: r.salesperson,
+    shop_count: (shopsByRoute.get(r.route_id) ?? []).length,
+    shops: (shopsByRoute.get(r.route_id) ?? []).map((s) => ({
+      shop_id: s.shop_id,
+      shop_name: s.shop_name,
+      phone_number: s.phone_number,
+      opt_out: s.opt_out,
+    })),
+  }));
+}
+
+export interface BeatCallRecord {
+  id: number;
+  call_date: string;
+  route_id: string;
+  shop_id: string;
+  status: "pending" | "calling" | "completed" | "failed" | "skipped";
+  order_id: string | null;
+  attempt_count: number;
+  shop_name?: string;
+  route_name?: string;
+}
+
+export async function getTodayBeatCalls(): Promise<BeatCallRecord[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("beat_calls")
+    .select("*, shops(shop_name), routes(route_name)")
+    .eq("call_date", today)
+    .order("id");
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    call_date: r.call_date,
+    route_id: r.route_id,
+    shop_id: r.shop_id,
+    status: r.status,
+    order_id: r.order_id,
+    attempt_count: r.attempt_count,
+    shop_name: r.shops?.shop_name,
+    route_name: r.routes?.route_name,
+  }));
+}
+
+export async function generateBeatCalls(): Promise<{ created: number; skipped: number }> {
+  const today = new Date().toISOString().slice(0, 10);
+  const dayOfWeek = new Date().getDay(); // 0=Sun, 1=Mon...
+
+  // Find routes scheduled for today
+  const { data: routes, error: routeError } = await supabase
+    .from("routes")
+    .select("route_id")
+    .eq("beat_day", dayOfWeek)
+    .eq("is_active", true);
+  if (routeError) throw new VoiceApiError(500, "db_error", routeError.message);
+  if (!routes?.length) return { created: 0, skipped: 0 };
+
+  const routeIds = routes.map((r) => r.route_id);
+
+  // Find eligible shops on these routes
+  const { data: shops, error: shopError } = await supabase
+    .from("shops")
+    .select("shop_id, beat_route_id")
+    .in("beat_route_id", routeIds)
+    .eq("opt_out", false)
+    .eq("voice_consent", true);
+  if (shopError) throw new VoiceApiError(500, "db_error", shopError.message);
+
+  // Check which already have calls today
+  const { data: existingCalls } = await supabase
+    .from("beat_calls")
+    .select("shop_id")
+    .eq("call_date", today);
+  const alreadyCalled = new Set((existingCalls ?? []).map((c) => c.shop_id));
+
+  const toCreate = (shops ?? []).filter((s) => !alreadyCalled.has(s.shop_id));
+  const skipped = (shops ?? []).length - toCreate.length;
+
+  if (toCreate.length > 0) {
+    const { error: insertError } = await supabase.from("beat_calls").insert(
+      toCreate.map((s) => ({
+        call_date: today,
+        route_id: s.beat_route_id,
+        shop_id: s.shop_id,
+        status: "pending",
+      }))
+    );
+    if (insertError) throw new VoiceApiError(500, "db_error", insertError.message);
+  }
+
+  return { created: toCreate.length, skipped };
+}
+
+export async function updateBeatCallStatus(
+  beatCallId: number,
+  status: BeatCallRecord["status"],
+  orderId?: string
+): Promise<void> {
+  const update: Record<string, any> = {
+    status,
+    last_attempt_at: new Date().toISOString(),
+  };
+  if (orderId) update.order_id = orderId;
+
+  const { error } = await supabase
+    .from("beat_calls")
+    .update(update)
+    .eq("id", beatCallId);
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+}
+
+// ──────────────────────────────────────────────
+// Auto-Delivery
+// ──────────────────────────────────────────────
+
+export async function autoCompleteDeliveries(): Promise<{ updated: number }> {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Find confirmed orders where delivery_date <= today and not yet delivered
+  const { data: orders, error: orderError } = await supabase
+    .from("orders")
+    .select("order_id, shop_id, total_amount, delivery_date")
+    .eq("order_status", "confirmed")
+    .lte("delivery_date", today);
+  if (orderError) throw new VoiceApiError(500, "db_error", orderError.message);
+  if (!orders?.length) return { updated: 0 };
+
+  // Check which already have delivery records
+  const orderIds = orders.map((o) => o.order_id);
+  const { data: existingDeliveries } = await supabase
+    .from("deliveries")
+    .select("order_id")
+    .in("order_id", orderIds);
+  const alreadyDelivered = new Set((existingDeliveries ?? []).map((d) => d.order_id));
+
+  const toDeliver = orders.filter((o) => !alreadyDelivered.has(o.order_id));
+  let updated = 0;
+
+  for (const order of toDeliver) {
+    // Fetch order items for delivery_items
+    const { data: orderItems } = await supabase
+      .from("order_items")
+      .select("order_item_id, quantity")
+      .eq("order_id", order.order_id);
+
+    // Create delivery record
+    const { data: delivery, error: delError } = await supabase
+      .from("deliveries")
+      .insert({
+        order_id: order.order_id,
+        delivery_date: order.delivery_date,
+        delivery_slot: "2 PM - 5 PM",
+        status: "completed",
+        notes: "Auto-delivered by scheduler",
+      })
+      .select("delivery_id")
+      .single();
+    if (delError) {
+      console.error(`Failed to create delivery for ${order.order_id}:`, delError.message);
+      continue;
+    }
+
+    // Create delivery items
+    if (orderItems?.length && delivery) {
+      await supabase.from("delivery_items").insert(
+        orderItems.map((oi) => ({
+          delivery_id: delivery.delivery_id,
+          order_item_id: oi.order_item_id,
+          delivered_qty: oi.quantity,
+          returned_qty: 0,
+        }))
+      );
+    }
+
+    // Update order status
+    await supabase
+      .from("orders")
+      .update({ order_status: "delivered" })
+      .eq("order_id", order.order_id);
+
+    updated++;
+  }
+
+  return { updated };
 }
