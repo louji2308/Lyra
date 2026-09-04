@@ -3,7 +3,6 @@ export type VoiceState =
   | "good_time"
   | "repeat_order"
   | "changes"
-  | "catalog_query"
   | "read_back"
   | "confirm"
   | "upsell_repeat"
@@ -65,6 +64,7 @@ export interface VoiceContext {
   pendingRemove?: { query: string; quantity?: number };
   pendingCallbackTime?: string;
   catalogResults?: Array<{ product_id: string; product_name: string; brand: string; category: string; price: number; unit_type: string; available_qty?: number }>;
+  products?: Array<{ product_id: string; product_name: string; brand: string; category: string; price: number; unit_type: string }>;
 }
 
 export interface VoiceMessage {

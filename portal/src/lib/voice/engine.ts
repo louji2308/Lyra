@@ -53,6 +53,42 @@ function removeFromCart(cart: CartItem[], productId: string, quantity?: number):
   );
 }
 
+/**
+ * Find a product by fuzzy name match against the products list.
+ * Returns the best match or null if not found.
+ */
+function findProduct(
+  products: VoiceContext["products"],
+  query: string
+): NonNullable<VoiceContext["products"]>[number] | null {
+  if (!products || !query) return null;
+  const q = query.toLowerCase().trim();
+
+  // Exact match on product_name
+  const exact = products.find((p) => p.product_name.toLowerCase() === q);
+  if (exact) return exact;
+
+  // Partial match — product_name contains query or vice versa
+  const partial = products.find(
+    (p) => p.product_name.toLowerCase().includes(q) || q.includes(p.product_name.toLowerCase())
+  );
+  if (partial) return partial;
+
+  // Brand match — query matches brand name
+  const brandMatch = products.find((p) => p.brand.toLowerCase().includes(q) || q.includes(p.brand.toLowerCase()));
+  if (brandMatch) return brandMatch;
+
+  // Fuzzy: remove spaces and compare
+  const qClean = q.replace(/\s+/g, "");
+  const fuzzy = products.find((p) => {
+    const nameClean = p.product_name.toLowerCase().replace(/\s+/g, "");
+    return nameClean.includes(qClean) || qClean.includes(nameClean);
+  });
+  if (fuzzy) return fuzzy;
+
+  return null;
+}
+
 function endWith(
   state: VoiceState,
   agentText: string,
@@ -108,7 +144,28 @@ export function step(
     return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
   }
   if (intent === "catalog_query") {
-    return { state: "catalog_query", agentText: SCRIPT.catalogThinking, done: false, ctx };
+    // Search products list immediately — no dead end
+    const query = userText.replace(/(enna|irukka|available|stock|vum|ha| undo| ah)/gi, "").trim();
+    const matched = findProduct(ctx.products, query);
+    if (matched) {
+      const inCart = ctx.currentCart.some((c) => c.product_id === matched.product_id);
+      return {
+        state: "changes",
+        agentText: SCRIPT.catalogFound(matched.product_name, matched.brand, matched.price, matched.unit_type, inCart),
+        done: false,
+        ctx,
+      };
+    }
+    // Try partial match — list all from same brand
+    const brand = query.split(/\s+/)[0];
+    const brandProducts = (ctx.products ?? []).filter(
+      (p) => p.brand.toLowerCase().includes(brand.toLowerCase()) || brand.toLowerCase().includes(p.brand.toLowerCase())
+    );
+    if (brandProducts.length > 0) {
+      const list = brandProducts.slice(0, 5).map((p) => `${p.product_name} ₹${p.price}`).join(", ");
+      return { state: "changes", agentText: `Ivlo products irukku: ${list}. Enna venum?`, done: false, ctx };
+    }
+    return { state: "changes", agentText: SCRIPT.catalogNone, done: false, ctx };
   }
   // Informational queries (stock, credit, delivery, etc.) — don't push orders
   if (intent === "info") {
@@ -335,22 +392,57 @@ export function step(
       if (addMatch) {
         const qty = parseInt(addMatch[1], 10) || 1;
         const productQuery = addMatch[2].trim();
+
+        // VERIFY PRODUCT EXISTS — don't hallucinate
+        const matched = findProduct(ctx.products, productQuery);
+        if (!matched) {
+          return {
+            state: "changes",
+            agentText: SCRIPT.productNotFound(productQuery),
+            done: false,
+            ctx,
+          };
+        }
+
+        // Product found — add to cart with verified data
+        const newItem: CartItem = {
+          product_id: matched.product_id,
+          product_name: matched.product_name,
+          quantity: qty,
+          unit: matched.unit_type,
+          price: matched.price,
+          line_total: matched.price * qty,
+        };
+        const updatedCart = addToCart(ctx.currentCart, newItem);
         return {
           state: "changes",
-          agentText: SCRIPT.addingToCart(productQuery, qty),
+          agentText: SCRIPT.addingToCart(matched.product_name, qty) + " " + SCRIPT.whatElse,
           done: false,
-          ctx: { ...ctx, pendingAdd: { query: productQuery, quantity: qty } },
+          ctx: { ...ctx, currentCart: updatedCart, currentSummary: summarizeCart(updatedCart) },
         };
       }
 
       if (removeMatch) {
         const qty = parseInt(removeMatch[1], 10);
         const productQuery = removeMatch[2].trim();
+
+        // Find product in cart by name match
+        const matched = findProduct(ctx.products, productQuery);
+        if (!matched) {
+          return {
+            state: "changes",
+            agentText: SCRIPT.productNotInCart(productQuery),
+            done: false,
+            ctx,
+          };
+        }
+
+        const updatedCart = removeFromCart(ctx.currentCart, matched.product_id, qty || undefined);
         return {
           state: "changes",
-          agentText: SCRIPT.removingFromCart(productQuery, qty || 1),
+          agentText: SCRIPT.removingFromCart(matched.product_name, qty || 1) + " " + SCRIPT.whatElse,
           done: false,
-          ctx: { ...ctx, pendingRemove: { query: productQuery, quantity: qty } },
+          ctx: { ...ctx, currentCart: updatedCart, currentSummary: summarizeCart(updatedCart) },
         };
       }
 
@@ -376,21 +468,6 @@ export function step(
         done: false,
         ctx: { ...ctx, currentSummary: corrected, corrections: ctx.corrections + 1 },
       };
-    }
-
-    case "catalog_query": {
-      // This state is handled by the tool call in the API layer
-      // After tool returns, we come back here with results in ctx.catalogResults
-      const results = ctx.catalogResults;
-      if (results && results.length > 0) {
-        return {
-          state: "changes",
-          agentText: SCRIPT.catalogResults(results),
-          done: false,
-          ctx: { ...ctx, catalogResults: undefined },
-        };
-      }
-      return { state: "changes", agentText: SCRIPT.catalogNone, done: false, ctx };
     }
 
     case "read_back": {
@@ -515,7 +592,6 @@ export const STATE_LABELS: Record<VoiceState, string> = {
   good_time: "Good time?",
   repeat_order: "Suggest repeat",
   changes: "Taking changes",
-  catalog_query: "Catalog query",
   read_back: "Read back",
   confirm: "Confirming",
   upsell_repeat: "Upsell repeat",

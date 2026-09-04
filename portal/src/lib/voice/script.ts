@@ -43,6 +43,19 @@ export const SCRIPT = {
 
   catalogNone: "Search panna product catalog la illai. Vera enna venum?",
 
+  catalogFound: (name: string, brand: string, price: number, unit: string, inCart: boolean) => {
+    if (inCart) return `${name} ungaloda cart la irukku. Vera enna venum?`;
+    return `${name} (${brand}) available irukku. ₹${price}/${unit}. Cart la add pannalama?`;
+  },
+
+  productNotFound: (query: string) =>
+    `Sorry, "${query}" ippo available la illai. Vera enna venum?`,
+
+  productNotInCart: (query: string) =>
+    `"${query}" cart la illai. Vera enna venum?`,
+
+  whatElse: "Vera enna venum?",
+
   // ========== UPSELL REPEAT ORDER ==========
   upsellRepeat: (repeatItems: Array<{ product_name: string; quantity: number; unit: string }>) => {
     const items = repeatItems.map((r) => `${r.quantity} ${r.unit} ${r.product_name}`).join(", ");

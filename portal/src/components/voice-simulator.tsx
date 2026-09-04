@@ -55,7 +55,6 @@ const FLOW_STEPS: VoiceState[] = [
   "good_time",
   "repeat_order",
   "changes",
-  "catalog_query",
   "read_back",
   "confirm",
   "upsell_repeat",
@@ -87,6 +86,17 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
   const [catalogSearch, setCatalogSearch] = useState("");
   const [catalogResults, setCatalogResults] = useState<ProductCatalogItem[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
+  const [allProducts, setAllProducts] = useState<Array<{ product_id: string; product_name: string; brand: string; category: string; price: number; unit_type: string }>>([]);
+
+  // Fetch all products once on mount for product verification
+  useEffect(() => {
+    fetch("/api/products?active=true")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setAllProducts(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const phaseRef = useRef(phase);
   const stateRef = useRef(state);
@@ -259,35 +269,6 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
         speak(result.agentText);
       }
 
-      // Handle catalog_query state - call API to search catalog
-      if (result.state === "catalog_query" && result.ctx) {
-        try {
-          pushTrace("search_catalog", `query="${trimmed}"`);
-          const searchResult = await voiceApi.searchCatalog(trimmed);
-          setCatalogResults(searchResult.products);
-          setCatalogLoading(false);
-          // Continue the flow with catalog results
-          const updatedCtx = { ...result.ctx, catalogResults: searchResult.products };
-          hydrateState("changes", updatedCtx);
-          const continueResult = step("changes", "", updatedCtx);
-          hydrateState(continueResult.state, continueResult.ctx);
-          if (continueResult.agentText) {
-            setMessages((m) => [...m, { role: "agent", text: continueResult.agentText }]);
-            speak(continueResult.agentText);
-          }
-        } catch (err) {
-          pushTrace("search_catalog", err instanceof Error ? err.message : String(err), "error");
-          const errorCtx = { ...result.ctx, catalogResults: [] };
-          hydrateState("changes", errorCtx);
-          const continueResult = step("changes", "", errorCtx);
-          hydrateState(continueResult.state, continueResult.ctx);
-          if (continueResult.agentText) {
-            setMessages((m) => [...m, { role: "agent", text: continueResult.agentText }]);
-            speak(continueResult.agentText);
-          }
-        }
-      }
-
       if (result.done) {
         phaseRef.current = "done";
         setPhase("done");
@@ -356,6 +337,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
         isAutoCall: false,
         onboardingStep: null,
         onboardingData: {},
+        products: allProducts,
       };
       const first = startCall(ctx0);
       hydrateState(first.state, first.ctx);
@@ -385,6 +367,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
           onboardingStep: "name",
           onboardingData: {},
           newShopPhone: shop.phone_number,
+          products: [],
         };
         const first = startCall(ctx0);
         hydrateState(first.state, first.ctx);

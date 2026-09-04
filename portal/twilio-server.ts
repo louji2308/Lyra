@@ -141,18 +141,27 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
   if (callerPhone) {
     try {
       console.log(`Identifying shop by caller: ${callerPhone}`);
-      const shop = await identifyShopByAnyPhone(callerPhone);
-      const suggested = await getSuggestedOrder(shop.shop_id);
+      // Step 1: Identify shop + fetch all products in parallel
+      const [shop, allProducts] = await Promise.all([
+        identifyShopByAnyPhone(callerPhone),
+        supabaseAdmin
+          .from("products")
+          .select("product_id, product_name, brand, category, price, unit_type")
+          .eq("is_active", true)
+          .then((r) => r.data ?? []),
+      ]);
 
-      // Check if this is an auto-call (beat call initiated by scheduler)
-      const today = new Date().toISOString().slice(0, 10);
-      const { data: beatCall } = await supabaseAdmin
-        .from("beat_calls")
-        .select("id")
-        .eq("shop_id", shop.shop_id)
-        .eq("call_date", today)
-        .eq("status", "calling")
-        .maybeSingle();
+      // Step 2: Fetch suggested order + beat call in parallel (both depend on shop_id)
+      const [suggested, beatCallResult] = await Promise.all([
+        getSuggestedOrder(shop.shop_id),
+        supabaseAdmin
+          .from("beat_calls")
+          .select("id")
+          .eq("shop_id", shop.shop_id)
+          .eq("call_date", new Date().toISOString().slice(0, 10))
+          .eq("status", "calling")
+          .maybeSingle(),
+      ]);
 
       session.ctx = {
         shopId: shop.shop_id,
@@ -167,18 +176,26 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
         pendingReturnProductName: null,
         pendingReturnOrderId: null,
         isNewShop: false,
-        isAutoCall: !!beatCall,
+        isAutoCall: !!beatCallResult.data,
         onboardingStep: null,
         onboardingData: {},
+        products: allProducts,
       };
       shopFound = true;
-      console.log(`Shop identified: ${shop.shop_name} (${shop.shop_id}) auto=${!!beatCall}`);
+      console.log(`Shop identified: ${shop.shop_name} (${shop.shop_id}) auto=${!!beatCallResult.data} products=${allProducts.length}`);
     } catch (err) {
       console.log(`Shop not found for ${callerPhone}, using default context`);
     }
   }
 
   if (!shopFound) {
+    // Fetch products in background for unknown shops too
+    const allProducts = await supabaseAdmin
+      .from("products")
+      .select("product_id, product_name, brand, category, price, unit_type")
+      .eq("is_active", true)
+      .then((r) => r.data ?? []);
+
     session.ctx = {
       shopId: "",
       shopName: "Unknown Shop",
@@ -195,6 +212,7 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
       isAutoCall: false,
       onboardingStep: null,
       onboardingData: {},
+      products: allProducts,
     } as VoiceContext;
   }
 
