@@ -197,7 +197,8 @@ export function step(
     // ========== ONBOARDING FLOW (for new shops) ==========
     case "onboarding_name": {
       const name = userText.trim();
-      if (!name) {
+      // Filter garbage: too short, numbers only, or common STT noise
+      if (!name || name.length < 2 || /^\d+$/.test(name) || /^(ha|ah|um|hm|ok|yes|no|sari|adi)$/i.test(name)) {
         return { state: "onboarding_name", agentText: SCRIPT.onboardingAskName, done: false, ctx };
       }
       return {
@@ -214,7 +215,7 @@ export function step(
 
     case "onboarding_area": {
       const area = userText.trim();
-      if (!area) {
+      if (!area || area.length < 2 || /^\d+$/.test(area) || /^(ha|ah|um|hm|ok|yes|no|sari|adi)$/i.test(area)) {
         return { state: "onboarding_area", agentText: SCRIPT.onboardingAskArea(""), done: false, ctx };
       }
       return {
@@ -231,7 +232,7 @@ export function step(
 
     case "onboarding_owner": {
       const owner = userText.trim();
-      if (!owner) {
+      if (!owner || owner.length < 2 || /^\d+$/.test(owner) || /^(ha|ah|um|hm|ok|yes|no|sari|adi)$/i.test(owner)) {
         return { state: "onboarding_owner", agentText: SCRIPT.onboardingAskOwner(""), done: false, ctx };
       }
       return {
@@ -332,15 +333,14 @@ export function step(
 
     // ========== MAIN ORDER FLOW ==========
     case "greeting": {
-      if (intent === "yes") {
-        return {
-          state: "good_time",
-          agentText: SCRIPT.goodTime,
-          done: false,
-          ctx,
-        };
-      }
-      return endWith(state, SCRIPT.endWrongNumber, ctx);
+      // Accept any response — user may say "yes", "vanakkam", their name, etc.
+      // "stop" is already handled by global pre-checks above
+      return {
+        state: "good_time",
+        agentText: SCRIPT.goodTime,
+        done: false,
+        ctx,
+      };
     }
 
     case "good_time": {

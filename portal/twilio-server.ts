@@ -27,6 +27,8 @@ interface CallSession {
   greetingSent: boolean;
   markResolvers: Map<string, () => void>;
   closed: boolean;
+  deepgramReady: boolean;
+  lastAgentText: string;
 }
 
 const WS_PORT = parseInt(process.env.TWILIO_WS_PORT ?? "3001", 10);
@@ -64,6 +66,8 @@ wss.on("connection", (ws: WebSocket) => {
     greetingSent: false,
     markResolvers: new Map(),
     closed: false,
+    deepgramReady: false,
+    lastAgentText: "",
   };
 
   ws.on("message", async (data: Buffer) => {
@@ -100,8 +104,12 @@ async function connectDeepgram(session: CallSession) {
 
     connection.on("open", async () => {
       console.log("Deepgram connected");
-      // Send greeting immediately — identify shop by caller ID if available
-      await sendGreeting(session, session.callerPhone ?? undefined);
+      session.deepgramReady = true;
+      // Only send greeting if Twilio start has already arrived (streamSid set)
+      if (session.streamSid) {
+        await sendGreeting(session, session.callerPhone ?? undefined);
+      }
+      // Otherwise, sendGreeting will be triggered by handleTwilioMessage "start"
     });
 
     connection.on("message", async (data: unknown) => {
@@ -242,6 +250,10 @@ async function handleTwilioMessage(session: CallSession, msg: TwilioMessage) {
       const customParams = startData?.CustomParameters as Record<string, string> | undefined;
       session.callerPhone = customParams?.From ?? customParams?.from ?? (startData?.From as string) ?? null;
       console.log("Stream started:", session.streamSid, "caller:", session.callerPhone);
+      // Send greeting now that we have streamSid — if Deepgram is also ready
+      if (session.deepgramReady && !session.greetingSent) {
+        await sendGreeting(session, session.callerPhone ?? undefined);
+      }
       break;
 
     case "media":
@@ -296,6 +308,20 @@ async function processUserSpeech(session: CallSession, userText: string) {
     if (!session.ctx) {
       await sendGreeting(session);
       return;
+    }
+
+    // Echo protection: ignore speech that looks like agent's own TTS output
+    const clean = userText.toLowerCase().trim();
+    if (session.lastAgentText && clean.length > 3) {
+      // Check if user text is a substring of agent's last message (agent echo)
+      const agentWords = session.lastAgentText.split(/\s+/);
+      const userWords = clean.split(/\s+/);
+      const overlap = userWords.filter((w) => agentWords.includes(w)).length;
+      if (overlap >= Math.min(3, userWords.length) && overlap / userWords.length > 0.6) {
+        console.log(`Echo detected — ignoring: "${userText}"`);
+        session.isProcessing = false;
+        return;
+      }
     }
 
     const result = step(session.state, userText, session.ctx);
@@ -369,6 +395,9 @@ async function sendAudioToTwilio(session: CallSession, text: string) {
     const audioBuffer = await synthesizeSarvamTTSMulaw(text, "ta-IN");
     const ttsTime = Date.now() - startTime;
     console.log(`TTS synthesized in ${ttsTime}ms (${text.substring(0, 40)}...)`);
+
+    // Track last agent text for echo detection
+    session.lastAgentText = text.toLowerCase().trim();
 
     const base64Audio = audioBuffer.toString("base64");
 
