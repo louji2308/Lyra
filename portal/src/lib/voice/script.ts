@@ -3,6 +3,9 @@ export const SCRIPT = {
   greet: (shopName: string) =>
     `Vanakkam! ${shopName} aa? Shree Agencies la irundhu call pannuren.`,
 
+  greetInbound:
+    "Vanakkam! Naan Lyra, Shree Agencies oda order assistant. Enna madhiri sollalam?",
+
   goodTime: "Ippo pesa convenient aa? Stock order confirm pannalama?",
 
   // ========== REPEAT ORDER ==========

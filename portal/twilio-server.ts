@@ -33,6 +33,29 @@ interface CallSession {
 
 const WS_PORT = parseInt(process.env.TWILIO_WS_PORT ?? "3001", 10);
 
+// In-memory product cache — refreshed every 5 minutes
+let productCache: Array<{ product_id: string; product_name: string; brand: string; category: string; price: number; unit_type: string }> = [];
+let productCacheTime = 0;
+const PRODUCT_CACHE_TTL = 5 * 60 * 1000;
+
+async function getProductsCached(): Promise<typeof productCache> {
+  if (Date.now() - productCacheTime < PRODUCT_CACHE_TTL && productCache.length > 0) {
+    return productCache;
+  }
+  const { data } = await supabaseAdmin
+    .from("products")
+    .select("product_id, product_name, brand, category, price, unit_type")
+    .eq("is_active", true)
+    .order("product_name");
+  productCache = data ?? [];
+  productCacheTime = Date.now();
+  console.log(`Product cache refreshed: ${productCache.length} products`);
+  return productCache;
+}
+
+// Pre-warm cache on startup
+getProductsCached().catch(() => {});
+
 const server = createServer((req: IncomingMessage, res: ServerResponse) => {
   if (req.method === "POST" && req.url === "/api/twilio/voice") {
     const wsHost = process.env.TUNNEL_URL ?? `ws://localhost:${WS_PORT}`;
@@ -96,7 +119,7 @@ async function connectDeepgram(session: CallSession) {
       encoding: "mulaw",
       sample_rate: "8000",
       interim_results: "true",
-      utterance_end_ms: "1000",
+      utterance_end_ms: "500",
       vad_events: "true",
     });
 
@@ -143,20 +166,17 @@ async function connectDeepgram(session: CallSession) {
 async function sendGreeting(session: CallSession, callerPhone?: string) {
   if (session.greetingSent || session.closed) return;
   session.greetingSent = true;
+  const t0 = Date.now();
 
   // Try to identify shop by caller ID
   let shopFound = false;
   if (callerPhone) {
     try {
       console.log(`Identifying shop by caller: ${callerPhone}`);
-      // Step 1: Identify shop + fetch all products in parallel
+      // Step 1: Identify shop (DB) + get cached products (memory) in parallel
       const [shop, allProducts] = await Promise.all([
         identifyShopByAnyPhone(callerPhone),
-        supabaseAdmin
-          .from("products")
-          .select("product_id, product_name, brand, category, price, unit_type")
-          .eq("is_active", true)
-          .then((r) => r.data ?? []),
+        getProductsCached(),
       ]);
 
       // Step 2: Fetch suggested order + beat call in parallel (both depend on shop_id)
@@ -185,25 +205,20 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
         pendingReturnOrderId: null,
         isNewShop: false,
         isAutoCall: !!beatCallResult.data,
+        isInbound: !beatCallResult.data,
         onboardingStep: null,
         onboardingData: {},
         products: allProducts,
       };
       shopFound = true;
-      console.log(`Shop identified: ${shop.shop_name} (${shop.shop_id}) auto=${!!beatCallResult.data} products=${allProducts.length}`);
+      console.log(`Shop identified: ${shop.shop_name} (${shop.shop_id}) auto=${!!beatCallResult.data} products=${allProducts.length} [${Date.now() - t0}ms]`);
     } catch (err) {
-      console.log(`Shop not found for ${callerPhone}, using default context`);
+      console.log(`Shop not found for ${callerPhone}, using default context [${Date.now() - t0}ms]`);
     }
   }
 
   if (!shopFound) {
-    // Fetch products in background for unknown shops too
-    const allProducts = await supabaseAdmin
-      .from("products")
-      .select("product_id, product_name, brand, category, price, unit_type")
-      .eq("is_active", true)
-      .then((r) => r.data ?? []);
-
+    const allProducts = await getProductsCached();
     session.ctx = {
       shopId: "",
       shopName: "Unknown Shop",
@@ -218,6 +233,7 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
       pendingReturnOrderId: null,
       isNewShop: false,
       isAutoCall: false,
+      isInbound: true,
       onboardingStep: null,
       onboardingData: {},
       products: allProducts,
@@ -227,10 +243,10 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
   const first = startCall(session.ctx!);
   session.state = first.state;
 
-  console.log("Sending greeting immediately...");
-  const startTime = Date.now();
+  console.log(`Sending greeting... [setup took ${Date.now() - t0}ms]`);
+  const ttsStart = Date.now();
   await sendAudioToTwilio(session, first.agentText);
-  console.log(`Greeting sent in ${Date.now() - startTime}ms`);
+  console.log(`Greeting audio sent [TTS: ${Date.now() - ttsStart}ms, total: ${Date.now() - t0}ms]`);
 }
 
 interface TwilioMessage {
@@ -301,6 +317,7 @@ function waitForMark(session: CallSession, markName: string, timeoutMs: number =
 async function processUserSpeech(session: CallSession, userText: string) {
   if (session.isProcessing) return;
   session.isProcessing = true;
+  const t0 = Date.now();
 
   try {
     // If context not yet initialized (shouldn't happen now with greeting-on-connect),
@@ -324,13 +341,24 @@ async function processUserSpeech(session: CallSession, userText: string) {
       }
     }
 
+    console.log(`[processUserSpeech] User: "${userText}" [${Date.now() - t0}ms]`);
+
+    const stepStart = Date.now();
     const result = step(session.state, userText, session.ctx);
+    const stepTime = Date.now() - stepStart;
     session.state = result.state;
     session.ctx = result.ctx;
 
+    console.log(`[processUserSpeech] State: ${result.state} [engine: ${stepTime}ms]`);
+
     if (result.agentText) {
+      const ttsStart = Date.now();
       await sendAudioToTwilio(session, result.agentText);
+      const ttsTime = Date.now() - ttsStart;
+      console.log(`[processUserSpeech] TTS sent [${ttsTime}ms] text: "${result.agentText.substring(0, 50)}..."`);
     }
+
+    console.log(`[processUserSpeech] Total: ${Date.now() - t0}ms`);
 
     if (result.done) {
       console.log("Call completed — waiting for final audio to finish playing...");
@@ -392,9 +420,16 @@ async function sendAudioToTwilio(session: CallSession, text: string) {
 
   try {
     const startTime = Date.now();
-    const audioBuffer = await synthesizeSarvamTTSMulaw(text, "ta-IN");
+
+    // TTS with timeout — don't block call forever
+    const ttsPromise = synthesizeSarvamTTSMulaw(text, "ta-IN");
+    const timeoutPromise = new Promise<null>((_, reject) =>
+      setTimeout(() => reject(new Error("TTS timeout")), 5000)
+    );
+    const audioBuffer = await Promise.race([ttsPromise, timeoutPromise]) as Buffer;
+
     const ttsTime = Date.now() - startTime;
-    console.log(`TTS synthesized in ${ttsTime}ms (${text.substring(0, 40)}...)`);
+    console.log(`TTS: ${ttsTime}ms (${text.substring(0, 50)}...)`);
 
     // Track last agent text for echo detection
     session.lastAgentText = text.toLowerCase().trim();

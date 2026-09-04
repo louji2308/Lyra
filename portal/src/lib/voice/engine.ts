@@ -124,6 +124,17 @@ export function startCall(ctx: VoiceContext): VoiceStep {
       ctx: { ...ctx, currentSummary: summary, currentCart: [] },
     };
   }
+  // Inbound call (shop owner calls us) — introduce ourselves, go straight to order
+  if (ctx.isInbound) {
+    const summary = summarize(ctx.repeatItems);
+    return {
+      state: summary ? "repeat_order" : "changes",
+      agentText: SCRIPT.greetInbound + " " + (summary ? SCRIPT.repeatOrder(summary) : SCRIPT.whatDoYouNeed),
+      done: false,
+      ctx: { ...ctx, currentSummary: summary, currentCart: [] },
+    };
+  }
+  // Outbound call (we call the shop) — identify them
   return {
     state: "greeting",
     agentText: SCRIPT.greet(ctx.shopName),

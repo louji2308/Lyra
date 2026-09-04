@@ -52,6 +52,7 @@ export interface VoiceContext {
   pendingReturnOrderId: string | null;
   isNewShop: boolean;
   isAutoCall: boolean;
+  isInbound: boolean;
   onboardingStep: "name" | "area" | "owner" | "language" | "complete" | null;
   onboardingData: {
     shopName?: string;
