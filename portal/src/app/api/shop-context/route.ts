@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     if (shopId) {
       return Response.json(await getShopContext(shopId, languageDetected));
     }
-    const phone = url.searchParams.get("phone");
+    const phone = url.searchParams.get("phone") ?? url.searchParams.get("phone_number");
     if (!phone) throw new VoiceApiError(400, "phone_or_shop_id_required");
     const shop = await identifyShopByAnyPhone(phone);
     return Response.json(await getShopContext(shop.shop_id));
