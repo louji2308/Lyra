@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       return Response.json(await getShopContext(shopId, languageDetected));
     }
     const phone = url.searchParams.get("phone") ?? url.searchParams.get("phone_number");
+    console.log("[shop-context GET] phone_received:", phone, "url:", request.url);
     if (!phone) throw new VoiceApiError(400, "phone_or_shop_id_required");
     const shop = await identifyShopByAnyPhone(phone);
     return Response.json(await getShopContext(shop.shop_id));
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const phone = body?.phone ?? body?.phone_number;
+    console.log("[shop-context POST] phone_received:", phone);
     if (!phone) throw new VoiceApiError(400, "phone_required");
     const shop = await identifyShopByAnyPhone(String(phone));
     return Response.json({ found: true, shop });
