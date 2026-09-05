@@ -30,7 +30,7 @@ export function ShopCreditClient({ shops }: ShopCreditClientProps) {
 
   async function handleAdjust(shopId: string) {
     if (!form.amount || !form.reason) return;
-    const res = await fetch("/api/credit/adjust", {
+    const res = await fetch("/api/credit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -44,13 +44,16 @@ export function ShopCreditClient({ shops }: ShopCreditClientProps) {
       setAdjusting(null);
       setForm({ amount: "", reason: "", type: "credit" });
       window.location.reload();
+    } else {
+      const data = await res.json().catch(() => ({ error: "Request failed" }));
+      alert(data.error || "Request failed");
     }
   }
 
   async function handleLimitUpdate(shopId: string) {
     const val = limitForm[shopId];
     if (!val) return;
-    const res = await fetch("/api/credit/adjust", {
+    const res = await fetch("/api/credit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -62,6 +65,9 @@ export function ShopCreditClient({ shops }: ShopCreditClientProps) {
     if (res.ok) {
       setLimitForm((prev) => ({ ...prev, [shopId]: "" }));
       window.location.reload();
+    } else {
+      const data = await res.json().catch(() => ({ error: "Request failed" }));
+      alert(data.error || "Request failed");
     }
   }
 

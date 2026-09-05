@@ -262,7 +262,7 @@ export function VoiceSimulator({ shops }: { shops: ShopOption[] }) {
       const prevState = stateRef.current;
       setInput("");
       setMessages((m) => [...m, { role: "user", text: trimmed }]);
-      let result = step(prevState, trimmed, ctxRef.current);
+      const result = step(prevState, trimmed, ctxRef.current);
       hydrateState(result.state, result.ctx);
       if (result.agentText) {
         setMessages((m) => [...m, { role: "agent", text: result.agentText }]);

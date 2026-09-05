@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { todayIST } from "@/lib/format";
 import { buildWhatsAppWaLink } from "@/lib/voice/whatsapp";
 import type {
   AppLanguage,
@@ -36,6 +37,25 @@ export interface BlacklistItem {
   product_id: string;
   product_name: string;
   reason: string | null;
+}
+
+export interface MemoryRowResult {
+  memory_id: number;
+  shop_id: string;
+  memory_text: string;
+  memory_type: MemoryType;
+  confidence_score: number;
+  confirmed_by_user: boolean;
+  created_at: string;
+}
+
+export interface BlacklistRowResult {
+  blacklist_id: number;
+  shop_id: string;
+  product_id: string;
+  product_name: string;
+  reason: string | null;
+  created_at: string;
 }
 
 export interface LastOrderItem {
@@ -150,6 +170,8 @@ export interface SendWhatsAppResult {
   shop_id: string;
   order_id: string;
   whatsapp_sent: boolean;
+  queued?: boolean;
+  pending_id?: number;
   message_preview: string;
   language_detected: AppLanguage | null;
 }
@@ -577,7 +599,7 @@ export async function createOrder(
     Math.round(lineItems.reduce((sum, i) => sum + i.line_total, 0) * 100) / 100;
   const orderId = await nextNumericId("ORD", "orders");
   const callId = await nextNumericId("CALL", "call_logs");
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
   const deliveryDate = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
@@ -670,7 +692,119 @@ export async function saveMemory(
     .select()
     .single();
   if (error) throw new VoiceApiError(500, "db_error", error.message);
-  return data;
+  return data as MemoryRowResult;
+}
+
+export async function updateMemory(
+  memoryId: number,
+  patch: {
+    memory_text?: string;
+    memory_type?: MemoryType;
+    confidence_score?: number;
+    confirmed_by_user?: boolean;
+  }
+): Promise<MemoryRowResult> {
+  if (!Number.isFinite(memoryId)) throw new VoiceApiError(400, "memory_id_required");
+
+  const update: Record<string, unknown> = {};
+  if (patch.memory_text != null) update.memory_text = patch.memory_text.trim();
+  if (patch.memory_type != null) update.memory_type = patch.memory_type;
+  if (patch.confidence_score != null) update.confidence_score = Number(patch.confidence_score);
+  if (patch.confirmed_by_user != null) update.confirmed_by_user = Boolean(patch.confirmed_by_user);
+  if (Object.keys(update).length === 0) throw new VoiceApiError(400, "no_fields_to_update");
+
+  const { data, error } = await supabase
+    .from("shop_memory")
+    .update(update)
+    .eq("memory_id", memoryId)
+    .select()
+    .single();
+  if (error) {
+    if (error.code === "PGRST116") throw new VoiceApiError(404, "memory_not_found");
+    throw new VoiceApiError(500, "db_error", error.message);
+  }
+  if (!data) throw new VoiceApiError(404, "memory_not_found");
+  return data as MemoryRowResult;
+}
+
+export async function deleteShopMemory(memoryId: number): Promise<{ memory_id: number; deleted: true }> {
+  if (!Number.isFinite(memoryId)) throw new VoiceApiError(400, "memory_id_required");
+
+  const { error } = await supabase
+    .from("shop_memory")
+    .delete()
+    .eq("memory_id", memoryId);
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  return { memory_id: memoryId, deleted: true };
+}
+
+export async function recordCallMemories(
+  shopId: string,
+  memories: Array<{
+    memory_text: string;
+    memory_type: MemoryType;
+    confidence_score?: number;
+    confirmed_by_user?: boolean;
+  }>
+): Promise<{ inserted: number; updated: number }> {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  if (!Array.isArray(memories) || memories.length === 0) return { inserted: 0, updated: 0 };
+
+  const { data: shop, error: shopError } = await supabase
+    .from("shops")
+    .select("shop_id")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+  if (shopError) throw new VoiceApiError(500, "db_error", shopError.message);
+  if (!shop) throw new VoiceApiError(404, "shop_not_found");
+
+  let inserted = 0;
+  let updated = 0;
+
+  for (const memory of memories) {
+    const text = memory.memory_text?.trim();
+    if (!text) continue;
+
+    const { data: existing, error: selectError } = await supabase
+      .from("shop_memory")
+      .select("*")
+      .eq("shop_id", shopId)
+      .ilike("memory_text", text)
+      .eq("memory_type", memory.memory_type)
+      .order("memory_id", { ascending: true })
+      .limit(1);
+    if (selectError) throw new VoiceApiError(500, "db_error", selectError.message);
+
+    if (existing && existing.length > 0) {
+      const current = existing[0];
+      const nextConfidence = Math.max(Number(current.confidence_score), memory.confidence_score ?? 0.5);
+      const nextConfirmed = Boolean(current.confirmed_by_user) || Boolean(memory.confirmed_by_user);
+      const { error: updateError } = await supabase
+        .from("shop_memory")
+        .update({
+          memory_text: text,
+          confidence_score: nextConfidence,
+          confirmed_by_user: nextConfirmed,
+        })
+        .eq("memory_id", current.memory_id);
+      if (updateError) throw new VoiceApiError(500, "db_error", updateError.message);
+      updated++;
+    } else {
+      const { error: insertError } = await supabase
+        .from("shop_memory")
+        .insert({
+          shop_id: shopId,
+          memory_text: text,
+          memory_type: memory.memory_type,
+          confidence_score: memory.confidence_score ?? 0.5,
+          confirmed_by_user: memory.confirmed_by_user ?? false,
+        });
+      if (insertError) throw new VoiceApiError(500, "db_error", insertError.message);
+      inserted++;
+    }
+  }
+
+  return { inserted, updated };
 }
 
 function normalizeComplaintType(raw: string): ComplaintType {
@@ -796,10 +930,101 @@ export async function checkBlacklist(
   };
 }
 
+export async function addBlacklistEntry(
+  shopId: string,
+  productId: string,
+  reason?: string | null
+): Promise<BlacklistRowResult> {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  if (!productId) throw new VoiceApiError(400, "product_id_required");
+
+  const payload: Record<string, unknown> = { shop_id: shopId, product_id: productId };
+  if (reason != null) payload.reason = reason.trim() || null;
+
+  const { data, error } = await supabase
+    .from("blacklist")
+    .upsert(payload, { onConflict: "shop_id,product_id" })
+    .select("blacklist_id, shop_id, product_id, reason, created_at")
+    .maybeSingle();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  if (!data) throw new VoiceApiError(500, "db_error", "Blacklist upsert returned no row");
+
+  const names = await resolveProductNames([data.product_id]);
+  return {
+    blacklist_id: data.blacklist_id,
+    shop_id: data.shop_id,
+    product_id: data.product_id,
+    product_name: names.get(data.product_id) ?? data.product_id,
+    reason: data.reason,
+    created_at: data.created_at,
+  };
+}
+
+export async function updateBlacklistEntry(
+  blacklistId: number,
+  patch: { reason?: string | null; product_id?: string }
+): Promise<BlacklistRowResult> {
+  if (!Number.isFinite(blacklistId)) throw new VoiceApiError(400, "blacklist_id_required");
+
+  const update: Record<string, unknown> = {};
+  if (patch.reason !== undefined) update.reason = patch.reason?.trim() || null;
+  if (patch.product_id != null) update.product_id = patch.product_id;
+  if (Object.keys(update).length === 0) throw new VoiceApiError(400, "no_fields_to_update");
+
+  const { data, error } = await supabase
+    .from("blacklist")
+    .update(update)
+    .eq("blacklist_id", blacklistId)
+    .select("blacklist_id, shop_id, product_id, reason, created_at")
+    .maybeSingle();
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  if (!data) throw new VoiceApiError(404, "blacklist_not_found");
+
+  const names = await resolveProductNames([data.product_id]);
+  return {
+    blacklist_id: data.blacklist_id,
+    shop_id: data.shop_id,
+    product_id: data.product_id,
+    product_name: names.get(data.product_id) ?? data.product_id,
+    reason: data.reason,
+    created_at: data.created_at,
+  };
+}
+
+export async function deleteBlacklistEntry(blacklistId: number): Promise<{ blacklist_id: number; deleted: true }> {
+  if (!Number.isFinite(blacklistId)) throw new VoiceApiError(400, "blacklist_id_required");
+
+  const { error } = await supabase
+    .from("blacklist")
+    .delete()
+    .eq("blacklist_id", blacklistId);
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  return { blacklist_id: blacklistId, deleted: true };
+}
+
+export async function removeBlacklistByProduct(
+  shopId: string,
+  productId: string
+): Promise<{ deleted: boolean }> {
+  if (!shopId) throw new VoiceApiError(400, "shop_id_required");
+  if (!productId) throw new VoiceApiError(400, "product_id_required");
+
+  const { data, error } = await supabase
+    .from("blacklist")
+    .delete()
+    .eq("shop_id", shopId)
+    .eq("product_id", productId)
+    .select("blacklist_id");
+  if (error) throw new VoiceApiError(500, "db_error", error.message);
+  return { deleted: (data ?? []).length > 0 };
+}
+
 export interface SendWhatsAppResult {
   shop_id: string;
   order_id: string;
   whatsapp_sent: boolean;
+  queued?: boolean;
+  pending_id?: number;
   message_preview: string;
   wa_link?: string | null;
   language_detected: AppLanguage | null;
@@ -882,15 +1107,28 @@ export async function sendWhatsAppSummary(
     (order.delivery_date ? `\nDelivery: ${order.delivery_date}` : "") +
     `\nThank you for ordering with Shree Agencies!`;
 
-  await supabase
-    .from("call_logs")
-    .update({ whatsapp_sent: true })
-    .eq("order_id", orderId);
+  const { data: pendingRow, error: pendingError } = await supabase
+    .from("whatsapp_pending")
+    .insert({
+      shop_id: shopId,
+      order_id: orderId,
+      kind: "order_summary",
+      message: msg,
+      wa_link: buildWhatsAppWaLink(shop.whatsapp_number, msg),
+      whatsapp_number: shop.whatsapp_number,
+      status: "pending",
+      agent_role: "order_taker",
+    })
+    .select("id")
+    .single();
+  if (pendingError) throw new VoiceApiError(500, "db_error", pendingError.message);
 
   return {
     shop_id: shopId,
     order_id: orderId,
-    whatsapp_sent: true,
+    whatsapp_sent: false,
+    queued: true,
+    pending_id: pendingRow.id,
     message_preview: msg.slice(0, 200),
     wa_link: buildWhatsAppWaLink(shop.whatsapp_number, msg),
     language_detected: null,
@@ -1034,7 +1272,7 @@ export async function getConversationHistory(
   }
 
   let targetShopId = shopId;
-  let targetCallId = callId;
+  const targetCallId = callId;
 
   if (callId && !shopId) {
     const { data: callLog, error } = await supabase
@@ -1051,7 +1289,7 @@ export async function getConversationHistory(
     throw new VoiceApiError(400, "shop_id_required");
   }
 
-  let turns: ConversationTurn[] = [];
+  const turns: ConversationTurn[] = [];
 
   if (targetCallId) {
     const { data: callLog, error } = await supabase
@@ -2036,7 +2274,7 @@ export async function writeTodayNote(
     .from("today_notes")
     .insert({
       shop_id: shopId,
-      note_date: new Date().toISOString().slice(0, 10),
+      note_date: todayIST(),
       note_type: opts.note_type ?? "general",
       note_text: noteText.trim(),
       source: opts.source ?? "AI",
@@ -2061,7 +2299,7 @@ export async function writeTodayNote(
 export async function getTodayDetails(shopId: string) {
   if (!shopId) throw new VoiceApiError(400, "shop_id_required");
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
 
   const { data: shop } = await supabase
     .from("shops")
@@ -2228,7 +2466,7 @@ export interface BeatCallRecord {
 }
 
 export async function getTodayBeatCalls(): Promise<BeatCallRecord[]> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
   const { data, error } = await supabase
     .from("beat_calls")
     .select("*, shops(shop_name), routes(route_name)")
@@ -2250,7 +2488,7 @@ export async function getTodayBeatCalls(): Promise<BeatCallRecord[]> {
 }
 
 export async function generateBeatCalls(): Promise<{ created: number; skipped: number }> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
   const dayOfWeek = new Date().getDay(); // 0=Sun, 1=Mon...
 
   // Find routes scheduled for today
@@ -2321,7 +2559,7 @@ export async function updateBeatCallStatus(
 // ──────────────────────────────────────────────
 
 export async function autoCompleteDeliveries(): Promise<{ updated: number }> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
 
   // Find confirmed orders where delivery_date <= today and not yet delivered
   const { data: orders, error: orderError } = await supabase

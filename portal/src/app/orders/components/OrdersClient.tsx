@@ -44,10 +44,10 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
   });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
 
   const pendingOrders = orders.filter((o) => o.confirmed_order === false);
-  const todayOrders = orders.filter((o) => o.confirmed_order === true && o.order_date === today);
+  const todayOrders = orders.filter((o) => o.order_date === today);
 
   const visibleOrders =
     viewMode === "pending" ? pendingOrders :
@@ -294,7 +294,7 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
           value={pendingOrders.length}
           valueTone={pendingOrders.length > 0 ? "text-amber-600" : "text-zinc-900"}
         />
-        <Stat label="Confirmed today" value={todayOrders.length} valueTone="text-sky-600" />
+        <Stat label="Orders today" value={todayOrders.length} valueTone="text-sky-600" />
       </div>
 
       <Card>
@@ -424,13 +424,13 @@ export function OrdersClient({ orders: initialOrders, shops, products }: OrdersC
       <ConfirmDialog
         isOpen={isCreateOrderOpen}
         onClose={() => { setIsCreateOrderOpen(false); setCreateOrderForm({ shop_id: "", items: [] }); }}
-        onConfirm={() => {}}
+        onConfirm={() => { (document.getElementById("create-order-form") as HTMLFormElement | null)?.requestSubmit(); }}
         title="Create Manual Order"
         confirmText="Create Order"
         cancelText="Cancel"
         variant="primary"
       >
-        <form onSubmit={handleCreateOrder} className="space-y-4 max-h-[70vh] overflow-y-auto">
+        <form id="create-order-form" onSubmit={handleCreateOrder} className="space-y-4 max-h-[70vh] overflow-y-auto">
           <SelectField
             label="Shop"
             id="create_shop_id"

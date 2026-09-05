@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { todayIST } from "@/lib/format";
 import { supabaseAdmin } from "./supabaseAdmin";
 import type {
   Shop,
@@ -15,6 +16,7 @@ import type {
   ReturnRecord,
   ShopMemory,
   BlacklistEntry,
+  MemoryType,
   Scheme,
   Route,
   OrderStatus,
@@ -185,9 +187,133 @@ export async function removeBlacklist(
   }
 }
 
+export async function updateBlacklist(
+  blacklistId: number,
+  patch: { reason?: string | null; product_id?: string }
+): Promise<ActionResult<BlacklistEntry>> {
+  try {
+    const updateData: Partial<BlacklistEntry> = { ...patch };
+    if (patch.reason !== undefined) {
+      updateData.reason = patch.reason && patch.reason.trim() ? patch.reason.trim() : null;
+    }
+    if (patch.product_id !== undefined && !patch.product_id.trim()) {
+      return { success: false, error: "Product is required" };
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("blacklist")
+      .update(updateData)
+      .eq("blacklist_id", blacklistId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    revalidateExceptions();
+    return { success: true, data };
+  } catch (err) {
+    return handleError(err, "updateBlacklist");
+  }
+}
+
+export async function deleteBlacklistEntry(blacklistId: number): Promise<ActionResult<void>> {
+  try {
+    const { error } = await supabaseAdmin
+      .from("blacklist")
+      .delete()
+      .eq("blacklist_id", blacklistId);
+
+    if (error) throw error;
+    revalidateExceptions();
+    return { success: true, data: undefined };
+  } catch (err) {
+    return handleError(err, "deleteBlacklistEntry");
+  }
+}
+
 // ============================================================================
 // SHOP MEMORY
 // ============================================================================
+
+const MEMORY_TYPES: MemoryType[] = [
+  "timing",
+  "language",
+  "product_preference",
+  "negative_memory",
+  "payment_behavior",
+  "complaint_history",
+];
+
+export async function addMemory(input: {
+  shop_id: string;
+  memory_text: string;
+  memory_type: MemoryType;
+  confidence_score?: number;
+  confirmed_by_user?: boolean;
+}): Promise<ActionResult<ShopMemory>> {
+  try {
+    if (!input.shop_id?.trim()) return { success: false, error: "Shop is required" };
+    if (!input.memory_text?.trim()) return { success: false, error: "Memory text is required" };
+    if (!MEMORY_TYPES.includes(input.memory_type)) return { success: false, error: "Invalid memory type" };
+
+    const { data, error } = await supabaseAdmin
+      .from("shop_memory")
+      .insert({
+        shop_id: input.shop_id.trim(),
+        memory_text: input.memory_text.trim(),
+        memory_type: input.memory_type,
+        confidence_score: input.confidence_score ?? 0.5,
+        confirmed_by_user: input.confirmed_by_user ?? false,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    revalidatePath("/memory");
+    return { success: true, data };
+  } catch (err) {
+    return handleError(err, "addMemory");
+  }
+}
+
+export async function updateMemory(
+  memoryId: number,
+  patch: {
+    memory_text?: string;
+    memory_type?: MemoryType;
+    confidence_score?: number;
+    confirmed_by_user?: boolean;
+  }
+): Promise<ActionResult<ShopMemory>> {
+  try {
+    const updateData: Partial<ShopMemory> = { ...patch };
+    if (patch.memory_text !== undefined) {
+      if (!patch.memory_text.trim()) return { success: false, error: "Memory text cannot be empty" };
+      updateData.memory_text = patch.memory_text.trim();
+    }
+    if (patch.memory_type !== undefined && !MEMORY_TYPES.includes(patch.memory_type)) {
+      return { success: false, error: "Invalid memory type" };
+    }
+    if (
+      patch.confidence_score !== undefined &&
+      (patch.confidence_score < 0 || patch.confidence_score > 1)
+    ) {
+      return { success: false, error: "Confidence score must be between 0 and 1" };
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("shop_memory")
+      .update(updateData)
+      .eq("memory_id", memoryId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    revalidatePath("/memory");
+    return { success: true, data };
+  } catch (err) {
+    return handleError(err, "updateMemory");
+  }
+}
 
 export async function confirmMemory(
   memoryId: number
@@ -277,7 +403,7 @@ export async function createOrder(input: {
 
     // Create order
     const orderId = await nextOrderId(supabaseAdmin);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayIST();
     const deliveryDate = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10);
@@ -1139,7 +1265,7 @@ export async function writeTodayNote(input: {
       .from("today_notes")
       .insert({
         shop_id: input.shop_id,
-        note_date: new Date().toISOString().slice(0, 10),
+        note_date: todayIST(),
         note_type: input.note_type ?? "general",
         note_text: input.note_text.trim(),
         source: input.source ?? "human",
@@ -1153,6 +1279,27 @@ export async function writeTodayNote(input: {
     return { success: true, data };
   } catch (err) {
     return handleError(err, "writeTodayNote");
+  }
+}
+
+export async function markWhatsAppPendingSent(pendingId: number): Promise<ActionResult<{ wa_link: string | null }>> {
+  try {
+    const { data: existing } = await supabaseAdmin
+      .from("whatsapp_pending")
+      .select("wa_link")
+      .eq("id", pendingId)
+      .eq("status", "pending")
+      .single();
+    if (!existing) return { success: false, error: "Pending message not found or already sent" };
+    const { error } = await supabaseAdmin
+      .from("whatsapp_pending")
+      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .eq("id", pendingId);
+    if (error) throw error;
+    revalidatePath("/");
+    return { success: true, data: { wa_link: existing.wa_link } };
+  } catch (err) {
+    return handleError(err, "markWhatsAppPendingSent");
   }
 }
 

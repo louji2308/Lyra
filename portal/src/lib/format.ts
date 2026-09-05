@@ -131,3 +131,7 @@ export const severityTone: Record<string, string> = {
   high: "orange",
   critical: "rose",
 };
+
+export function todayIST(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+}

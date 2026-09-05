@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { todayIST } from "@/lib/format";
 import type {
   BlacklistEntry,
   BlacklistWithProduct,
@@ -138,7 +139,7 @@ export async function getShopDetail(
   phones: { phone_id: number; phone_number: string; label: string | null; is_primary: boolean }[];
   todayNotes: { note_id: number; note_type: string; note_text: string; source: string; agent_role: string | null; created_at: string }[];
 } | null> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
 
   const [
     shopRes,
@@ -279,7 +280,7 @@ export async function getShopDetail(
 export async function getTodayNotes(
   shopId: string
 ): Promise<{ note_id: number; note_type: string; note_text: string; source: string; agent_role: string | null; created_at: string }[]> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
   const { data } = await supabase
     .from("today_notes")
     .select("note_id, note_type, note_text, source, agent_role, created_at")
@@ -303,10 +304,10 @@ export async function getAllTodayNotes(): Promise<{
   note_type: string;
   note_text: string;
   source: string;
-  agent_role: string | null;
+agent_role: string | null;
   created_at: string;
 }[]> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIST();
   const { data, error } = await supabase
     .from("today_notes")
     .select("note_id, shop_id, note_type, note_text, source, agent_role, created_at, shops(shop_name)")
@@ -333,6 +334,47 @@ export async function getAllTodayNotes(): Promise<{
     source: n.source,
     agent_role: n.agent_role,
     created_at: n.created_at,
+  }));
+}
+
+export interface PendingWhatsAppItem {
+  id: number;
+  shop_id: string;
+  shop_name: string;
+  kind: string;
+  message: string;
+  wa_link: string | null;
+  whatsapp_number: string | null;
+  status: string;
+  agent_role: string | null;
+  created_at: string;
+}
+
+export async function getPendingWhatsApps(): Promise<PendingWhatsAppItem[]> {
+  const { data, error } = await supabase
+    .from("whatsapp_pending")
+    .select("id, shop_id, kind, message, wa_link, whatsapp_number, status, agent_role, created_at, shops(shop_name)")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  type Row = {
+    id: number; shop_id: string; kind: string; message: string;
+    wa_link: string | null; whatsapp_number: string | null; status: string;
+    agent_role: string | null; created_at: string;
+    shops?: { shop_name: string }[] | null;
+  };
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id: r.id,
+    shop_id: r.shop_id,
+    shop_name: r.shops?.[0]?.shop_name ?? r.shop_id,
+    kind: r.kind,
+    message: r.message,
+    wa_link: r.wa_link,
+    whatsapp_number: r.whatsapp_number,
+    status: r.status,
+    agent_role: r.agent_role,
+    created_at: r.created_at,
   }));
 }
 

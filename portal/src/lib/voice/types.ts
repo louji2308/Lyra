@@ -13,6 +13,8 @@ export type VoiceState =
   | "return_reason"
   | "callback_time"
   | "callback_confirm"
+  | "blacklist_confirm"
+  | "blacklist_unblock_confirm"
   | "onboarding_name"
   | "onboarding_area"
   | "onboarding_owner"
@@ -64,6 +66,9 @@ export interface VoiceContext {
   pendingAdd?: { query: string; quantity: number };
   pendingRemove?: { query: string; quantity?: number };
   pendingCallbackTime?: string;
+  blacklistedProductIds?: string[];
+  pendingBlacklistAdd?: { product_id: string; product_name: string; reason: string } | null;
+  pendingBlacklistRemove?: string | null;
   catalogResults?: Array<{ product_id: string; product_name: string; brand: string; category: string; price: number; unit_type: string; available_qty?: number }>;
   products?: Array<{ product_id: string; product_name: string; brand: string; category: string; price: number; unit_type: string }>;
 }

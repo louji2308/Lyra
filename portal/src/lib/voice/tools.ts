@@ -39,6 +39,104 @@ export const RECEPTION_TOOLS: VoiceTool[] = [
   },
 ];
 
+const MEMORY_TYPE_ENUM = [
+  "timing",
+  "language",
+  "product_preference",
+  "negative_memory",
+  "payment_behavior",
+  "complaint_history",
+];
+
+export const MEMORY_TOOLS: VoiceTool[] = [
+  {
+    name: "save_shop_memory",
+    description:
+      "Persist a learned preference or fact about a shop from the conversation (preferred call time, do-not-pitch product, reorder pattern, complaint). Updates the row if an identical memory already exists.",
+    parameters: {
+      type: "object",
+      properties: {
+        shop_id: { type: "string" },
+        memory_text: { type: "string", description: "What to remember, in plain English" },
+        memory_type: { type: "string", enum: MEMORY_TYPE_ENUM, description: "Category of the memory" },
+        confidence_score: { type: "number", minimum: 0, maximum: 1, description: "How confident the AI is (0-1)" },
+        confirmed_by_user: { type: "boolean", description: "Whether the shop owner explicitly confirmed this" },
+      },
+      required: ["shop_id", "memory_text", "memory_type"],
+    },
+  },
+  {
+    name: "update_shop_memory",
+    description:
+      "Edit an existing shop memory by memory_id — correct the text, change the type, or adjust the confidence score.",
+    parameters: {
+      type: "object",
+      properties: {
+        memory_id: { type: "number" },
+        memory_text: { type: "string", description: "Corrected memory text" },
+        memory_type: { type: "string", enum: MEMORY_TYPE_ENUM },
+        confidence_score: { type: "number", minimum: 0, maximum: 1 },
+      },
+      required: ["memory_id"],
+    },
+  },
+  {
+    name: "delete_shop_memory",
+    description:
+      "Remove a shop memory by memory_id, e.g. when the shop owner contradicts an earlier learned fact.",
+    parameters: {
+      type: "object",
+      properties: {
+        memory_id: { type: "number" },
+      },
+      required: ["memory_id"],
+    },
+  },
+];
+
+export const BLACKLIST_TOOLS: VoiceTool[] = [
+  {
+    name: "add_blacklist",
+    description:
+      "Permanently stop proposing a product to a shop because the owner refused it. Never suggest this product to this shop again.",
+    parameters: {
+      type: "object",
+      properties: {
+        shop_id: { type: "string" },
+        product_id: { type: "string" },
+        reason: { type: "string", description: "The owner's reason, in their own words" },
+      },
+      required: ["shop_id", "product_id"],
+    },
+  },
+  {
+    name: "update_blacklist",
+    description:
+      "Change the reason (or product) for an existing blacklist entry by blacklist_id.",
+    parameters: {
+      type: "object",
+      properties: {
+        blacklist_id: { type: "number" },
+        reason: { type: "string", description: "Updated reason, or empty string to clear" },
+      },
+      required: ["blacklist_id"],
+    },
+  },
+  {
+    name: "remove_blacklist",
+    description:
+      "Remove a product from a shop's blacklist when the owner now says they want it again.",
+    parameters: {
+      type: "object",
+      properties: {
+        shop_id: { type: "string" },
+        product_id: { type: "string" },
+      },
+      required: ["shop_id", "product_id"],
+    },
+  },
+];
+
 export const ORDER_TAKER_TOOLS: VoiceTool[] = [
   {
     name: "get_shop_context",
@@ -126,7 +224,7 @@ export const ORDER_TAKER_TOOLS: VoiceTool[] = [
   {
     name: "send_whatsapp_summary",
     description:
-      "Send the confirmed order summary to the shop's WhatsApp number.",
+      "Queue the order summary WhatsApp for the shop. It appears as a PENDING message in the portal dashboard; the office sends it manually. Do NOT claim it was sent.",
     parameters: {
       type: "object",
       properties: {
@@ -136,6 +234,7 @@ export const ORDER_TAKER_TOOLS: VoiceTool[] = [
       required: ["shop_id", "order_id"],
     },
   },
+  ...MEMORY_TOOLS,
 ];
 
 export const BUSINESS_BRAIN_TOOLS: VoiceTool[] = [
@@ -185,6 +284,7 @@ export const BUSINESS_BRAIN_TOOLS: VoiceTool[] = [
       properties: {},
     },
   },
+  ...BLACKLIST_TOOLS,
 ];
 
 export const SUPPORT_TOOLS: VoiceTool[] = [
@@ -234,7 +334,7 @@ export const SUPPORT_TOOLS: VoiceTool[] = [
   {
     name: "send_whatsapp_summary",
     description:
-      "Send the confirmed order summary to the shop's WhatsApp number.",
+      "Queue the order summary WhatsApp for the shop. It appears as a PENDING message in the portal dashboard; the office sends it manually. Do NOT claim it was sent.",
     parameters: {
       type: "object",
       properties: {
@@ -244,6 +344,8 @@ export const SUPPORT_TOOLS: VoiceTool[] = [
       required: ["shop_id", "order_id"],
     },
   },
+  ...MEMORY_TOOLS,
+  ...BLACKLIST_TOOLS,
 ];
 
 export const AGENT_TOOLS: Record<string, VoiceTool[]> = {

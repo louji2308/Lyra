@@ -111,6 +111,20 @@ export interface CheckBlacklistPayload {
   reason: string | null;
 }
 
+export interface BlacklistEntryPayload {
+  blacklist_id: number;
+  shop_id: string;
+  product_id: string;
+  product_name: string;
+  reason: string | null;
+  created_at: string;
+}
+
+export interface RemovedBlacklistPayload {
+  deleted: boolean;
+  blacklist_id?: number;
+}
+
 export interface SendWhatsAppPayload {
   shop_id: string;
   order_id: string;
@@ -228,6 +242,26 @@ export const voiceApi = {
     confirmed_by_user?: boolean;
     confidence_score?: number;
   }) => post<SavedMemoryPayload>("/api/save-memory", body),
+
+  updateMemory: (body: {
+    memory_id: number;
+    memory_text?: string;
+    memory_type?: MemoryType;
+    confidence_score?: number;
+    confirmed_by_user?: boolean;
+  }) => post<SavedMemoryPayload>("/api/update-memory", body),
+
+  deleteMemory: (body: { memory_id: number }) =>
+    post<{ memory_id: number; deleted: true }>("/api/delete-memory", body),
+
+  addBlacklist: (body: { shop_id: string; product_id: string; reason?: string | null }) =>
+    post<BlacklistEntryPayload>("/api/add-blacklist", body),
+
+  updateBlacklist: (body: { blacklist_id: number; reason?: string | null; product_id?: string }) =>
+    post<BlacklistEntryPayload>("/api/update-blacklist", body),
+
+  removeBlacklist: (body: { shop_id: string; product_id: string } | { blacklist_id: number }) =>
+    post<RemovedBlacklistPayload>("/api/remove-blacklist", body),
 
   saveComplaint: (body: {
     shop_id: string;

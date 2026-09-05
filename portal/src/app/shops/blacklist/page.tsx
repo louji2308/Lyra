@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getShops } from "@/lib/data";
+import { getProducts, getShops } from "@/lib/data";
 import { ShopBlacklistClient } from "./components/ShopBlacklistClient";
 
 export const metadata: Metadata = { title: "Blacklist" };
@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Blacklist" };
 export const dynamic = "force-dynamic";
 
 export default async function ShopBlacklistPage() {
-  const shops = await getShops();
+  const [shops, products] = await Promise.all([getShops(), getProducts()]);
 
   const allBlacklist = shops.flatMap(s =>
     s.blacklist?.map((b) => ({
@@ -19,5 +19,5 @@ export default async function ShopBlacklistPage() {
 
   const shopCount = shops.filter(s => s.blacklist?.length).length;
 
-  return <ShopBlacklistClient blacklist={allBlacklist} shopCount={shopCount} />;
+  return <ShopBlacklistClient blacklist={allBlacklist} shopCount={shopCount} shops={shops} products={products} />;
 }

@@ -12,6 +12,7 @@ import {
   getDeliveries,
   getPayments,
   getAllTodayNotes,
+  getPendingWhatsApps,
 } from "@/lib/data";
 import {
   formatINR,
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderCard } from "@/components/order-card";
+import { WhatsAppPendingPanel } from "@/components/whatsapp-pending-panel";
 
 export const metadata: Metadata = { title: "Dashboard | Shree Agencies" };
 
@@ -56,12 +58,13 @@ async function getDashboardData() {
     getPayments(),
   ]);
 
-  const today = new Date().toISOString().split('T')[0];
-  const todayOrders = orders.filter(o => o.order_date === new Date().toISOString().split('T')[0]);
-  const todayDeliveries = deliveries.filter(d => d.delivery_date === new Date().toISOString().split('T')[0]);
-  const todayPayments = payments.filter(p => p.collected_at?.split('T')[0] === new Date().toISOString().split('T')[0]);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+  const todayOrders = orders.filter(o => o.order_date === today);
+  const todayDeliveries = deliveries.filter(d => d.delivery_date === today);
+  const todayPayments = payments.filter(p => p.collected_at?.split('T')[0] === today);
 
   const todayNotes = await getAllTodayNotes();
+  const pendingWhatsApps = await getPendingWhatsApps();
 
   const totalRevenue = orders
     .filter(o => o.order_status === 'delivered')
@@ -90,6 +93,7 @@ async function getDashboardData() {
     todayDeliveries,
     todayPayments,
     todayNotes,
+    pendingWhatsApps,
     totalRevenue,
     todayRevenue,
     overdueVisits,
@@ -208,7 +212,7 @@ function UrgentActionsTable({ shops, orders, complaints, returns }: {
 }
 
 function TodaysScheduleTable({ deliveries }: { deliveries: any[] }) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
   const todayDeliveries = deliveries.filter(d => d.delivery_date === today).slice(0, 10);
 
   if (todayDeliveries.length === 0) {
@@ -355,6 +359,7 @@ export default async function DashboardPage() {
     todayDeliveries,
     todayPayments,
     todayNotes,
+    pendingWhatsApps,
     totalRevenue,
     todayRevenue,
     overdueVisits,
@@ -473,6 +478,11 @@ export default async function DashboardPage() {
       {/* Today's Details */}
       <Suspense fallback={<Card className="h-96 animate-pulse bg-charcoal/5">Loading...</Card>}>
         <TodaysDetailsPanel todayNotes={todayNotes} todayOrders={todayOrders} todayDeliveries={todayDeliveries} />
+      </Suspense>
+
+      {/* Pending WhatsApp */}
+      <Suspense fallback={<Card className="h-96 animate-pulse bg-charcoal/5">Loading...</Card>}>
+        <WhatsAppPendingPanel items={pendingWhatsApps} />
       </Suspense>
     </div>
   );

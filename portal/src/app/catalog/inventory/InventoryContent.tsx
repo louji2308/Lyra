@@ -149,13 +149,13 @@ export function InventoryContent({ products: initialProducts }: InventoryContent
         <ConfirmDialog
           isOpen={adjustModal.isOpen}
           onClose={() => setAdjustModal({ product: null, isOpen: false })}
-          onConfirm={() => {}}
+          onConfirm={() => { (document.getElementById("inventory-adjust-form") as HTMLFormElement | null)?.requestSubmit(); }}
           title={`Adjust Inventory: ${adjustModal.product.product_name}`}
           confirmText="Adjust Stock"
           cancelText="Cancel"
           variant="primary"
         >
-          <form onSubmit={handleAdjustInventory} className="space-y-4">
+          <form id="inventory-adjust-form" onSubmit={handleAdjustInventory} className="space-y-4">
             <p className="text-sm text-zinc-600">
               Current Stock: <span className="font-medium text-emerald-700">{adjustModal.product.available_qty ?? 0}</span> {adjustModal.product.unit_type}
             </p>

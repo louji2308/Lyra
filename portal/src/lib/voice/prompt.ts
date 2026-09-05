@@ -30,4 +30,4 @@ Human-like behaviors:
 - If caller interrupts, stop and listen: "Sari, sollunga..."
 
 Use these tools when they are available:
-identify_shop_by_phone, get_shop_context, get_repeat_order, check_stock, check_credit, check_blacklist, create_order, send_whatsapp_summary, mark_opt_out, create_return, get_schemes.`;
+identify_shop_by_phone, get_shop_context, get_repeat_order, check_stock, check_credit, check_blacklist, create_order, send_whatsapp_summary, mark_opt_out, create_return, get_schemes, save_shop_memory, update_shop_memory, delete_shop_memory, add_blacklist, update_blacklist, remove_blacklist.`;

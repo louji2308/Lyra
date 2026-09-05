@@ -4,8 +4,9 @@ import { createServer, IncomingMessage, ServerResponse } from "http";
 import { step, startCall } from "./src/lib/voice/engine";
 import { SCRIPT } from "./src/lib/voice/script";
 import type { VoiceContext, VoiceState } from "./src/lib/voice/types";
+import type { MemoryType } from "./src/lib/types";
 import { synthesizeSarvamTTSMulaw } from "./src/lib/voice/sarvam";
-import { identifyShopByAnyPhone, getSuggestedOrder } from "./src/lib/voice/backend";
+import { identifyShopByAnyPhone, getSuggestedOrder, recordCallMemories, addBlacklistEntry, removeBlacklistByProduct } from "./src/lib/voice/backend";
 import { supabaseAdmin } from "./src/lib/supabaseAdmin";
 
 const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
@@ -179,8 +180,8 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
         getProductsCached(),
       ]);
 
-      // Step 2: Fetch suggested order + beat call in parallel (both depend on shop_id)
-      const [suggested, beatCallResult] = await Promise.all([
+      // Step 2: Fetch suggested order + beat call + blacklist in parallel (all depend on shop_id)
+      const [suggested, beatCallResult, blacklistResult] = await Promise.all([
         getSuggestedOrder(shop.shop_id),
         supabaseAdmin
           .from("beat_calls")
@@ -189,6 +190,10 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
           .eq("call_date", new Date().toISOString().slice(0, 10))
           .eq("status", "calling")
           .maybeSingle(),
+        supabaseAdmin
+          .from("blacklist")
+          .select("product_id")
+          .eq("shop_id", shop.shop_id),
       ]);
 
       session.ctx = {
@@ -208,6 +213,7 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
         isInbound: !beatCallResult.data,
         onboardingStep: null,
         onboardingData: {},
+        blacklistedProductIds: (blacklistResult.data ?? []).map((b) => b.product_id),
         products: allProducts,
       };
       shopFound = true;
@@ -236,6 +242,7 @@ async function sendGreeting(session: CallSession, callerPhone?: string) {
       isInbound: true,
       onboardingStep: null,
       onboardingData: {},
+      blacklistedProductIds: [],
       products: allProducts,
     } as VoiceContext;
   }
@@ -344,6 +351,7 @@ async function processUserSpeech(session: CallSession, userText: string) {
     console.log(`[processUserSpeech] User: "${userText}" [${Date.now() - t0}ms]`);
 
     const stepStart = Date.now();
+    const prevState = session.state;
     const result = step(session.state, userText, session.ctx);
     const stepTime = Date.now() - stepStart;
     session.state = result.state;
@@ -362,6 +370,54 @@ async function processUserSpeech(session: CallSession, userText: string) {
 
     if (result.done) {
       console.log("Call completed — waiting for final audio to finish playing...");
+
+      const memoriesToSave: Array<{
+        memory_text: string;
+        memory_type: MemoryType;
+        confidence_score?: number;
+        confirmed_by_user?: boolean;
+      }> = [];
+
+      if (result.ctx.shopId) {
+        if ((prevState === "confirm" || prevState === "upsell_repeat") && result.ctx.currentSummary) {
+          memoriesToSave.push({
+            memory_text: `Repeat order confirmed: ${result.ctx.currentSummary}`,
+            memory_type: "product_preference",
+            confidence_score: 0.9,
+            confirmed_by_user: true,
+          });
+        }
+        if (prevState === "complaint_desc" || result.ctx.pendingComplaintType) {
+          memoriesToSave.push({
+            memory_text: `Shop mentioned a complaint: ${result.ctx.pendingComplaintType}`,
+            memory_type: "complaint_history",
+            confidence_score: 0.9,
+            confirmed_by_user: true,
+          });
+          memoriesToSave.push({
+            memory_text: "Complained during call",
+            memory_type: "negative_memory",
+            confidence_score: 0.8,
+            confirmed_by_user: true,
+          });
+        }
+        if (result.ctx.pendingReturnProductName) {
+          memoriesToSave.push({
+            memory_text: `Asked to return ${result.ctx.pendingReturnProductName}`,
+            memory_type: "negative_memory",
+            confidence_score: 0.8,
+            confirmed_by_user: true,
+          });
+        }
+        if (result.ctx.optedOut) {
+          memoriesToSave.push({
+            memory_text: "Opted out of voice calls",
+            memory_type: "negative_memory",
+            confidence_score: 0.9,
+            confirmed_by_user: true,
+          });
+        }
+      }
 
       // Save callback time if requested
       if (result.ctx.pendingCallbackTime && result.ctx.shopId) {
@@ -386,6 +442,12 @@ async function processUserSpeech(session: CallSession, userText: string) {
               .update({ preferred_call_start: dbTime, preferred_call_end: `${String(Math.min(hour + 2, 23)).padStart(2, "0")}:00:00` })
               .eq("shop_id", result.ctx.shopId);
             console.log(`Saved permanent call time ${dbTime} for ${result.ctx.shopId}`);
+            memoriesToSave.push({
+              memory_text: `Prefers calls at ${timeStr}`,
+              memory_type: "timing",
+              confidence_score: 0.9,
+              confirmed_by_user: true,
+            });
           } else {
             await supabaseAdmin
               .from("shops")
@@ -393,6 +455,29 @@ async function processUserSpeech(session: CallSession, userText: string) {
               .eq("shop_id", result.ctx.shopId);
             console.log(`Saved temp call time ${dbTime} for ${result.ctx.shopId}`);
           }
+        }
+      }
+
+      // End-of-call learning + blacklist persistence — never crash/block teardown
+      if (result.ctx.shopId) {
+        if (memoriesToSave.length > 0) {
+          recordCallMemories(result.ctx.shopId, memoriesToSave)
+            .then((res) =>
+              console.log(`[learning] saved call memories for ${result.ctx.shopId}: inserted=${res.inserted} updated=${res.updated}`)
+            )
+            .catch((err) => console.error("[learning] failed to save call memories:", err));
+        }
+        if (result.ctx.pendingBlacklistAdd) {
+          const add = result.ctx.pendingBlacklistAdd;
+          addBlacklistEntry(result.ctx.shopId, add.product_id, add.reason)
+            .then(() => console.log(`[learning] blacklisted ${add.product_id} for ${result.ctx.shopId}`))
+            .catch((err) => console.error("[learning] failed to add blacklist:", err));
+        }
+        if (result.ctx.pendingBlacklistRemove) {
+          const productId = result.ctx.pendingBlacklistRemove;
+          removeBlacklistByProduct(result.ctx.shopId, productId)
+            .then(() => console.log(`[learning] un-blacklisted ${productId} for ${result.ctx.shopId}`))
+            .catch((err) => console.error("[learning] failed to remove blacklist:", err));
         }
       }
 

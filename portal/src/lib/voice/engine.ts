@@ -89,6 +89,17 @@ function findProduct(
   return null;
 }
 
+const PERMANENT_REFUSAL_RE = /(?:don'?t\s+send|stop\s+sending|stop\s+calling|vendaam|venam|not\s+needed|zodhu|inna\s+solladheenga)\s+(.+)/i;
+
+function findRefusalProduct(
+  text: string,
+  products: VoiceContext["products"]
+): NonNullable<VoiceContext["products"]>[number] | null {
+  const match = text.trim().match(PERMANENT_REFUSAL_RE);
+  if (!match || !match[1]) return null;
+  return findProduct(products, match[1].trim());
+}
+
 function endWith(
   state: VoiceState,
   agentText: string,
@@ -152,7 +163,11 @@ export function step(
 
   // Global pre-checks: intents that apply in any conversational state
   if (intent === "stop") {
-    return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
+    // "stop sending/calling <product>" is a permanent product refusal (handled
+    // in the changes state as a blacklist), not a hang-up / opt-out.
+    if (!findRefusalProduct(userText, ctx.products)) {
+      return endWith(state, SCRIPT.endOptOut, ctx, { optedOut: true });
+    }
   }
   if (intent === "catalog_query") {
     // Search products list immediately — no dead end
@@ -396,6 +411,24 @@ export function step(
     }
 
     case "changes": {
+      // Explicit permanent product refusal ("don't send X") → confirm blacklist
+      const refusalProduct = findRefusalProduct(userText, ctx.products);
+      if (refusalProduct) {
+        return {
+          state: "blacklist_confirm",
+          agentText: `Sari, ${refusalProduct.product_name} future orders-la propose panna maaten. Confirm aa?`,
+          done: false,
+          ctx: {
+            ...ctx,
+            pendingBlacklistAdd: {
+              product_id: refusalProduct.product_id,
+              product_name: refusalProduct.product_name,
+              reason: userText.trim(),
+            },
+          },
+        };
+      }
+
       // Parse add/remove commands
       const addMatch = userText.match(/(?:add|vadikka|add pannu|kudukku)\s+(\d+)\s*(?:pack|bottle|carton|box|jar|tube|pack)?\s*(.+)/i);
       const removeMatch = userText.match(/(?:remove|kuda|kuduthu|eduthu)\s+(\d+)?\s*(.+)/i);
@@ -412,6 +445,17 @@ export function step(
             agentText: SCRIPT.productNotFound(productQuery),
             done: false,
             ctx,
+          };
+        }
+
+        // Blacklisted product — ask before un-blocking
+        const blacklistIds = ctx.blacklistedProductIds ?? [];
+        if (blacklistIds.includes(matched.product_id) && ctx.pendingBlacklistRemove !== matched.product_id) {
+          return {
+            state: "blacklist_unblock_confirm",
+            agentText: `Ithu earlier blacklist la irundhuchu — ippo unduvaattuma?`,
+            done: false,
+            ctx: { ...ctx, pendingBlacklistRemove: matched.product_id },
           };
         }
 
@@ -534,6 +578,56 @@ export function step(
       return endWith(state, SCRIPT.endGood, ctx);
     }
 
+    // ========== BLACKLIST (permanent product refusal) ==========
+    case "blacklist_confirm": {
+      const pending = ctx.pendingBlacklistAdd;
+      if (!pending) {
+        return { state: "changes", agentText: SCRIPT.changes, done: false, ctx: { ...ctx, pendingBlacklistAdd: null } };
+      }
+      if (intent === "yes") {
+        // Keep pending — persisted to the blacklist table at end of call
+        return {
+          state: "changes",
+          agentText: `Sari, ${pending.product_name} future la propose panna maaten. Vera enna venum?`,
+          done: false,
+          ctx,
+        };
+      }
+      // User backed out — clear the pending blacklist
+      return {
+        state: "changes",
+        agentText: `Sari, ${pending.product_name} blacklist la podadhu nu decide pannala. Vera enna venum?`,
+        done: false,
+        ctx: { ...ctx, pendingBlacklistAdd: null },
+      };
+    }
+
+    case "blacklist_unblock_confirm": {
+      const productId = ctx.pendingBlacklistRemove ?? null;
+      const matchedProduct = productId
+        ? (ctx.products ?? []).find((p) => p.product_id === productId)
+        : undefined;
+      if (intent === "yes") {
+        // Keep pending — the un-blacklist is persisted at end of call
+        return {
+          state: "changes",
+          agentText: matchedProduct
+            ? `Sari, ${matchedProduct.product_name} blacklist la irundhu eduthuten. Inime adha add pannalam. Vera enna venum?`
+            : "Sari, blacklist la irundhu eduthuten. Vera enna venum?",
+          done: false,
+          ctx,
+        };
+      }
+      return {
+        state: "changes",
+        agentText: matchedProduct
+          ? `Sari, ${matchedProduct.product_name} blacklist la irukku madhiriye vaikkuren. Vera enna venum?`
+          : "Sari, blacklist la irukku madhiriye vaikkuren. Vera enna venum?",
+        done: false,
+        ctx: { ...ctx, pendingBlacklistRemove: null },
+      };
+    }
+
     // ========== COMPLAINT SUB-FLOW ==========
     case "complaint": {
       const complaintType = userText.trim() || "other";
@@ -613,6 +707,8 @@ export const STATE_LABELS: Record<VoiceState, string> = {
   return_reason: "Return reason",
   callback_time: "Callback time",
   callback_confirm: "Callback confirm",
+  blacklist_confirm: "Blacklist confirm",
+  blacklist_unblock_confirm: "Unblock confirm",
   onboarding_name: "Onboarding: name",
   onboarding_area: "Onboarding: area",
   onboarding_owner: "Onboarding: owner",
