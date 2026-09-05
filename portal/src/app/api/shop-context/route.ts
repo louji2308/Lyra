@@ -22,6 +22,9 @@ export async function GET(request: Request) {
     const shop = await identifyShopByAnyPhone(phone);
     return Response.json(await getShopContext(shop.shop_id));
   } catch (err) {
+    if (err instanceof VoiceApiError && err.code === "shop_not_found" && err.detail === "new_shop") {
+      return Response.json({ found: false, reason: "new_shop" }, { status: 404 });
+    }
     return voiceErrorResponse(err);
   }
 }
