@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Inter, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
+import { CallButton } from "@/components/call-button";
 import "./globals.css";
 
 const inter = Inter({
@@ -36,15 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="mesh-blob-2" />
         </div>
         <AppShell>{children}</AppShell>
-        <Script
-          src="https://app.snapserve.ai/api/widget.js"
-          data-agent-id="797"
-          data-share="wcl_5a38eb421ee4267019c11a4457964e08f76f"
-          data-name="Lyra Reception - Tamil Order Routing"
-          data-color="#0ea5e9"
-          data-position="bottom-right"
-          strategy="afterInteractive"
-        />
+        <CallButton />
       </body>
     </html>
   );
